@@ -34,4 +34,4 @@ def handle_mention(event_data):
         if re.search('h(ello|i)', text):
             say_hello(message)
 
-slack_events_adapter.start(port=3000)
+slack_events_adapter.start(host='0.0.0.0', port=3000)
