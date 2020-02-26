@@ -12,5 +12,5 @@ WORKDIR /app
 COPY . /app
 
 # expose ports and set command
-EXPOSE 3000
+EXPOSE 80
 CMD python scrum-master-jr.py
