@@ -39,4 +39,4 @@ def handle_mention(event_data):
 
 # Start the server on port 80
 if __name__ == "__main__":
-  app.run(port=80)
+  app.run(host='0.0.0.0', port=80)
