@@ -3,7 +3,7 @@ import slack
 import os
 import re
 import random
-import flask
+from flask import Flask
 
 app = Flask(__name__)
 
