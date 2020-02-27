@@ -7,9 +7,13 @@ from flask import Flask
 
 app = Flask(__name__)
 
+@app.route("/")
+def healthcheck():
+  return "Up and Running!"
+
 # Our app's Slack Event Adapter for receiving actions via the Events API
 slack_signing_secret = os.environ["SLACK_SIGNING_SECRET"]
-slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events")
+slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events", app)
 
 # Create a SlackClient for your bot to use for Web API requests
 slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
