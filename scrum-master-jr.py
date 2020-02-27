@@ -3,13 +3,23 @@ import slack
 import os
 import re
 import random
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-@app.route("/")
+@app.route("/health")
 def healthcheck():
-  return "Up and Running!"
+    token = request.args.get('token')
+    env_token = None
+    try:
+        env_token = os.environ["HEALTHCHECK_TOKEN"]
+    except KeyError:
+        return jsonify({'error': 'Healthcheck token not found'}), 500
+
+    if token == env_token:
+        return "Up and Running!"
+    else:
+        return jsonify({'error': 'Healthcheck token mismatch'}), 401
 
 # Our app's Slack Event Adapter for receiving actions via the Events API
 slack_signing_secret = os.environ["SLACK_SIGNING_SECRET"]
