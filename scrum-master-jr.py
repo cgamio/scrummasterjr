@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 @app.route("/health")
 def healthcheck():
-    token = request.args.get('token')
+    token = request.args.get('token').strip('\"\\')
     env_token = None
     try:
         env_token = os.environ["HEALTHCHECK_TOKEN"]
