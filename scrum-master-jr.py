@@ -16,7 +16,7 @@ def healthcheck():
     except KeyError:
         return jsonify({'error': 'Healthcheck token not found'}), 500
 
-    return "Up and Running!" if token == env_token else jsonify({'error': 'Healthcheck token mismatch'}), 401
+    return "Up and Running!" if token == env_token else (jsonify({'error': 'Healthcheck token mismatch'}), 401)
 
 
 # Our app's Slack Event Adapter for receiving actions via the Events API
