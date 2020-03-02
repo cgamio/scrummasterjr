@@ -36,14 +36,12 @@ spec:
           value: {{ slack_signing_secret }}
         - name: SLACK_BOT_TOKEN
           value: {{ slack_bot_secret }}
-        - name: HEALTHCHECK_TOKEN
-          value: {{ healthcheck_token }}
         ports:
         - containerPort: 80
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /health?token={{ healthcheck_token }}
+            path: /health
             port: 80
             httpHeaders:
             - name: X-Healthcheck-Light

@@ -11,18 +11,7 @@ app = Flask(__name__)
 
 @app.route("/health")
 def healthcheck():
-    token = request.args.get('token').strip('\"\\')
-    env_token = None
-    try:
-        env_token = os.environ["HEALTHCHECK_TOKEN"]
-    except KeyError:
-        return jsonify({'error': 'Healthcheck token not found'}), 500
-
-    if token != env_token:
-        logging.error(f"Token: {env_token} doesn't match expected token {env_token}")
-        return jsonify({'error': 'Healthcheck token mismatch'}), 401
-
-    return "Up and Running!"
+    return "Up and Running!", 200
 
 
 # Our app's Slack Event Adapter for receiving actions via the Events API
