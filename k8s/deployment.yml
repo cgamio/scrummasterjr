@@ -39,6 +39,12 @@ spec:
         ports:
         - containerPort: 80
           protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 20
+          periodSeconds: 5
       imagePullSecrets:
       - name: quay.io
       restartPolicy: Always
