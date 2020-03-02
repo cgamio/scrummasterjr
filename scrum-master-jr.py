@@ -4,6 +4,8 @@ import os
 import re
 import random
 from flask import Flask, jsonify, request
+import logging
+logging.basicConfig(format='%(message)s')
 
 app = Flask(__name__)
 
@@ -16,7 +18,11 @@ def healthcheck():
     except KeyError:
         return jsonify({'error': 'Healthcheck token not found'}), 500
 
-    return "Up and Running!" if token == env_token else (jsonify({'error': 'Healthcheck token mismatch'}), 401)
+    if token != env_token:
+        logging.error(f"Token: {env_token} doesn't match expected token {env_token}")
+        return jsonify({'error': 'Healthcheck token mismatch'}), 401
+
+    return "Up and Running!"
 
 
 # Our app's Slack Event Adapter for receiving actions via the Events API
