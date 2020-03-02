@@ -3,10 +3,20 @@ import slack
 import os
 import re
 import random
+from flask import Flask, jsonify, request
+import logging
+logging.basicConfig(format='%(message)s')
+
+app = Flask(__name__)
+
+@app.route("/health")
+def healthcheck():
+    return "Up and Running!", 200
+
 
 # Our app's Slack Event Adapter for receiving actions via the Events API
 slack_signing_secret = os.environ["SLACK_SIGNING_SECRET"]
-slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events")
+slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events", app)
 
 # Create a SlackClient for your bot to use for Web API requests
 slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
@@ -34,4 +44,6 @@ def handle_mention(event_data):
         if re.search('h(ello|i)', text):
             say_hello(message)
 
-slack_events_adapter.start(host='0.0.0.0', port=80)
+# Start the server on port 80
+if __name__ == "__main__":
+  app.run(host='0.0.0.0', port=80)

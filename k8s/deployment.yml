@@ -32,18 +32,17 @@ spec:
             cpu: '{{ k8s_cpu_requests }}'
             memory: '{{ k8s_memory_requests }}'
         env:
-        - name: VAR_NAME
-          value: '{{ var_value }}'
+        - name: SLACK_SIGNING_SECRET
+          value: {{ slack_signing_secret }}
+        - name: SLACK_BOT_TOKEN
+          value: {{ slack_bot_secret }}
         ports:
         - containerPort: 80
           protocol: TCP
         readinessProbe:
           httpGet:
-            path: /health?token="{{ scrum-master-jr_healthcheck_token }}"
+            path: /health
             port: 80
-            httpHeaders:
-            - name: X-Healthcheck-Light
-              value: 'true'
           initialDelaySeconds: 20
           periodSeconds: 5
       imagePullSecrets:
