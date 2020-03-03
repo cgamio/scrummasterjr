@@ -56,7 +56,7 @@ def handle_mention(event_data):
         if re.search('h(ello|i)', text):
             response = say_hello(message)
         for set in commandsets:
-            for regex in set.getCommandsRegex.keys():
+            for regex in set.getCommandsRegex().keys():
                 if re.search(regex, text):
                     response = set.getCommandsRegex[regex](message)
 
