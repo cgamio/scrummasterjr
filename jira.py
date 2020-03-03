@@ -22,7 +22,7 @@ class Jira:
 
         return response
 
-    def testConnectionCommand(self):
+    def testConnectionCommand(self, message):
         response = self.testConnection()
 
         if response.status_code == 200:
