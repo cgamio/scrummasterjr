@@ -1,5 +1,6 @@
 from requests.auth import HTTPBasicAuth
 import requests
+import logging
 
 class Jira:
     __auth = None
@@ -20,3 +21,22 @@ class Jira:
         response = requests.request('GET', url, headers=self.__headers, auth=self.__auth)
 
         return response
+
+    def testConnectionCommand(self):
+        response = self.testConnection()
+
+        if response.status_code == 200:
+            return "My connection to Jira is up and running!"
+        else:
+            logging.error(response)
+            return "Looks like there's an issue with my connection..."
+
+    def getCommandsRegex(self):
+        return {
+            'test jira': self.testConnectionCommand
+        }
+
+    def getCommandDescriptions(self):
+        return {
+            'test jira': 'tests my connection to jira'
+        }
