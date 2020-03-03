@@ -7,6 +7,8 @@ from flask import Flask, jsonify, request
 import logging
 logging.basicConfig(format='%(message)s')
 
+from jira import Jira
+
 app = Flask(__name__)
 
 @app.route("/health")
@@ -22,6 +24,12 @@ slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events", 
 slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
 slack_client = slack.WebClient(slack_bot_token)
 
+# Set up for Jira Commands
+jira_host = os.environ["JIRA_HOST"]
+jira_user = os.environ["JIRA_USER"]
+jira_token = os.environ["JIRA_TOKEN"]
+jira = Jira(jira_host, jira_user, jira_token)
+
 def say_hello(message):
     responses = ["Hello there!",
                  "It's a pleasure to meet you! My name is Scrum Master Jr.",
@@ -33,16 +41,24 @@ def say_hello(message):
                  "Bonjour!"
                 ]
 
-    slack_client.chat_postMessage(channel=message["channel"], text=random.choice(responses))
+    return random.choice(responses)
 
 @slack_events_adapter.on("app_mention")
 def handle_mention(event_data):
     message = event_data["event"]
+    response = "I'm sorry, I don't understand you. Try asking me for `help`"
 
     if message.get("subtype") is None:
         text = message.get("text")
+
         if re.search('h(ello|i)', text):
-            say_hello(message)
+            response = say_hello(message)
+
+        for regex in jira.getCommandsRegex:
+            if re.search(regex, text):
+                response = jira.getCommandsRegex[regex](message)
+
+        slack_client.chat_postMessage(channel=message["channel"], text=response)
 
 # Start the server on port 80
 if __name__ == "__main__":
