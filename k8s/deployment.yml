@@ -36,6 +36,12 @@ spec:
           value: {{ slack_signing_secret }}
         - name: SLACK_BOT_TOKEN
           value: {{ slack_bot_secret }}
+        - name: JIRA_HOST
+          value: {{ jira_host }}
+        - name: JIRA_USER
+          value: {{ jira_user }}
+        - name: JIRA_TOKEN
+          value: {{ jira_token }}
         ports:
         - containerPort: 80
           protocol: TCP
