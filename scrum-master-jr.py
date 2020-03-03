@@ -30,6 +30,8 @@ jira_user = os.environ["JIRA_USER"]
 jira_token = os.environ["JIRA_TOKEN"]
 jira = Jira(jira_host, jira_user, jira_token)
 
+commandsets = [jira]
+
 def say_hello(message):
     responses = ["Hello there!",
                  "It's a pleasure to meet you! My name is Scrum Master Jr.",
@@ -53,10 +55,10 @@ def handle_mention(event_data):
 
         if re.search('h(ello|i)', text):
             response = say_hello(message)
-
-        for regex in jira.getCommandsRegex:
-            if re.search(regex, text):
-                response = jira.getCommandsRegex[regex](message)
+        for set in commandsets:
+            for regex in set.getCommandsRegex:
+                if re.search(regex, text):
+                    response = set.getCommandsRegex[regex](message)
 
         slack_client.chat_postMessage(channel=message["channel"], text=response)
 
