@@ -58,7 +58,7 @@ def handle_mention(event_data):
         for set in commandsets:
             for regex in set.getCommandsRegex().keys():
                 if re.search(regex, text):
-                    response = set.getCommandsRegex[regex](message)
+                    response = set.getCommandsRegex()[regex](message)
 
         slack_client.chat_postMessage(channel=message["channel"], text=response)
 
