@@ -38,7 +38,7 @@ class Jira:
         return response
 
     def getSprintMetricsCommand(self, message):
-        sprintid = re.search('sprint metrics ([0-9]+)', message.get("text")).group(1)
+        sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
 
         try:
             response = self.__getSprintMetrics(sprintid)
