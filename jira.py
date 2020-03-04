@@ -43,10 +43,170 @@ class Jira:
         else:
             return "My connection to Jira is up and running!"
 
-    def __getSprintMetrics(self, id):
-        raise Exception("This function hasn't been implemented yet!")
+    def __calculateSprintMetrics(self, sprint_report):
+        points = {
+            "committed": 0,
+            "completed": 0,
+            "planned_completed": 0,
+            "unplanned_completed": 0,
+            "feature_completed": 0,
+            "optimization_completed": 0,
+            "not_completed": 0,
+            "removed": 0
+        }
 
-        return response
+        items = {
+            "committed": 0,
+            "completed": 0,
+            "planned_completed": 0,
+            "unplanned_completed": 0,
+            "stories_completed": 0,
+            "unplanned_stories_completed": 0,
+            "bugs_completed": 0,
+            "unplanned_bugs_completed": 0,
+            "not_completed": 0,
+            "removed": 0
+        }
+
+        issue_keys = {
+            "committed": [],
+            "completed": [],
+            "incomplete": [],
+            "removed": []
+        }
+
+        feature_work = ["Story", "Design", "Spike"]
+        optimization = ["Optimization"]
+        bug = ["Bug"]
+        ignore = ["Task", "Epic"]
+
+        # Completed Work
+        for completed in sprint_report["contents"]["completedIssues"]:
+
+            issue_keys["completed"].append(completed["key"])
+
+            # Short-circuit for things we don't track
+            if completed["typeName"] in ignore:
+                continue
+
+            try:
+                issue_points_original = int(completed["estimateStatistic"]["statFieldValue"]["value"])
+            except:
+                issue_points_original = 0
+
+            try:
+                issue_points = int(completed["currentEstimateStatistic"]["statFieldValue"]["value"])
+            except:
+                issue_points = 0
+
+            points["completed"] += issue_points
+            items["completed"] += 1
+
+            unplanned = False
+            if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+                unplanned = True
+                points["unplanned_completed"] += issue_points_original
+                items["unplanned_completed"] += 1
+            else:
+                issue_keys["committed"].append(completed["key"])
+                points["committed"] += issue_points_original
+                items["committed"] += 1
+                points["planned_completed"] += issue_points
+                items["planned_completed"] += 1
+                if issue_points_original < issue_points:
+                    points["unplanned_completed"] += issue_points-issue_points_original
+
+            # Story
+            if completed["typeName"] == "Story":
+                items["stories_completed"] += 1
+                if unplanned:
+                    items["unplanned_stories_completed"] += 1
+
+            # Story / Design / Spike (Feature Work)
+            if completed["typeName"] in feature_work:
+                points["feature_completed"] += issue_points
+
+            # Optimization
+            if completed["typeName"] in optimization:
+                points["optimization_completed"] += issue_points
+
+            # Bugs
+            if completed["typeName"] in bug:
+                items["bugs_completed"] += 1
+                if unplanned:
+                    items["unplanned_bugs_completed"] += 1
+
+
+        # Incomplete Work
+        for incomplete in sprint_report["contents"]["issuesNotCompletedInCurrentSprint"]:
+
+            issue_keys["incomplete"].append(incomplete["key"])
+
+            # Short-circuit for things we don't track
+            if incomplete["typeName"] in ignore:
+                continue
+
+            try:
+                issue_points = int(incomplete["currentEstimateStatistic"]["statFieldValue"]["value"])
+            except:
+                issue_points = 0
+
+            points["not_completed"] += issue_points
+            items["not_completed"] += 1
+
+            if incomplete["key"] not in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+                issue_keys["committed"].append(incomplete["key"])
+                points["committed"] += issue_points
+                items["committed"] += 1
+
+        # Removed Work
+        for removed in sprint_report["contents"]["puntedIssues"]:
+
+            issue_keys["removed"].append(removed["key"])
+
+            # Short-circuit for things we don't track
+            if removed["typeName"] in ignore:
+                continue
+
+            try:
+                issue_points = int(removed["currentEstimateStatistic"]["statFieldValue"]["value"])
+            except:
+                issue_points = 0
+
+            if removed["key"] not in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+                points["committed"] += issue_points
+                items["committed"] += 1
+                issue_keys["committed"].append(removed["key"])
+
+            points["removed"] += issue_points
+            items["removed"] += 1
+
+        return {
+            "points" : points,
+            "items" : items,
+            "issue_keys": issue_keys
+        }
+
+    def __getSprintMetrics(self, sprint_id):
+        # Get Jira Sprint Object (including Board reference) from Sprint ID
+        sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
+        if sprint == False:
+            raise Exception(f"Could not find sprint with id {sprint_id}")
+
+        # Get the Jira Sprint Report given a Board ID and Sprint ID
+        try:
+            board = sprint['originBoardId']
+        except:
+            raise Exception(f"Sprint {sprint_id} does not appear to be associated with a board")
+
+        sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={sprint['originBoardId']}&sprintId={sprint_id}")
+        if sprint_report == False:
+            raise Exception(f"Could not find report for sprint {sprint_id} on board {sprint['board_id']}")
+
+        # Use the Jira Sprint Report to generate metrics
+        metrics = self.__calculateSprintMetrics(sprint_report)
+
+        return metrics
 
     def getSprintMetricsCommand(self, message):
         sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
