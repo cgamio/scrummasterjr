@@ -40,7 +40,6 @@ class Jira:
         if response == False:
             logging.error(f"Error with Jira connection: {response}")
             return "Looks like there's an issue with my connection. I've logged an error"
-            
         else:
             return "My connection to Jira is up and running!"
 
