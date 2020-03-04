@@ -9,6 +9,7 @@ verify_ssl = true
 slackclient = "*"
 slackeventsapi = "*"
 flask = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.7"
