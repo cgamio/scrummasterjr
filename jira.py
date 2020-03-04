@@ -40,6 +40,7 @@ class Jira:
         if response == False:
             logging.error(f"Error with Jira connection: {response}")
             return "Looks like there's an issue with my connection. I've logged an error"
+            
         else:
             return "My connection to Jira is up and running!"
 
@@ -207,6 +208,7 @@ class Jira:
 
         try:
             metrics = self.__getSprintMetrics(sprintid)
+            
         except BaseException as e:
             logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
