@@ -206,7 +206,7 @@ class Jira:
 
         try:
             metrics = self.__getSprintMetrics(sprintid)
-            
+
         except BaseException as e:
             logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
