@@ -2,35 +2,46 @@ from requests.auth import HTTPBasicAuth
 import requests
 import logging
 import re
+import json
 
 class Jira:
     __auth = None
     __token = None
     __url = None
+    __greenhopper_url = None
+    __agile_url = None
 
-    __headers = { 'Accept': 'application/json' }
+    def __makeRequest(self, verb, url, params=None):
+        response = requests.request(verb, url, headers={ 'Accept': 'application/json' }, auth=self.__auth, params=params)
+        if response.status_code == 200:
+            return(json.loads(response.text))
+        else:
+            logging.error(response.text)
+            return(False)
 
     def __init__(self, host, user, token):
         self.__host = host
         self.__auth = HTTPBasicAuth(user, token)
 
         self.__url = f"https://{self.__host}/rest/api/latest/"
+        self.__agile_url = f"https://{self.__host}/rest/agile/latest/"
+        self.__greenhopper_url = f"https://{self.__host}/rest/greenhopper/latest/"
 
     def __testConnection(self):
         url = f"{self.__url}/myself"
 
-        response = requests.request('GET', url, headers=self.__headers, auth=self.__auth)
+        response = self.__makeRequest('GET', url)
 
         return response
 
     def testConnectionCommand(self, message):
         response = self.__testConnection()
 
-        if response.status_code == 200:
-            return "My connection to Jira is up and running!"
-        else:
+        if response == False:
             logging.error(f"Error with Jira connection: {response}")
             return "Looks like there's an issue with my connection. I've logged an error"
+        else:
+            return "My connection to Jira is up and running!"
 
     def __getSprintMetrics(self, id):
         raise Exception("This function hasn't been implemented yet!")
