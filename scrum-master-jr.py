@@ -57,9 +57,9 @@ def get_help(message):
 @slack_events_adapter.on("app_mention")
 def handle_mention(event_data):
     message = event_data["event"]
-    response = "I'm sorry, I don't understand you. Try asking me for `help`"
 
     if message.get("subtype") is None:
+        response = "I'm sorry, I don't understand you. Try asking me for `help`"
         text = message.get("text")
 
         if re.search('h(ello|i)', text):
