@@ -15,7 +15,7 @@ class Jira:
 
         self.__url = f"https://{self.__host}/rest/api/latest/"
 
-    def testConnection(self):
+    def __testConnection(self):
         url = f"{self.__url}/myself"
 
         response = requests.request('GET', url, headers=self.__headers, auth=self.__auth)
@@ -23,7 +23,7 @@ class Jira:
         return response
 
     def testConnectionCommand(self, message):
-        response = self.testConnection()
+        response = self.__testConnection()
 
         if response.status_code == 200:
             return "My connection to Jira is up and running!"
