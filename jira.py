@@ -212,12 +212,13 @@ class Jira:
         sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
 
         try:
-            response = self.__getSprintMetrics(sprintid)
+            metrics = self.__getSprintMetrics(sprintid)
         except BaseException as e:
             logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
 
-        return response
+        metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
+        return f"```{metrics_text}```"
 
 
     def getCommandsRegex(self):
