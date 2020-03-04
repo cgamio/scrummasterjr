@@ -28,7 +28,7 @@ class Jira:
         if response.status_code == 200:
             return "My connection to Jira is up and running!"
         else:
-            logging.error(response)
+            logging.error(f"Error with Jira connection: {response}")
             return "Looks like there's an issue with my connection..."
 
     def getCommandsRegex(self):
