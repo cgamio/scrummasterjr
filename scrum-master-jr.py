@@ -45,6 +45,15 @@ def say_hello(message):
 
     return random.choice(responses)
 
+def get_help(message):
+    response = "These are the things I know how to respond to:\nhello - random greeting"
+    for set in commandsets:
+        for command in set.getCommandDescriptions().keys():
+            response = f"{response}\n{command} - {set.getCommandDescriptions()[command]}"
+        response = f"{response}\n"
+
+    return response.strip()
+
 @slack_events_adapter.on("app_mention")
 def handle_mention(event_data):
     message = event_data["event"]
@@ -55,6 +64,8 @@ def handle_mention(event_data):
 
         if re.search('h(ello|i)', text):
             response = say_hello(message)
+        if re.search('help', text):
+            response = get_help(message)
         for set in commandsets:
             for regex in set.getCommandsRegex().keys():
                 if re.search(regex, text):
