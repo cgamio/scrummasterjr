@@ -33,3 +33,19 @@ def test_help_mock_set():
 
     set.getCommandDescriptions.assert_called()
     assert response == expected_response
+
+@pytest.mark.parametrize('message , expected_response', [
+    ({'event': {'subtype': None, 'text':'help', 'channel': '1234'}},
+     {'channel':'1234', 'text':"These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"}
+    ),
+    ({'event': {'subtype': None, 'text':'asldkfjaslkdjhfa', 'channel': '1234'}},
+     {'channel':'1234', 'text':"I'm sorry, I don't understand you. Try asking me for `help`"}
+    )
+])
+def test_handle_mention(message, expected_response):
+
+    mock_slack_client = MagicMock()
+    scrum_master_jr.slack_client = mock_slack_client
+    scrum_master_jr.handle_mention(message)
+
+    mock_slack_client.chat_postMessage.assert_called_with(**expected_response)
