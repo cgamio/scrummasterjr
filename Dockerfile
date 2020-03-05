@@ -10,4 +10,4 @@ COPY . /app
 
 # expose ports and set command
 EXPOSE 80
-CMD python jr.py
+CMD python scrum_master_jr.py
