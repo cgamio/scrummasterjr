@@ -21,7 +21,7 @@ install:
   - docker pull quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} || docker build -t quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} .
 
 script:
-  - docker run --name appliance quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} ./run-tests.sh
+  - docker run --name appliance quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} run-tests.sh
 
 after_success: >-
   if [ "$TRAVIS_PULL_REQUEST" != "false" ];then
