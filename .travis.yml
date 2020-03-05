@@ -11,6 +11,11 @@ branches:
 env:
   global:
     - APP_NAME=scrum-master-jr
+    - SLACK_SIGNING_SECRET=test-secret
+    - SLACK_BOT_TOKEN=test-slack-bot-token
+    - JIRA_HOST=test-jira-host
+    - JIRA_USER=test-jira-user
+    - JIRA_TOKEN=test-jira-token
 
 before_install:
   - wget https://hearst-hatchery.github.io/atlas/v3/vault.sh;
