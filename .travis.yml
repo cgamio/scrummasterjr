@@ -21,7 +21,7 @@ install:
   - docker pull quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} || docker build -t quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} .
 
 script:
-  - /bin/true
+  - docker run -e SLACK_SIGNING_SECRET="test-signing-secret" -e SLACK_BOT_TOKEN="test-slack-bot-token" -e JIRA_HOST="test-jira-host" -e JIRA_USER="test-jira-user" -e JIRA_TOKEN="test-jira-token" quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} bin/run-tests.sh
 
 after_success: >-
   if [ "$TRAVIS_PULL_REQUEST" != "false" ];then
@@ -49,3 +49,8 @@ deploy:
     on:
       tags: true
       condition: $TRAVIS_TAG =~ [0-9]+\.[0-9]+\.[0-9]+
+
+notifications:
+  slack:
+    rooms:
+      - hearstmedia:dr6Hedn7VGijyg2ZXEDnRTkI#scrum-master-jr

@@ -7,15 +7,24 @@ chardet==3.0.4
 click==7.0
 flask==1.1.1
 idna==2.9
+importlib-metadata==1.5.0 ; python_version < '3.8'
 itsdangerous==1.1.0
 jinja2==2.11.1
 markupsafe==1.1.1
+more-itertools==8.2.0
 multidict==4.7.5
+packaging==20.1
+pluggy==0.13.1
+py==1.8.1
 pyee==7.0.1
+pyparsing==2.4.6
+pytest==5.3.5
 requests==2.23.0
 six==1.14.0
 slackclient==2.5.0
 slackeventsapi==2.1.0
 urllib3==1.25.8
+wcwidth==0.1.8
 werkzeug==1.0.0
 yarl==1.4.2
+zipp==3.1.0
