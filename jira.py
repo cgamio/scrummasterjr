@@ -82,7 +82,7 @@ class Jira:
 
         # Completed Work
         for completed in sprint_report["contents"]["completedIssues"]:
-
+-
             issue_keys["completed"].append(completed["key"])
 
             # Short-circuit for things we don't track
