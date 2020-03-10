@@ -192,6 +192,12 @@ class Jira:
         if sprint == False:
             raise NotFoundException(f"Could not find sprint with id {sprint_id}")
 
+        # Get the Jira Sprint Report given a Board ID and Sprint ID
+        try:
+            board = sprint['originBoardId']
+        except:
+            raise NotFoundException(f"Sprint {sprint_id} does not appear to be associated with a board")
+
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={sprint['originBoardId']}&sprintId={sprint_id}")
         if sprint_report == False:
             raise NotFoundException(f"Could not find report for sprint {sprint_id} on board {sprint['board_id']}")
