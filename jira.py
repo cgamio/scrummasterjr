@@ -191,17 +191,17 @@ class Jira:
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
         if sprint == False:
-            raise Exception(f"Could not find sprint with id {sprint_id}")
+            raise NotFoundException(f"Could not find sprint with id {sprint_id}")
 
         # Get the Jira Sprint Report given a Board ID and Sprint ID
         try:
             board = sprint['originBoardId']
         except:
-            raise Exception(f"Sprint {sprint_id} does not appear to be associated with a board")
+            raise NotFoundException(f"Sprint {sprint_id} does not appear to be associated with a board")
 
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={sprint['originBoardId']}&sprintId={sprint_id}")
         if sprint_report == False:
-            raise Exception(f"Could not find report for sprint {sprint_id} on board {sprint['board_id']}")
+            raise NotFoundException(f"Could not find report for sprint {sprint_id} on board {sprint['board_id']}")
 
         # Use the Jira Sprint Report to generate metrics
         metrics = self.__calculateSprintMetrics(sprint_report)
