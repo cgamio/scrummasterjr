@@ -35,61 +35,6 @@ def test_getCommandDescriptions():
     assert jira.getCommandDescriptions() == expected_response
 
 # Test Data
-valid_response = json.dumps({
-    "issue_keys": {
-    "committed": [
-        "MADD-244",
-        "MADD-252",
-        "MADD-279",
-        "MADD-282",
-        "MADD-284",
-        "MADD-242",
-        "MADD-278"
-    ],
-    "completed": [
-    "MADD-244",
-    "MADD-252",
-    "MADD-253",
-    "MADD-279",
-    "MADD-282",
-    "MADD-284",
-    "MADD-286",
-    "MADD-287",
-    "MADD-290",
-    "MADD-291",
-        "MADD-294"
-    ],
-    "incomplete": [
-        "MADD-242",
-        "MADD-278"
-    ],
-    "removed": []
-    },
-    "items": {
-        "bugs_completed": 1,
-        "committed": 7,
-        "completed": 7,
-        "not_completed": 2,
-        "planned_completed": 5,
-        "removed": 0,
-        "stories_completed": 6,
-        "unplanned_bugs_completed": 1,
-        "unplanned_completed": 2,
-        "unplanned_stories_completed": 1
-    },
-    "points": {
-        "committed": 23,
-        "completed": 16,
-        "feature_completed": 16,
-        "not_completed": 8,
-        "optimization_completed": 0,
-        "planned_completed": 15,
-        "removed": 0,
-        "unplanned_completed": 1
-    }
-}, sort_keys=True, indent=4, separators=(",", ": "))
-valid_response = f"```{valid_response}```"
-
 sprint_id = '1234'
 board_id = '4321'
 error_response = "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
