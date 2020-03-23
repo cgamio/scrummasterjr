@@ -446,6 +446,160 @@ punted_sprint_data = {
         }
     }
 }
+added_sprint_data = {
+    'sprint_report_response' : {
+        'contents' : {
+            'completedIssues': [
+            {
+                'key': 'NORMAL-1',
+                'typeName': 'Story',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-2',
+                'typeName': 'Bug',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-3',
+                'typeName': 'Epic',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-4',
+                'typeName': 'Task',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'ADDED-1',
+                'typeName': 'Story',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 1
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 1
+                    }
+                }
+            },
+            {
+                'key': 'ADDED-2',
+                'typeName': 'Bug',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 1
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 1
+                    }
+                }
+            },
+            {
+                'key': 'ADDED-3',
+                'typeName': 'Epic',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 1
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 1
+                    }
+                }
+            },
+            {
+                'key': 'ADDED-4',
+                'typeName': 'Task',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 1
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 1
+                    }
+                }
+            },
+        ],
+            'issueKeysAddedDuringSprint': {'ADDED-1':'', 'ADDED-2':'', 'ADDED-3':'', 'ADDED-4':''},
+            'issuesNotCompletedInCurrentSprint': {},
+            'puntedIssues': {}
+        }
+    },
+    'expected_response': {
+        "issue_keys": {
+            "committed": ['NORMAL-1', 'NORMAL-2'],
+            "completed": ['NORMAL-1', 'NORMAL-2', 'NORMAL-3', 'NORMAL-4', 'ADDED-1', 'ADDED-2', 'ADDED-3', 'ADDED-4'],
+        "incomplete": [],
+        "removed": []
+        },
+        "items": {
+            "bugs_completed": 2,
+            "committed": 2,
+            "completed": 4,
+            "not_completed": 0,
+            "planned_completed": 2,
+            "removed": 0,
+            "stories_completed": 2,
+            "unplanned_bugs_completed": 1,
+            "unplanned_completed": 2,
+            "unplanned_stories_completed": 1
+        },
+        "points": {
+            "committed": 6,
+            "completed": 8,
+            "feature_completed": 4,
+            "not_completed": 0,
+            "optimization_completed": 0,
+            "planned_completed": 6,
+            "removed": 0,
+            "unplanned_completed": 2
+        }
+    }
+}
+
 
 @patch('jira.requests')
 @pytest.mark.parametrize('message, sprint_get_response, report_get_response,  expected_response', [
@@ -454,6 +608,7 @@ punted_sprint_data = {
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(normal_sprint_data['sprint_report_response'])}, normal_sprint_data['expected_response']),
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(incomplete_work_sprint_data['sprint_report_response'])}, incomplete_work_sprint_data['expected_response']),
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(punted_sprint_data['sprint_report_response'])}, punted_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(added_sprint_data['sprint_report_response'])}, added_sprint_data['expected_response']),
 ])
 def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
 
