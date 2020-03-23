@@ -193,7 +193,6 @@ normal_sprint_data = {
         }
     }
 }
-
 incomplete_work_sprint_data = {
     'sprint_report_response' : {
         'contents' : {
@@ -348,6 +347,160 @@ incomplete_work_sprint_data = {
         }
     }
 }
+punted_sprint_data = {
+    'sprint_report_response' : {
+        'contents' : {
+            'completedIssues': [
+            {
+                'key': 'NORMAL-1',
+                'typeName': 'Story',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-2',
+                'typeName': 'Bug',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-3',
+                'typeName': 'Epic',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-4',
+                'typeName': 'Task',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+        ],
+            'issueKeysAddedDuringSprint': {},
+            'issuesNotCompletedInCurrentSprint': {},
+            'puntedIssues': [
+                {
+                    'key': 'PUNTED-1',
+                    'typeName': 'Story',
+                    'estimateStatistic': {
+                        'statFieldValue': {
+                                'value': 1
+                        }
+                    },
+                    'currentEstimateStatistic': {
+                        'statFieldValue': {
+                            'value': 1
+                        }
+                    }
+                },
+                {
+                    'key': 'PUNTED-2',
+                    'typeName': 'Bug',
+                    'estimateStatistic': {
+                        'statFieldValue': {
+                                'value': 1
+                        }
+                    },
+                    'currentEstimateStatistic': {
+                        'statFieldValue': {
+                            'value': 1
+                        }
+                    }
+                },
+                {
+                    'key': 'PUNTED-3',
+                    'typeName': 'Epic',
+                    'estimateStatistic': {
+                        'statFieldValue': {
+                                'value': 1
+                        }
+                    },
+                    'currentEstimateStatistic': {
+                        'statFieldValue': {
+                            'value': 1
+                        }
+                    }
+                },
+                {
+                    'key': 'PUNTED-4',
+                    'typeName': 'Task',
+                    'estimateStatistic': {
+                        'statFieldValue': {
+                                'value': 1
+                        }
+                    },
+                    'currentEstimateStatistic': {
+                        'statFieldValue': {
+                            'value': 1
+                        }
+                    }
+                },
+            ],
+        }
+    },
+    'expected_response': {
+        "issue_keys": {
+            "committed": ['NORMAL-1', 'NORMAL-2', 'PUNTED-1', 'PUNTED-2'],
+            "completed": ['NORMAL-1', 'NORMAL-2', 'NORMAL-3', 'NORMAL-4'],
+        "incomplete": [],
+        "removed": ['PUNTED-1', 'PUNTED-2', 'PUNTED-3', 'PUNTED-4']
+        },
+        "items": {
+            "bugs_completed": 1,
+            "committed": 4,
+            "completed": 2,
+            "not_completed": 0,
+            "planned_completed": 2,
+            "removed": 2,
+            "stories_completed": 1,
+            "unplanned_bugs_completed": 0,
+            "unplanned_completed": 0,
+            "unplanned_stories_completed": 0
+        },
+        "points": {
+            "committed": 8,
+            "completed": 6,
+            "feature_completed": 3,
+            "not_completed": 0,
+            "optimization_completed": 0,
+            "planned_completed": 6,
+            "removed": 2,
+            "unplanned_completed": 0
+        }
+    }
+}
 
 @patch('jira.requests')
 @pytest.mark.parametrize('message, sprint_get_response, report_get_response,  expected_response', [
@@ -355,6 +508,7 @@ incomplete_work_sprint_data = {
     ('sprint metrics 1234', {}, {'status_code': 500, 'text': 'No Board Found!'}, error_response),
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(normal_sprint_data['sprint_report_response'])}, normal_sprint_data['expected_response']),
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(incomplete_work_sprint_data['sprint_report_response'])}, incomplete_work_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(punted_sprint_data['sprint_report_response'])}, punted_sprint_data['expected_response']),
 ])
 def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
 
