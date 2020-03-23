@@ -599,6 +599,103 @@ added_sprint_data = {
         }
     }
 }
+changed_estimate_sprint_data = {
+    'sprint_report_response' : {
+        'contents' : {
+            'completedIssues': [
+            {
+                'key': 'NORMAL-1',
+                'typeName': 'Story',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 6
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-2',
+                'typeName': 'Bug',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-3',
+                'typeName': 'Epic',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+            {
+                'key': 'NORMAL-4',
+                'typeName': 'Task',
+                'estimateStatistic': {
+                    'statFieldValue': {
+                            'value': 3
+                    }
+                },
+                'currentEstimateStatistic': {
+                    'statFieldValue': {
+                        'value': 3
+                    }
+                }
+            },
+        ],
+            'issueKeysAddedDuringSprint': {},
+            'issuesNotCompletedInCurrentSprint': {},
+            'puntedIssues': {}
+        }
+    },
+    'expected_response': {
+        "issue_keys": {
+            "committed": ['NORMAL-1', 'NORMAL-2'],
+            "completed": ['NORMAL-1', 'NORMAL-2', 'NORMAL-3', 'NORMAL-4'],
+        "incomplete": [],
+        "removed": []
+        },
+        "items": {
+            "bugs_completed": 1,
+            "committed": 2,
+            "completed": 2,
+            "not_completed": 0,
+            "planned_completed": 2,
+            "removed": 0,
+            "stories_completed": 1,
+            "unplanned_bugs_completed": 0,
+            "unplanned_completed": 0,
+            "unplanned_stories_completed": 0
+        },
+        "points": {
+            "committed": 6,
+            "completed": 9,
+            "feature_completed": 6,
+            "not_completed": 0,
+            "optimization_completed": 0,
+            "planned_completed": 9, # This is a point of contention among the SM's but is a crazy edge case
+            "removed": 0,
+            "unplanned_completed": 3
+        }
+    }
+}
 
 
 @patch('jira.requests')
@@ -609,6 +706,7 @@ added_sprint_data = {
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(incomplete_work_sprint_data['sprint_report_response'])}, incomplete_work_sprint_data['expected_response']),
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(punted_sprint_data['sprint_report_response'])}, punted_sprint_data['expected_response']),
     ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(added_sprint_data['sprint_report_response'])}, added_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(changed_estimate_sprint_data['sprint_report_response'])}, changed_estimate_sprint_data['expected_response']),
 ])
 def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
 
