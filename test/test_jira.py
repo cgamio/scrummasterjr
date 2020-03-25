@@ -730,5 +730,18 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
     else:
         assert response == expected_response
 
-def test_getSprintReportCommand():
-    assert jira.getSprintReportCommand('') == 'A dummy report'
+@patch('jira.requests')
+@pytest.mark.parametrize('message, sprint_get_response, report_get_response, expected_response', [
+    ('sprint report 1234', {'status_code': 500, 'text': 'No Sprint Found!'}, {}, 'Sorry, I had trouble getting metrics for that sprint. I\'ve logged an error'),
+    ('sprint report 5432', valid_sprint_response, {'status_code': 200, 'text': json.dumps(normal_sprint_data['sprint_report_response'])}, 'A dummy report')
+])
+def test_getSprintReportCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
+    def request_side_effect(verb, url, *args, **kwargs):
+        if 'sprint/' in url:
+            return MagicMock(**sprint_get_response)
+        if 'rapid/charts/sprintreport' in url:
+            return MagicMock(**report_get_response)
+
+    mock_requests.request.side_effect = request_side_effect
+
+    assert jira.getSprintReportCommand(message) == expected_response
