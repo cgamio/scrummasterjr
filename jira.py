@@ -214,15 +214,19 @@ class Jira:
         metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
         return f"```{metrics_text}```"
 
+    def getSprintReportCommand(self, message):
+        return "A dummy report"
 
     def getCommandsRegex(self):
         return {
             'test jira': self.testConnectionCommand,
-            'sprint metrics [0-9]+': self.getSprintMetricsCommand
+            'sprint metrics [0-9]+': self.getSprintMetricsCommand,
+            'sprint report [0-9]+': self.getSprintReportCommand
         }
 
     def getCommandDescriptions(self):
         return {
             'test jira': 'tests my connection to jira',
-            'sprint metrics [sprint-id]': 'get metrics for a given sprint'
+            'sprint metrics [sprint-id]': 'get metrics for a given sprint',
+            'sprint report [sprint-id]': 'get a quick sprint report for a given sprint'
         }

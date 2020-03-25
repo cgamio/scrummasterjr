@@ -21,7 +21,8 @@ def test_testConnectionCommand(mock_requests, http_code, expected_response):
 def test_getCommandsRegex():
     expected_response = {
         'test jira': jira.testConnectionCommand,
-        'sprint metrics [0-9]+': jira.getSprintMetricsCommand
+        'sprint metrics [0-9]+': jira.getSprintMetricsCommand,
+        'sprint report [0-9]+': jira.getSprintReportCommand
     }
 
     assert jira.getCommandsRegex() == expected_response
@@ -29,7 +30,8 @@ def test_getCommandsRegex():
 def test_getCommandDescriptions():
     expected_response = {
         'test jira': 'tests my connection to jira',
-        'sprint metrics [sprint-id]': 'get metrics for a given sprint'
+        'sprint metrics [sprint-id]': 'get metrics for a given sprint',
+        'sprint report [sprint-id]': 'get a quick sprint report for a given sprint'
     }
 
     assert jira.getCommandDescriptions() == expected_response
@@ -727,3 +729,6 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
         assert result_dict == expected_response
     else:
         assert response == expected_response
+
+def test_getSprintReportCommand():
+    assert jira.getSprintReportCommand('') == 'A dummy report'
