@@ -186,7 +186,7 @@ class Jira:
             "issue_keys": issue_keys
         }
 
-    def __getSprintMetrics(self, sprint_id):
+    def __getSprintReport(self, sprint_id):
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
         if sprint == False:
@@ -196,16 +196,14 @@ class Jira:
         if sprint_report == False:
             raise Exception(f"Could not find report for sprint {sprint_id} on board {sprint['board_id']}")
 
-        # Use the Jira Sprint Report to generate metrics
-        metrics = self.__calculateSprintMetrics(sprint_report)
-
-        return metrics
+        return sprint_report
 
     def getSprintMetricsCommand(self, message):
         sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
 
         try:
-            metrics = self.__getSprintMetrics(sprintid)
+            sprint_report = self.__getSprintReport(sprintid)
+            metrics = self.__calculateSprintMetrics(sprint_report)
 
         except BaseException as e:
             logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{str(e)}")
@@ -218,7 +216,9 @@ class Jira:
         sprintid = re.search('sprint report ([0-9]+)', message).group(1)
 
         try:
-            metrics = self.__getSprintMetrics(sprintid)
+            sprint_report = self.__getSprintReport(sprintid)
+            metrics = self.__calculateSprintMetrics(sprint_report)
+            
         except BaseException as e:
             logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
