@@ -210,7 +210,26 @@ class Jira:
             return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
 
         metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
+
         return f"```{metrics_text}```"
+
+    def __getSprintReportData(self, sprint_report):
+        report = {}
+
+        try:
+            report['sprint_number'] = re.search('(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
+        except:
+            logging.error(f"Could not parse sprint number from \"{sprint_report['name']}\"")
+            raise Exception(f"Could not parse sprint number from \"{sprint_report['name']}\"")
+
+        try:
+            report['sprint_start'] = sprint_report['sprint']['startDate']
+            report['sprint_end'] = sprint_report['sprint']['endDate']
+        except:
+            # Every sprint doesn't have a start / end date
+            logging.warning('This sprint does not have start and/or end dates')
+
+        return report
 
     def getSprintReportCommand(self, message):
         sprintid = re.search('sprint report ([0-9]+)', message).group(1)
@@ -218,8 +237,8 @@ class Jira:
         report = {}
         try:
             sprint_report = self.__getSprintReport(sprintid)
+            report = self.__getSprintReportData(sprint_report)
             report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
-
         except BaseException as e:
             logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble generating a report for that sprint. I've logged an error"

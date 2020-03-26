@@ -52,6 +52,11 @@ valid_sprint_response = okRequestResponse({'originBoardId': 123})
 
 normal_sprint_data = {
     'sprint_report_response' : {
+        'sprint': {
+            'startDate': '01/Jan/20 1:00 AM',
+            'endDate': '15/Jan/20 1:00 AM',
+            'name': 'Sprint 1',
+        },
         'contents' : {
             'completedIssues': [
             {
@@ -738,6 +743,9 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
         assert response == expected_response
 
 valid_report = {
+    'sprint_number': '1',
+    'sprint_start': '01/Jan/20 1:00 AM',
+    'sprint_end': '15/Jan/20 1:00 AM',
     'issue_metrics': normal_sprint_data['expected_response']
 }
 
