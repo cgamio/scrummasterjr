@@ -242,6 +242,12 @@ class Jira:
             # Every sprint doesn't have a start / end date
             logging.warning('This sprint does not have start and/or end dates')
 
+        try:
+            report['sprint_goals'] = sprint_report['sprint']['goal'].split("\n")
+        except:
+            logging.error(f"Could not find or parse sprint goal")
+            raise Exception(f"Could not find or parse sprint goal")
+
         return report
 
     def getSprintReportCommand(self, message):

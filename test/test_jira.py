@@ -56,6 +56,7 @@ normal_sprint_data = {
             'startDate': '01/Jan/20 1:00 AM',
             'endDate': '15/Jan/20 1:00 AM',
             'name': 'Sprint 1',
+            'goal': 'Goal 1\nGoal 2\nGoal 3'
         },
         'contents' : {
             'completedIssues': [
@@ -766,7 +767,8 @@ valid_report = {
     'sprint_number': '1',
     'sprint_start': '01/Jan/20 1:00 AM',
     'sprint_end': '15/Jan/20 1:00 AM',
-    'issue_metrics': normal_sprint_data['expected_response']
+    'issue_metrics': normal_sprint_data['expected_response'],
+    'sprint_goals': ['Goal 1', 'Goal 2', 'Goal 3']
 }
 
 @patch('jira.requests')
