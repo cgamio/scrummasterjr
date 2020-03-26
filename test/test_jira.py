@@ -737,10 +737,14 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
     else:
         assert response == expected_response
 
+valid_report = {
+    'issue_metrics': normal_sprint_data['expected_response']
+}
+
 @patch('jira.requests')
 @pytest.mark.parametrize('message, sprint_get_response, report_get_response, expected_response', [
-    ('sprint report 1234', {'status_code': 500, 'text': 'No Sprint Found!'}, {}, 'Sorry, I had trouble generating a report for that sprint. I\'ve logged an error'),
-    ('sprint report 5432', valid_sprint_response, {'status_code': 200, 'text': json.dumps(normal_sprint_data['sprint_report_response'])}, 'A dummy report')
+    ('sprint report 1234', badRequestResponse('No Sprint Found!'), {}, 'Sorry, I had trouble generating a report for that sprint. I\'ve logged an error'),
+    ('sprint report 5432', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), valid_report)
 ])
 def test_getSprintReportCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
     def request_side_effect(verb, url, *args, **kwargs):
