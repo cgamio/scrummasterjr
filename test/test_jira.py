@@ -6,6 +6,13 @@ import re
 
 jira = jira.Jira(" ", " ", " ")
 
+def okRequestResponse(json_data):
+    return {'status_code': 200, 'text': json.dumps(json_data)}
+
+def badRequestResponse(text):
+    return {'status_code': 500, 'text': text}
+
+
 @patch('jira.requests')
 @pytest.mark.parametrize('http_code , expected_response', [
     (200, "My connection to Jira is up and running!"),
@@ -41,7 +48,7 @@ sprint_id = '1234'
 board_id = '4321'
 error_response = "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
 
-valid_sprint_response = {'status_code': 200, 'text': json.dumps({ 'originBoardId': 123})}
+valid_sprint_response = okRequestResponse({'originBoardId': 123})
 
 normal_sprint_data = {
     'sprint_report_response' : {
@@ -702,13 +709,13 @@ changed_estimate_sprint_data = {
 
 @patch('jira.requests')
 @pytest.mark.parametrize('message, sprint_get_response, report_get_response,  expected_response', [
-    ('sprint metrics 1234', {'status_code': 500, 'text': 'No Sprint Found!'}, {}, error_response),
-    ('sprint metrics 1234', {}, {'status_code': 500, 'text': 'No Board Found!'}, error_response),
-    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(normal_sprint_data['sprint_report_response'])}, normal_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(incomplete_work_sprint_data['sprint_report_response'])}, incomplete_work_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(punted_sprint_data['sprint_report_response'])}, punted_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(added_sprint_data['sprint_report_response'])}, added_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, {'status_code': 200, 'text': json.dumps(changed_estimate_sprint_data['sprint_report_response'])}, changed_estimate_sprint_data['expected_response']),
+    ('sprint metrics 1234', badRequestResponse('No Sprint Found!'), {}, error_response),
+    ('sprint metrics 1234', {}, badRequestResponse('No Board Found!'), error_response),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), normal_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(incomplete_work_sprint_data['sprint_report_response']), incomplete_work_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(punted_sprint_data['sprint_report_response']), punted_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(added_sprint_data['sprint_report_response']), added_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(changed_estimate_sprint_data['sprint_report_response']), changed_estimate_sprint_data['expected_response']),
 ])
 def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
 
