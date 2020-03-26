@@ -149,6 +149,10 @@ normal_sprint_data = {
             "planned_completed": 6,
             "removed": 0,
             "unplanned_completed": 0
+        },
+        "meta": {
+            "predictability": 100,
+            "predictability_of_commitments": 100
         }
     }
 }
@@ -303,6 +307,10 @@ incomplete_work_sprint_data = {
             "planned_completed": 6,
             "removed": 0,
             "unplanned_completed": 0
+        },
+        "meta": {
+            "predictability": 75,
+            "predictability_of_commitments": 75
         }
     }
 }
@@ -457,6 +465,10 @@ punted_sprint_data = {
             "planned_completed": 6,
             "removed": 2,
             "unplanned_completed": 0
+        },
+        "meta": {
+            "predictability": 75,
+            "predictability_of_commitments": 75
         }
     }
 }
@@ -610,6 +622,10 @@ added_sprint_data = {
             "planned_completed": 6,
             "removed": 0,
             "unplanned_completed": 2
+        },
+        "meta": {
+            "predictability": 133,
+            "predictability_of_commitments": 100
         }
     }
 }
@@ -707,6 +723,10 @@ changed_estimate_sprint_data = {
             "planned_completed": 9, # This is a point of contention among the SM's but is a crazy edge case
             "removed": 0,
             "unplanned_completed": 3
+        },
+        "meta": {
+            "predictability": 150,
+            "predictability_of_commitments": 150
         }
     }
 }
