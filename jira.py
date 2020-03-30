@@ -199,15 +199,19 @@ class Jira:
             "meta": meta
         }
 
-    def __getSprintReport(self, sprint_id):
+    def __getSprint(self, sprint_id):
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
         if sprint == False:
             raise Exception(f"Could not find sprint with id {sprint_id}")
 
-        sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={sprint['originBoardId']}&sprintId={sprint_id}")
+        return sprint
+
+    def __getSprintReport(self, sprint_id, board_id):
+
+        sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
         if sprint_report == False:
-            raise Exception(f"Could not find report for sprint {sprint_id} on board {sprint['board_id']}")
+            raise Exception(f"Could not find report for sprint {sprint_id} on board {board_id}")
 
         return sprint_report
 
@@ -215,7 +219,8 @@ class Jira:
         sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
 
         try:
-            sprint_report = self.__getSprintReport(sprintid)
+            sprint = self.__getSprint(sprintid)
+            sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
             metrics = self.__calculateSprintMetrics(sprint_report)
 
         except BaseException as e:
@@ -255,7 +260,8 @@ class Jira:
 
         report = {}
         try:
-            sprint_report = self.__getSprintReport(sprintid)
+            sprint = self.__getSprint(sprintid)
+            sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
             report = self.__getSprintReportData(sprint_report)
             report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
         except BaseException as e:
