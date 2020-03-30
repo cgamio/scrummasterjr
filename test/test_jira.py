@@ -50,6 +50,8 @@ error_response = "Sorry, I had trouble getting metrics for that sprint. I've log
 
 valid_sprint_response = okRequestResponse({'originBoardId': 123})
 
+valid_board_response = okRequestResponse({'projectName' : 'The Best Team', 'projectKey':'TBT'})
+
 normal_sprint_data = {
     'sprint_report_response' : {
         'sprint': {
@@ -734,22 +736,24 @@ changed_estimate_sprint_data = {
 
 
 @patch('jira.requests')
-@pytest.mark.parametrize('message, sprint_get_response, report_get_response,  expected_response', [
-    ('sprint metrics 1234', badRequestResponse('No Sprint Found!'), {}, error_response),
-    ('sprint metrics 1234', {}, badRequestResponse('No Board Found!'), error_response),
-    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), normal_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(incomplete_work_sprint_data['sprint_report_response']), incomplete_work_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(punted_sprint_data['sprint_report_response']), punted_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(added_sprint_data['sprint_report_response']), added_sprint_data['expected_response']),
-    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(changed_estimate_sprint_data['sprint_report_response']), changed_estimate_sprint_data['expected_response']),
+@pytest.mark.parametrize('message, sprint_get_response, report_get_response, board_get_response,  expected_response', [
+    ('sprint metrics 1234', badRequestResponse('No Sprint Found!'), {}, {}, error_response),
+    ('sprint metrics 1234', {}, badRequestResponse('No Board Found!'), {},  error_response),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), valid_board_response, normal_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(incomplete_work_sprint_data['sprint_report_response']), valid_board_response, incomplete_work_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(punted_sprint_data['sprint_report_response']), valid_board_response, punted_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(added_sprint_data['sprint_report_response']), valid_board_response, added_sprint_data['expected_response']),
+    ('sprint metrics 1234', valid_sprint_response, okRequestResponse(changed_estimate_sprint_data['sprint_report_response']), valid_board_response, changed_estimate_sprint_data['expected_response']),
 ])
-def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
+def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, report_get_response, board_get_response, expected_response):
 
     def request_side_effect(verb, url, *args, **kwargs):
         if 'sprint/' in url:
             return MagicMock(**sprint_get_response)
         if 'rapid/charts/sprintreport' in url:
             return MagicMock(**report_get_response)
+        if 'board/' in url:
+            return MagicMock(**board_get_response)
 
     mock_requests.request.side_effect = request_side_effect
 
@@ -768,20 +772,24 @@ valid_report = {
     'sprint_start': '01/Jan/20 1:00 AM',
     'sprint_end': '15/Jan/20 1:00 AM',
     'issue_metrics': normal_sprint_data['expected_response'],
-    'sprint_goals': ['Goal 1', 'Goal 2', 'Goal 3']
+    'sprint_goals': ['Goal 1', 'Goal 2', 'Goal 3'],
+    'project_name': "The Best Team",
+    'project_key': 'TBT'
 }
 
 @patch('jira.requests')
-@pytest.mark.parametrize('message, sprint_get_response, report_get_response, expected_response', [
-    ('sprint report 1234', badRequestResponse('No Sprint Found!'), {}, 'Sorry, I had trouble generating a report for that sprint. I\'ve logged an error'),
-    ('sprint report 5432', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), valid_report)
+@pytest.mark.parametrize('message, sprint_get_response, report_get_response, board_get_response, expected_response', [
+    ('sprint report 1234', badRequestResponse('No Sprint Found!'), {}, {}, 'Sorry, I had trouble generating a report for that sprint. I\'ve logged an error'),
+    ('sprint report 5432', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), valid_board_response, valid_report)
 ])
-def test_getSprintReportCommand(mock_requests, message, sprint_get_response, report_get_response, expected_response):
+def test_getSprintReportCommand(mock_requests, message, sprint_get_response, report_get_response, board_get_response, expected_response):
     def request_side_effect(verb, url, *args, **kwargs):
         if 'sprint/' in url:
             return MagicMock(**sprint_get_response)
         if 'rapid/charts/sprintreport' in url:
             return MagicMock(**report_get_response)
+        if 'board/' in url:
+            return MagicMock(**board_get_response)
 
     mock_requests.request.side_effect = request_side_effect
 

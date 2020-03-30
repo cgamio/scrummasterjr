@@ -207,6 +207,13 @@ class Jira:
 
         return sprint
 
+    def __getBoard(self, board_id):
+        board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
+        if board == False:
+            raise Exception(f"Could not find boad with id {board_id}")
+
+        return board
+
     def __getSprintReport(self, sprint_id, board_id):
 
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
@@ -264,6 +271,9 @@ class Jira:
             sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
             report = self.__getSprintReportData(sprint_report)
             report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
+            board = self.__getBoard(sprint['originBoardId'])
+            report['project_name'] = board['projectName']
+            report['project_key'] = board['projectKey']
         except BaseException as e:
             logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble generating a report for that sprint. I've logged an error"
