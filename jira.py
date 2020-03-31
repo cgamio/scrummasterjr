@@ -280,7 +280,7 @@ class Jira:
 
         return report
 
-    def getAverageVelocity(self, board_id):
+    def getAverageVelocity(self, board_id, sprint_id = None):
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
 
         if velocity_report == False:
@@ -288,16 +288,17 @@ class Jira:
 
         total = 0
         sprints = 0
+        found_sprint = True if sprint_id == None else False
 
         for sprint in sorted(velocity_report['velocityStatEntries'], reverse=True):
             if sprints >= 3:
                 # We only care about the last three sprints
                 break;
 
-            total = total +  velocity_report['velocityStatEntries'][sprint]['completed']['value']
-            sprints = sprints + 1
-
-        logging.error(f"Total: {total} Sprints: {sprints}")
+            if found_sprint == True or sprint_id == sprint:
+                found_sprint = True
+                total = total +  velocity_report['velocityStatEntries'][sprint]['completed']['value']
+                sprints = sprints + 1
 
         return int(total/sprints) if sprints > 0 else total
 
