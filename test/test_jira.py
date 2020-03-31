@@ -958,11 +958,11 @@ report_velocity_response = {
 }
 
 @patch('jira.requests')
-@pytest.mark.parametrize('message, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response', [
-    ('sprint report 5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, 'Sorry, I had trouble generating a report for that sprint. I\'ve logged an error'),
-    ('sprint report 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_report)
+@pytest.mark.parametrize('sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response', [
+    ('5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, Exception("Could not find sprint with id 5432")),
+    ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_report)
 ])
-def test_getSprintReportCommand(mock_requests, message, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response):
+def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response):
     def request_side_effect(verb, url, *args, **kwargs):
         if 'sprint/' in url:
             return MagicMock(**sprint_get_response)
@@ -975,4 +975,8 @@ def test_getSprintReportCommand(mock_requests, message, sprint_get_response, rep
 
     mock_requests.request.side_effect = request_side_effect
 
-    assert jira.getSprintReportCommand(message) == expected_response
+    if isinstance(expected_response, Exception):
+        with pytest.raises(Exception):
+            jira.generateAllSprintReportData(sprint_id)
+    else:
+        assert jira.generateAllSprintReportData(sprint_id) == expected_response

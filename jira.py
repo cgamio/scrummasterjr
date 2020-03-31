@@ -238,7 +238,7 @@ class Jira:
 
         return f"```{metrics_text}```"
 
-    def __getSprintReportData(self, sprint_report):
+    def __getJiraSprintReportData(self, sprint_report):
         report = {}
 
         try:
@@ -262,24 +262,30 @@ class Jira:
 
         return report
 
+    def generateAllSprintReportData(self, sprint_id):
+        report = {}
+
+        sprint = self.__getSprint(sprint_id)
+        sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
+        report = self.__getJiraSprintReportData(sprint_report)
+        report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
+        board = self.__getBoard(sprint['originBoardId'])
+        report['project_name'] = board['projectName']
+        report['project_key'] = board['projectKey']
+        report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
+
+        return report
+
     def getSprintReportCommand(self, message):
         sprintid = re.search('sprint report ([0-9]+)', message).group(1)
 
-        report = {}
         try:
-            sprint = self.__getSprint(sprintid)
-            sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
-            report = self.__getSprintReportData(sprint_report)
-            report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
-            board = self.__getBoard(sprint['originBoardId'])
-            report['project_name'] = board['projectName']
-            report['project_key'] = board['projectKey']
-            report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprintid)
+            report_data = self.__generateAllSprintReportData(sprintid)
         except BaseException as e:
             logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble generating a report for that sprint. I've logged an error"
 
-        return report
+        return report_data
 
     def getAverageVelocity(self, board_id, sprint_id = None):
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
