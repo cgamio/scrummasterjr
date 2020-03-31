@@ -794,3 +794,98 @@ def test_getSprintReportCommand(mock_requests, message, sprint_get_response, rep
     mock_requests.request.side_effect = request_side_effect
 
     assert jira.getSprintReportCommand(message) == expected_response
+
+velocity_response = {
+    'velocity_get_response': {
+        'velocityStatEntries': {
+            '0' : {
+                'estimated': {
+                    'value': 50.0
+                },
+                'completed': {
+                    'value': 50.0
+                }
+            },
+            '2': {
+                'estimated': {
+                    'value': 5.0
+                },
+                'completed' : {
+                    'value': 5.0
+                }
+            },
+            '3': {
+                'estimated': {
+                    'value': 10.0
+                },
+                'completed' : {
+                    'value': 10.0
+                }
+            },
+            '4': {
+                'estimated': {
+                    'value': 20.0
+                },
+                'completed': {
+                    'value': 20.0
+                }
+            },
+            '1': {
+                'estimated': {
+                    'value': 100.0
+                },
+                'completed': {
+                    'value': 100.0
+                }
+            }
+        }
+    },
+    'expected_response': 11
+}
+
+no_sprints_velocity_response = {
+    'velocity_get_response': {
+        'velocityStatEntries': {
+        }
+    },
+    'expected_response': 0
+}
+
+only_two_velocity_response = {
+    'velocity_get_response' : {
+        'velocityStatEntries': {
+            '1': {
+                'estimated': {
+                    'value': 5.0
+                },
+                'completed' : {
+                    'value': 5.0
+                }
+            },
+            '2': {
+                'estimated': {
+                    'value': 10.0
+                },
+                'completed' : {
+                    'value': 10.0
+                }
+            }
+        }
+    },
+    'expected_response': 7
+}
+
+@patch('jira.requests')
+@pytest.mark.parametrize('velocity_get_response, expected_response', [
+    (okRequestResponse(velocity_response['velocity_get_response']), velocity_response['expected_response']),
+    (okRequestResponse(no_sprints_velocity_response['velocity_get_response']), no_sprints_velocity_response['expected_response']),
+    (okRequestResponse(only_two_velocity_response['velocity_get_response']), only_two_velocity_response['expected_response'])
+])
+def test_getAverageVelocity(mock_requests, velocity_get_response, expected_response):
+    def request_side_effect(verb, url, *args, **kwargs):
+        print(url)
+        return MagicMock(**velocity_get_response)
+
+    mock_requests.request.side_effect = request_side_effect
+
+    assert jira.getAverageVelocity('1234') == expected_response
