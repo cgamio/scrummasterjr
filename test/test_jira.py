@@ -767,33 +767,6 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
     else:
         assert response == expected_response
 
-valid_report = {
-    'sprint_number': '1',
-    'sprint_start': '01/Jan/20 1:00 AM',
-    'sprint_end': '15/Jan/20 1:00 AM',
-    'issue_metrics': normal_sprint_data['expected_response'],
-    'sprint_goals': ['Goal 1', 'Goal 2', 'Goal 3'],
-    'project_name': "The Best Team",
-    'project_key': 'TBT'
-}
-
-@patch('jira.requests')
-@pytest.mark.parametrize('message, sprint_get_response, report_get_response, board_get_response, expected_response', [
-    ('sprint report 1234', badRequestResponse('No Sprint Found!'), {}, {}, 'Sorry, I had trouble generating a report for that sprint. I\'ve logged an error'),
-    ('sprint report 5432', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), valid_board_response, valid_report)
-])
-def test_getSprintReportCommand(mock_requests, message, sprint_get_response, report_get_response, board_get_response, expected_response):
-    def request_side_effect(verb, url, *args, **kwargs):
-        if 'sprint/' in url:
-            return MagicMock(**sprint_get_response)
-        if 'rapid/charts/sprintreport' in url:
-            return MagicMock(**report_get_response)
-        if 'board/' in url:
-            return MagicMock(**board_get_response)
-
-    mock_requests.request.side_effect = request_side_effect
-
-    assert jira.getSprintReportCommand(message) == expected_response
 
 velocity_response = {
     'velocity_get_response': {
@@ -941,3 +914,65 @@ def test_getAverageVelocity(mock_requests, velocity_get_response, sprint_id,  ex
         assert jira.getAverageVelocity('1234') == expected_response
     else:
         assert jira.getAverageVelocity('1234', sprint_id) == expected_response
+
+valid_report = {
+    'sprint_number': '1',
+    'sprint_start': '01/Jan/20 1:00 AM',
+    'sprint_end': '15/Jan/20 1:00 AM',
+    'issue_metrics': normal_sprint_data['expected_response'],
+    'sprint_goals': ['Goal 1', 'Goal 2', 'Goal 3'],
+    'project_name': "The Best Team",
+    'project_key': 'TBT',
+    'average_velocity': 21
+}
+
+report_velocity_response = {
+    'velocity_get_response': {
+        'velocityStatEntries': {
+            '1234' : {
+                'estimated': {
+                    'value': 50.0
+                },
+                'completed': {
+                    'value': 50.0
+                }
+            },
+            '1233': {
+                'estimated': {
+                    'value': 5.0
+                },
+                'completed' : {
+                    'value': 5.0
+                }
+            },
+            '1232': {
+                'estimated': {
+                    'value': 10.0
+                },
+                'completed' : {
+                    'value': 10.0
+                }
+            }
+        }
+    }
+}
+
+@patch('jira.requests')
+@pytest.mark.parametrize('message, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response', [
+    ('sprint report 5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, 'Sorry, I had trouble generating a report for that sprint. I\'ve logged an error'),
+    ('sprint report 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_report)
+])
+def test_getSprintReportCommand(mock_requests, message, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response):
+    def request_side_effect(verb, url, *args, **kwargs):
+        if 'sprint/' in url:
+            return MagicMock(**sprint_get_response)
+        if 'rapid/charts/sprintreport' in url:
+            return MagicMock(**report_get_response)
+        if 'board/' in url:
+            return MagicMock(**board_get_response)
+        if 'rapid/charts/velocity' in url:
+            return MagicMock(**velocity_get_response)
+
+    mock_requests.request.side_effect = request_side_effect
+
+    assert jira.getSprintReportCommand(message) == expected_response

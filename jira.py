@@ -274,6 +274,7 @@ class Jira:
             board = self.__getBoard(sprint['originBoardId'])
             report['project_name'] = board['projectName']
             report['project_key'] = board['projectKey']
+            report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprintid)
         except BaseException as e:
             logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble generating a report for that sprint. I've logged an error"
