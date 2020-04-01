@@ -285,7 +285,35 @@ class Jira:
             logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble generating a report for that sprint. I've logged an error"
 
-        return report_data
+        blocks = []
+
+        divider_block = {
+    			"type": "divider"
+    		}
+
+        blocks.append({
+    			"type": "image",
+    			"title": {
+    				"type": "plain_text",
+    				"text": "Order Up!"
+    			},
+    			"image_url": "https://media.giphy.com/media/l1JojmmBMELYFKJc4/giphy.gif",
+    			"alt_text": "Order Up!"
+    		})
+        blocks.append(divider_block)
+
+        goals_string = '\n'.join(report_data['sprint_goals'])
+        blocks.append({
+    			"type": "section",
+    			"text": {
+    				"type": "mrkdwn",
+    				"text": f"*Project Name*: {report_data['project_name']}\n*Sprint {report_data['sprint_number']}*\n{goals_string}"
+    			}
+    		})
+
+        return {
+            "blocks": blocks
+            }
 
     def getAverageVelocity(self, board_id, sprint_id = None):
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
