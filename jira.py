@@ -280,7 +280,7 @@ class Jira:
         sprintid = re.search('sprint report ([0-9]+)', message).group(1)
 
         try:
-            report_data = self.__generateAllSprintReportData(sprintid)
+            report_data = self.generateAllSprintReportData(sprintid)
         except BaseException as e:
             logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
             return "Sorry, I had trouble generating a report for that sprint. I've logged an error"
