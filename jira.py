@@ -231,7 +231,7 @@ class Jira:
             metrics = self.__calculateSprintMetrics(sprint_report)
 
         except BaseException as e:
-            logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{str(e)}")
+            logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{e}")
             return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
 
         metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
