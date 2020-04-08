@@ -71,7 +71,11 @@ def handle_mention(event_data):
                 if re.search(regex, text):
                     response = set.getCommandsRegex()[regex](text)
 
-        slack_client.chat_postMessage(channel=message["channel"], text=response)
+        if type(response) is dict:
+            response['channel'] = message['channel']
+            slack_client.chat_postMessage(response)
+        else:
+            slack_client.chat_postMessage(channel=message["channel"], text=response)
 
 # Start the server on port 80
 if __name__ == "__main__":
