@@ -332,14 +332,14 @@ class Jira:
         		}
             blocks.append(type_block)
 
-            for metric in data['issue_metrics'][type].keys():
+            for metric in report_data['issue_metrics'][type].keys():
                 sprint_metrics.append({
     					"type": "plain_text",
     					"text": f"{metric}"
     				})
                 sprint_metrics.append({
     					"type": "plain_text",
-    					"text": f"{data['issue_metrics'][type][metric]}"
+    					"text": f"{report_data['issue_metrics'][type][metric]}"
     				})
                 if len(sprint_metrics) > 8:
                     blocks.append({
