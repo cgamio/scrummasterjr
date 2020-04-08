@@ -311,6 +311,51 @@ class Jira:
     			}
     		})
 
+        blocks.append(divider_block)
+
+        blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Metrics:*"
+                }
+                })
+
+        sprint_metrics = []
+        for type in ['items', 'points', 'meta']:
+            type_block = {
+        			"type": "section",
+        			"text": {
+        				"type": "mrkdwn",
+        				"text": f"*{type}*"
+        			}
+        		}
+            blocks.append(type_block)
+
+            for metric in data['issue_metrics'][type].keys():
+                sprint_metrics.append({
+    					"type": "plain_text",
+    					"text": f"{metric}"
+    				})
+                sprint_metrics.append({
+    					"type": "plain_text",
+    					"text": f"{data['issue_metrics'][type][metric]}"
+    				})
+                if len(sprint_metrics) > 8:
+                    blocks.append({
+                			"type": "section",
+                			"fields": sprint_metrics
+                    })
+                    sprint_metrics = []
+
+            if len(sprint_metrics) > 0:
+                sprint_metrics_block = {
+            			"type": "section",
+            			"fields": sprint_metrics
+                }
+                blocks.append(sprint_metrics_block)
+                sprint_metrics = []
+
         return {
             "blocks": blocks
             }
