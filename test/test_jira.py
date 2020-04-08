@@ -50,7 +50,7 @@ error_response = "Sorry, I had trouble getting metrics for that sprint. I've log
 
 valid_sprint_response = okRequestResponse({'originBoardId': 123})
 
-valid_board_response = okRequestResponse({'projectName' : 'The Best Team', 'projectKey':'TBT'})
+valid_board_response = okRequestResponse({'location': {'projectName' : 'The Best Team', 'projectKey':'TBT'}})
 
 normal_sprint_data = {
     'sprint_report_response' : {

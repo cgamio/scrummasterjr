@@ -270,8 +270,8 @@ class Jira:
         report = self.__getJiraSprintReportData(sprint_report)
         report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
         board = self.__getBoard(sprint['originBoardId'])
-        report['project_name'] = board['projectName']
-        report['project_key'] = board['projectKey']
+        report['project_name'] = board['location']['projectName']
+        report['project_key'] = board['location']['projectKey']
         report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
 
         return report
