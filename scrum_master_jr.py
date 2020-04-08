@@ -73,8 +73,10 @@ def handle_mention(event_data):
 
         if type(response) is dict:
             response['channel'] = message['channel']
+            logging.error('Responding to message with dictionary')
             slack_client.chat_postMessage(**response)
         else:
+            logging.error('Responding to message with text')
             slack_client.chat_postMessage(channel=message["channel"], text=response)
 
 # Start the server on port 80
