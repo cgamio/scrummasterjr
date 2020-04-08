@@ -73,7 +73,7 @@ def handle_mention(event_data):
 
         if type(response) is dict:
             response['channel'] = message['channel']
-            slack_client.chat_postMessage(response)
+            slack_client.chat_postMessage(**response)
         else:
             slack_client.chat_postMessage(channel=message["channel"], text=response)
 
