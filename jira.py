@@ -244,7 +244,6 @@ class Jira:
         try:
             report['sprint_number'] = re.search('(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
         except:
-            logging.error(f"Could not parse sprint number from \"{sprint_report['name']}\"")
             raise Exception(f"Could not parse sprint number from \"{sprint_report['name']}\"")
 
         try:
@@ -257,7 +256,6 @@ class Jira:
         try:
             report['sprint_goals'] = sprint_report['sprint']['goal'].split("\n")
         except:
-            logging.error(f"Could not find or parse sprint goal")
             raise Exception(f"Could not find or parse sprint goal")
 
         return report
