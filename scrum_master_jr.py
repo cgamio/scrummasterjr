@@ -78,7 +78,7 @@ def handle_mention(event_data):
         for set in commandsets:
             for regex in set.getCommandsRegex().keys():
                 if re.search(regex, text):
-                    thread = threading.Thread(target=handle_response, args=(set.getCommandsRegex()[regex], text))
+                    thread = threading.Thread(target=handle_response, args=(set.getCommandsRegex()[regex], message))
                     thread.start()
                     return
 
