@@ -23,7 +23,7 @@ def test_testConnectionCommand(mock_requests, http_code, expected_response):
 
     response = jira.testConnectionCommand("")
 
-    assert response == expected_response
+    assert response == {'text': expected_response}
 
 def test_getCommandsRegex():
     expected_response = {
@@ -761,11 +761,11 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
 
     if isinstance(expected_response,dict):
         strip_blockqoutes = re.compile('```([^`]*)```', re.MULTILINE)
-        result_dict = json.loads(strip_blockqoutes.match(response).group(1))
+        result_dict = json.loads(strip_blockqoutes.match(response['text']).group(1))
 
         assert result_dict == expected_response
     else:
-        assert response == expected_response
+        assert response == {'text': expected_response}
 
 
 velocity_response = {

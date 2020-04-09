@@ -36,12 +36,12 @@ class Jira:
 
     def testConnectionCommand(self, message):
         response = self.__testConnection()
-
-        if response == False:
+        text = "My connection to Jira is up and running!"
+        if not response:
             logging.error(f"Error with Jira connection: {response}")
-            return "Looks like there's an issue with my connection. I've logged an error"
-        else:
-            return "My connection to Jira is up and running!"
+            text = "Looks like there's an issue with my connection. I've logged an error"
+
+        return {'text': text}
 
     def __calculateSprintMetrics(self, sprint_report):
         points = {
@@ -232,11 +232,11 @@ class Jira:
 
         except BaseException as e:
             logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{e}")
-            return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
+            return {'text': "Sorry, I had trouble getting metrics for that sprint. I've logged an error"}
 
         metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
 
-        return f"```{metrics_text}```"
+        return {'text': f"```{metrics_text}```"}
 
     def __getJiraSprintReportData(self, sprint_report):
         report = {}
@@ -281,7 +281,7 @@ class Jira:
             report_data = self.generateAllSprintReportData(sprintid)
         except BaseException as e:
             logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
-            return "Sorry, I had trouble generating a report for that sprint. I've logged an error"
+            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
 
         blocks = []
 

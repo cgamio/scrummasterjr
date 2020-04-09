@@ -43,7 +43,7 @@ def say_hello(text):
                  "Bonjour!"
                 ]
 
-    return random.choice(responses)
+    return {'text': random.choice(responses)}
 
 def get_help(text):
     response = "These are the things I know how to respond to:\nhello - random greeting"
@@ -52,15 +52,12 @@ def get_help(text):
             response = f"{response}\n{command} - {set.getCommandDescriptions()[command]}"
         response = f"{response}\n"
 
-    return response.strip()
+    return {'text': response.strip()}
 
 def handle_response(function, message):
     response = function(message['text'])
-    if type(response) is dict:
-        response['channel'] = message['channel']
-        response = slack_client.chat_postMessage(**response)
-    else:
-        response = slack_client.chat_postMessage(channel=message["channel"], text=response)
+    response['channel'] = message['channel']
+    response = slack_client.chat_postMessage(**response)
 
 @slack_events_adapter.on("app_mention")
 def handle_mention(event_data):

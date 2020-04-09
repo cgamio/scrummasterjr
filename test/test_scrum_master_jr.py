@@ -14,7 +14,7 @@ def test_healthcheck(client):
 
 def test_help_no_set():
     # Test getting help with no command sets
-    default_response = "These are the things I know how to respond to:\nhello - random greeting"
+    default_response = {'text': "These are the things I know how to respond to:\nhello - random greeting"}
 
     scrum_master_jr.commandsets = []
 
@@ -28,7 +28,7 @@ def test_help_mock_set():
 
     scrum_master_jr.commandsets = [set]
 
-    expected_response = "These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"
+    expected_response = {'text': "These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"}
     response = scrum_master_jr.get_help("help")
 
     set.getCommandDescriptions.assert_called()
