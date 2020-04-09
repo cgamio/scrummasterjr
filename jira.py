@@ -202,14 +202,14 @@ class Jira:
     def __getSprint(self, sprint_id):
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
-        if sprint == False:
+        if not sprint:
             raise Exception(f"Could not find sprint with id {sprint_id}")
 
         return sprint
 
     def __getBoard(self, board_id):
         board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
-        if board == False:
+        if not board:
             raise Exception(f"Could not find boad with id {board_id}")
 
         return board
@@ -217,7 +217,7 @@ class Jira:
     def __getSprintReport(self, sprint_id, board_id):
 
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
-        if sprint_report == False:
+        if not sprint_report:
             raise Exception(f"Could not find report for sprint {sprint_id} on board {board_id}")
 
         return sprint_report
