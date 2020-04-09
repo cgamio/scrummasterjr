@@ -185,10 +185,10 @@ class Jira:
             "predictability_of_commitments": 0
         }
 
-        try:
+        if points['committed'] != 0:
             meta['predictability'] = int(points['completed']/points['committed']*100)
             meta['predictability_of_commitments'] = int(points['planned_completed']/points['committed']*100)
-        except:
+        else:
             # If a sprint has no points committed, we say the predictability is 0
             logging.warning('This sprint had no commitments, predictability is 0')
 
