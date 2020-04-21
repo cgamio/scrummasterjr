@@ -976,7 +976,7 @@ def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_respon
     mock_requests.request.side_effect = request_side_effect
 
     if isinstance(expected_response, Exception):
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match=str(expected_response)):
             jira.generateAllSprintReportData(sprint_id)
     else:
         assert jira.generateAllSprintReportData(sprint_id) == expected_response
