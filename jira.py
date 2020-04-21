@@ -249,7 +249,7 @@ class Jira:
         try:
             report['sprint_start'] = sprint_report['sprint']['startDate']
             report['sprint_end'] = sprint_report['sprint']['endDate']
-        except:
+        except KeyError:
             # Every sprint doesn't have a start / end date
             logging.warning('This sprint does not have start and/or end dates')
 
