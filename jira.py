@@ -460,6 +460,14 @@ class Jira:
             notion_dictionary['[predictability-commitments]'] = str(sprint_report_data['issue_metrics']['meta']['predictability_of_commitments']) + "%"
             notion_dictionary['[average-velocity]'] = str(sprint_report_data['average_velocity'])
 
+            notion_dictionary['[original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
+
+            notion_dictionary['[completed-issues-link]'] = f"[{sprint_report_data['issue_metrics']['items']['completed']} Completed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['completed'])})"
+
+            notion_dictionary['[items-not-completed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['not_completed']} Incomplete Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['incomplete'])})"
+
+            notion_dictionary['[items-removed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['removed']} Removed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['removed'])})"
+
         except KeyError:
             raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
 
@@ -471,7 +479,7 @@ class Jira:
         for issue in issues:
             link += f"{issue}%2C"
 
-        link = link.rstrip('%2C') + ")"
+        link = re.sub('\%2C$', '', link) + ")"
 
         return link
 

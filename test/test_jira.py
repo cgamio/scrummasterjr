@@ -997,20 +997,25 @@ def test_generateGoogleFormURL(sprint_report_data, expected_response):
 
 validNotionReplacementDictionary = {
     '[sprint-number]': '1',
-    '[sprint-start]': '01/Jan/20',
-    '[sprint-end]': '15/Jan/20',
+    '[sprint-start]': '01/01/2020',
+    '[sprint-end]': '01/15/2020',
     '[sprint-goal]': 'Goal 1\nGoal 2\nGoal 3',
     '[team-name]': "The Best Team",
-    '[average-velocity]': 21,
-    '[points-committed]': 6,
-    '[points-completed]': 6,
-    '[items-committed]': 2,
-    '[items-completed]': 2,
-    '[bugs-completed]': 1,
+    '[average-velocity]': '21',
+    '[points-committed]': '6',
+    '[points-completed]': '6',
+    '[items-committed]': '2',
+    '[items-completed]': '2',
+    '[bugs-completed]': '1',
     '[predictability]': '100%',
     '[predictability-commitments]': '100%',
-    '[average-velocity]': 21
+    '[average-velocity]': '21',
+    '[original-committed-link]': "[2 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2))",
+    '[completed-issues-link]': "[2 Completed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4))",
+    '[items-not-completed-link]': "[0 Incomplete Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())",
+    '[items-removed-link]': "[0 Removed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())"
 }
+
 @pytest.mark.parametrize('sprint_report_data, expected_response', [
     ({}, Exception("Unable to generate a Notion Replacement Dictionary, keys not found")),
     (valid_report, validNotionReplacementDictionary)
@@ -1020,8 +1025,11 @@ def test_generateNotionReplacementDictionary(sprint_report_data, expected_respon
         with pytest.raises(Exception, match=str(expected_response)):
             jira.generateNotionReplacementDictionary(sprint_report_data)
     else:
-        assert sorted(jira.generateNotionReplacementDictionary(sprint_report_data)) == sorted(expected_response)
 
+        actual_response = jira.generateNotionReplacementDictionary(sprint_report_data)
+
+        for key in sorted(expected_response):
+            assert expected_response[key] == actual_response[key]
 
 @pytest.mark.parametrize('issue_numbers, expected_response', [
     (normal_sprint_data['expected_response']['issue_keys']['completed'], "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4)"),
