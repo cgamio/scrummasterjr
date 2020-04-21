@@ -354,6 +354,16 @@ class Jira:
                 blocks.append(sprint_metrics_block)
                 sprint_metrics = []
 
+        blocks.append(divider_block)
+
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"<{self.generateGoogleFormURL(report_data)}|Google Form URL>"
+            }
+            })
+
         return {
             "blocks": blocks
             }
