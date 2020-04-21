@@ -1021,3 +1021,11 @@ def test_generateNotionReplacementDictionary(sprint_report_data, expected_respon
             jira.generateNotionReplacementDictionary(sprint_report_data)
     else:
         assert sorted(jira.generateNotionReplacementDictionary(sprint_report_data)) == sorted(expected_response)
+
+
+@pytest.mark.parametrize('issue_numbers, expected_response', [
+    (normal_sprint_data['expected_response']['issue_keys']['completed'], "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4)"),
+    ([], "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20()")
+])
+def test_generateJiraIssueLink(issue_numbers, expected_response):
+    assert jira.generateJiraIssueLink(issue_numbers) == expected_response

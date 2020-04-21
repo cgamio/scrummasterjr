@@ -465,6 +465,16 @@ class Jira:
 
         return notion_dictionary
 
+    def generateJiraIssueLink(self, issues):
+        link =  "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20("
+
+        for issue in issues:
+            link += f"{issue}%2C"
+
+        link = link.rstrip('%2C') + ")"
+
+        return link
+
     def getCommandsRegex(self):
         return {
             'test jira': self.testConnectionCommand,
