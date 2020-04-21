@@ -36,12 +36,12 @@ class Jira:
 
     def testConnectionCommand(self, message):
         response = self.__testConnection()
-
-        if response == False:
+        text = "My connection to Jira is up and running!"
+        if not response:
             logging.error(f"Error with Jira connection: {response}")
-            return "Looks like there's an issue with my connection. I've logged an error"
-        else:
-            return "My connection to Jira is up and running!"
+            text = "Looks like there's an issue with my connection. I've logged an error"
+
+        return {'text': text}
 
     def __calculateSprintMetrics(self, sprint_report):
         points = {
@@ -180,49 +180,216 @@ class Jira:
             points["removed"] += issue_points
             items["removed"] += 1
 
+        meta = {
+            "predictability": 0,
+            "predictability_of_commitments": 0
+        }
+
+        if points['committed'] != 0:
+            meta['predictability'] = int(points['completed']/points['committed']*100)
+            meta['predictability_of_commitments'] = int(points['planned_completed']/points['committed']*100)
+        else:
+            # If a sprint has no points committed, we say the predictability is 0
+            logging.warning('This sprint had no commitments, predictability is 0')
+
         return {
             "points" : points,
             "items" : items,
-            "issue_keys": issue_keys
+            "issue_keys": issue_keys,
+            "meta": meta
         }
 
-    def __getSprintMetrics(self, sprint_id):
+    def __getSprint(self, sprint_id):
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
-        if sprint == False:
+        if not sprint:
             raise Exception(f"Could not find sprint with id {sprint_id}")
 
-        sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={sprint['originBoardId']}&sprintId={sprint_id}")
-        if sprint_report == False:
-            raise Exception(f"Could not find report for sprint {sprint_id} on board {sprint['board_id']}")
+        return sprint
 
-        # Use the Jira Sprint Report to generate metrics
-        metrics = self.__calculateSprintMetrics(sprint_report)
+    def __getBoard(self, board_id):
+        board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
+        if not board:
+            raise Exception(f"Could not find boad with id {board_id}")
 
-        return metrics
+        return board
+
+    def __getSprintReport(self, sprint_id, board_id):
+
+        sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
+        if not sprint_report:
+            raise Exception(f"Could not find report for sprint {sprint_id} on board {board_id}")
+
+        return sprint_report
 
     def getSprintMetricsCommand(self, message):
         sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
 
         try:
-            metrics = self.__getSprintMetrics(sprintid)
+            sprint = self.__getSprint(sprintid)
+            sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
+            metrics = self.__calculateSprintMetrics(sprint_report)
 
         except BaseException as e:
-            logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{str(e)}")
-            return "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
+            logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{e}")
+            return {'text': "Sorry, I had trouble getting metrics for that sprint. I've logged an error"}
 
         metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
-        return f"```{metrics_text}```"
 
+        return {'text': f"```{metrics_text}```"}
+
+    def __getJiraSprintReportData(self, sprint_report):
+        report = {}
+
+        try:
+            report['sprint_number'] = re.search('(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
+        except:
+            raise Exception(f"Could not parse sprint number from \"{sprint_report['name']}\"")
+
+        try:
+            report['sprint_start'] = sprint_report['sprint']['startDate']
+            report['sprint_end'] = sprint_report['sprint']['endDate']
+        except KeyError:
+            # Every sprint doesn't have a start / end date
+            logging.warning('This sprint does not have start and/or end dates')
+
+        try:
+            report['sprint_goals'] = sprint_report['sprint']['goal'].split("\n")
+        except:
+            raise Exception(f"Could not find or parse sprint goal")
+
+        return report
+
+    def generateAllSprintReportData(self, sprint_id):
+        report = {}
+
+        sprint = self.__getSprint(sprint_id)
+        sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
+        report = self.__getJiraSprintReportData(sprint_report)
+        report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
+        board = self.__getBoard(sprint['originBoardId'])
+        report['project_name'] = board['location']['projectName']
+        report['project_key'] = board['location']['projectKey']
+        report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
+
+        return report
+
+    def getSprintReportCommand(self, message):
+        sprintid = re.search('sprint report ([0-9]+)', message).group(1)
+
+        try:
+            report_data = self.generateAllSprintReportData(sprintid)
+        except BaseException as e:
+            logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
+            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
+
+        blocks = []
+
+        divider_block = {
+    			"type": "divider"
+    		}
+
+        blocks.append({
+    			"type": "image",
+    			"title": {
+    				"type": "plain_text",
+    				"text": "Order Up!"
+    			},
+    			"image_url": "https://media.giphy.com/media/l1JojmmBMELYFKJc4/giphy.gif",
+    			"alt_text": "Order Up!"
+    		})
+        blocks.append(divider_block)
+
+        goals_string = '\n'.join(report_data['sprint_goals'])
+        blocks.append({
+    			"type": "section",
+    			"text": {
+    				"type": "mrkdwn",
+    				"text": f"*Project Name*: {report_data['project_name']}\n*Sprint {report_data['sprint_number']}*\n{goals_string}"
+    			}
+    		})
+
+        blocks.append(divider_block)
+
+        blocks.append({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"*Metrics:*"
+                }
+                })
+
+        sprint_metrics = []
+        for type in ['items', 'points', 'meta']:
+            type_block = {
+        			"type": "section",
+        			"text": {
+        				"type": "mrkdwn",
+        				"text": f"*{type}*"
+        			}
+        		}
+            blocks.append(type_block)
+
+            for metric in report_data['issue_metrics'][type].keys():
+                sprint_metrics.append({
+    					"type": "plain_text",
+    					"text": f"{metric}"
+    				})
+                sprint_metrics.append({
+    					"type": "plain_text",
+    					"text": f"{report_data['issue_metrics'][type][metric]}"
+    				})
+                if len(sprint_metrics) > 8:
+                    blocks.append({
+                			"type": "section",
+                			"fields": sprint_metrics
+                    })
+                    sprint_metrics = []
+
+            if len(sprint_metrics) > 0:
+                sprint_metrics_block = {
+            			"type": "section",
+            			"fields": sprint_metrics
+                }
+                blocks.append(sprint_metrics_block)
+                sprint_metrics = []
+
+        return {
+            "blocks": blocks
+            }
+
+    def getAverageVelocity(self, board_id, sprint_id = None):
+        velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
+
+        if velocity_report == False:
+            raise Exception(f"Unable to get velocity report for board {board_id}")
+
+        total = 0
+        sprints = 0
+        found_sprint = True if sprint_id == None else False
+
+        for sprint in sorted(velocity_report['velocityStatEntries'], reverse=True):
+            if sprints >= 3:
+                # We only care about the last three sprints
+                break;
+
+            if found_sprint == True or sprint_id == sprint:
+                found_sprint = True
+                total = total +  velocity_report['velocityStatEntries'][sprint]['completed']['value']
+                sprints = sprints + 1
+
+        return int(total/sprints) if sprints > 0 else total
 
     def getCommandsRegex(self):
         return {
             'test jira': self.testConnectionCommand,
-            'sprint metrics [0-9]+': self.getSprintMetricsCommand
+            'sprint metrics [0-9]+': self.getSprintMetricsCommand,
+            'sprint report [0-9]+': self.getSprintReportCommand
         }
 
     def getCommandDescriptions(self):
         return {
             'test jira': 'tests my connection to jira',
-            'sprint metrics [sprint-id]': 'get metrics for a given sprint'
+            'sprint metrics [sprint-id]': 'get metrics for a given sprint',
+            'sprint report [sprint-id]': 'get a quick sprint report for a given sprint'
         }
