@@ -980,3 +980,17 @@ def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_respon
             jira.generateAllSprintReportData(sprint_id)
     else:
         assert jira.generateAllSprintReportData(sprint_id) == expected_response
+
+valid_google_form_url='https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
+
+@pytest.mark.parametrize('sprint_report_data, expected_response', [
+    (valid_report, valid_google_form_url),
+    ({}, Exception('Unable to generate Google Form URL, expected keys missing'))
+])
+def test_generateGoogleFormURL(sprint_report_data, expected_response):
+
+    if isinstance(expected_response, Exception):
+        with pytest.raises(Exception, match=str(expected_response)):
+            jira.generateGoogleFormURL(sprint_report_data)
+    else:
+        assert jira.generateGoogleFormURL(sprint_report_data) == expected_response

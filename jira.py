@@ -380,6 +380,15 @@ class Jira:
 
         return int(total/sprints) if sprints > 0 else total
 
+    def generateGoogleFormURL(self, sprint_report_data):
+        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
+        try:
+            sprint_report_data['project_key']
+        except (KeyError):
+            raise Exception("Unable to generate Google Form URL, expected keys missing")
+
+        return url
+
     def getCommandsRegex(self):
         return {
             'test jira': self.testConnectionCommand,
