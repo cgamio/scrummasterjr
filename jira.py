@@ -3,6 +3,7 @@ import requests
 import logging
 import re
 import json
+from datetime import datetime
 
 class Jira:
     __auth = None
@@ -436,6 +437,33 @@ class Jira:
             raise Exception("Unable to generate Google Form URL, expected keys missing")
 
         return url
+
+    def generateNotionReplacementDictionary(self, sprint_report_data):
+        notion_dictionary = {}
+
+        try:
+            notion_dictionary['[team-name]'] = sprint_report_data['project_name']
+            notion_dictionary['[sprint-number]'] = sprint_report_data['sprint_number']
+            start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%Y-%m-%d')
+            notion_dictionary['[sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
+            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%Y-%m-%d')
+            notion_dictionary['[sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
+            notion_dictionary['[sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
+            notion_dictionary['[points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
+            notion_dictionary['[points-completed]'] = str(sprint_report_data['issue_metrics']['points']['completed'])
+
+            notion_dictionary['[items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
+            notion_dictionary['[items-completed]'] = str(sprint_report_data['issue_metrics']['items']['completed'])
+            notion_dictionary['[bugs-completed]'] = str(sprint_report_data['issue_metrics']['items']['bugs_completed'])
+
+            notion_dictionary['[predictability]'] = str(sprint_report_data['issue_metrics']['meta']['predictability']) + "%"
+            notion_dictionary['[predictability-commitments]'] = str(sprint_report_data['issue_metrics']['meta']['predictability_of_commitments']) + "%"
+            notion_dictionary['[average-velocity]'] = str(sprint_report_data['average_velocity'])
+
+        except KeyError:
+            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
+
+        return notion_dictionary
 
     def getCommandsRegex(self):
         return {

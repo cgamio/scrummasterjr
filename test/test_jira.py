@@ -55,8 +55,8 @@ valid_board_response = okRequestResponse({'location': {'projectName' : 'The Best
 normal_sprint_data = {
     'sprint_report_response' : {
         'sprint': {
-            'startDate': '01/Jan/20 1:00 AM',
-            'endDate': '15/Jan/20 1:00 AM',
+            'startDate': '2020-01-01T01:00:00.000Z',
+            'endDate': '2020-01-15T01:00:00.000Z',
             'name': 'Sprint 1',
             'goal': 'Goal 1\nGoal 2\nGoal 3'
         },
@@ -917,8 +917,8 @@ def test_getAverageVelocity(mock_requests, velocity_get_response, sprint_id,  ex
 
 valid_report = {
     'sprint_number': '1',
-    'sprint_start': '01/Jan/20 1:00 AM',
-    'sprint_end': '15/Jan/20 1:00 AM',
+    'sprint_start': '2020-01-01T01:00:00.000Z',
+    'sprint_end': '2020-01-15T01:00:00.000Z',
     'issue_metrics': normal_sprint_data['expected_response'],
     'sprint_goals': ['Goal 1', 'Goal 2', 'Goal 3'],
     'project_name': "The Best Team",
@@ -994,3 +994,30 @@ def test_generateGoogleFormURL(sprint_report_data, expected_response):
             jira.generateGoogleFormURL(sprint_report_data)
     else:
         assert jira.generateGoogleFormURL(sprint_report_data) == expected_response
+
+validNotionReplacementDictionary = {
+    '[sprint-number]': '1',
+    '[sprint-start]': '01/Jan/20',
+    '[sprint-end]': '15/Jan/20',
+    '[sprint-goal]': 'Goal 1\nGoal 2\nGoal 3',
+    '[team-name]': "The Best Team",
+    '[average-velocity]': 21,
+    '[points-committed]': 6,
+    '[points-completed]': 6,
+    '[items-committed]': 2,
+    '[items-completed]': 2,
+    '[bugs-completed]': 1,
+    '[predictability]': '100%',
+    '[predictability-commitments]': '100%',
+    '[average-velocity]': 21
+}
+@pytest.mark.parametrize('sprint_report_data, expected_response', [
+    ({}, Exception("Unable to generate a Notion Replacement Dictionary, keys not found")),
+    (valid_report, validNotionReplacementDictionary)
+])
+def test_generateNotionReplacementDictionary(sprint_report_data, expected_response):
+    if isinstance(expected_response, Exception):
+        with pytest.raises(Exception, match=str(expected_response)):
+            jira.generateNotionReplacementDictionary(sprint_report_data)
+    else:
+        assert sorted(jira.generateNotionReplacementDictionary(sprint_report_data)) == sorted(expected_response)
