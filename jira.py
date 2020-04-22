@@ -224,7 +224,11 @@ class Jira:
         return sprint_report
 
     def getSprintMetricsCommand(self, message):
-        sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
+        try:
+            sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
+        except :
+            logging.error(f"Did not find a sprint number in \"{message}\"")
+            return {'text': "Sorry, I don't see a valid sprint number there"}
 
         try:
             sprint = self.__getSprint(sprintid)
@@ -245,7 +249,7 @@ class Jira:
         try:
             report['sprint_number'] = re.search('(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
         except:
-            raise Exception(f"Could not parse sprint number from \"{sprint_report['name']}\"")
+            raise Exception(f"Could not find or parse sprint number")
 
         try:
             report['sprint_start'] = sprint_report['sprint']['startDate']
