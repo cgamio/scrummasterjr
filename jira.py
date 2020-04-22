@@ -354,6 +354,16 @@ class Jira:
                 blocks.append(sprint_metrics_block)
                 sprint_metrics = []
 
+        blocks.append(divider_block)
+
+        blocks.append({
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"<{self.generateGoogleFormURL(report_data)}|Google Form URL>"
+            }
+            })
+
         return {
             "blocks": blocks
             }
@@ -379,6 +389,53 @@ class Jira:
                 sprints = sprints + 1
 
         return int(total/sprints) if sprints > 0 else total
+
+    def generateGoogleFormURL(self, sprint_report_data):
+        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
+
+        google_entry_translations = {
+        "issue_metrics": {
+            "items": {
+                "bugs_completed": 'entry.448087930',
+                "committed": 'entry.2095001800',
+                "completed": 'entry.1399119358',
+                "not_completed": 'entry.128659456',
+                "planned_completed": 'entry.954885633',
+                "removed": 'entry.1137054034',
+                "stories_completed": 'entry.1980453543',
+                "unplanned_bugs_completed": 'entry.1252702382',
+                "unplanned_completed": 'entry.485777497',
+                "unplanned_stories_completed": 'entry.370334542'
+            },
+            "points": {
+                "committed": 'entry.1427603868',
+                "completed": 'entry.1486076673',
+                "feature_completed": 'entry.254612996',
+                "not_completed": 'entry.611444996',
+                "optimization_completed": 'entry.2092919144',
+                "planned_completed": 'entry.493624591',
+                "removed": 'entry.976792423',
+                "unplanned_completed": 'entry.1333444050'
+            }
+        },
+        #TODO: We're assuming that the project name IS the team name, which isn't always the case
+        "project_key": "entry.1082637073",
+        "sprint_number": "entry.1975251686"
+        }
+
+        try:
+            for entry in ["project_key", "sprint_number"]:
+                url += f"{google_entry_translations[entry]}={sprint_report_data[entry]}&"
+
+            for metric_type in sprint_report_data['issue_metrics'].keys():
+                if metric_type in ["meta", "issue_keys"]:
+                    continue
+                for item in sprint_report_data['issue_metrics'][metric_type].keys():
+                    url += f"{google_entry_translations['issue_metrics'][metric_type][item]}={sprint_report_data['issue_metrics'][metric_type][item]}&"
+        except (KeyError):
+            raise Exception("Unable to generate Google Form URL, expected keys missing")
+
+        return url
 
     def getCommandsRegex(self):
         return {
