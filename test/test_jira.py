@@ -29,7 +29,8 @@ def test_getCommandsRegex():
     expected_response = {
         'test jira': jira.testConnectionCommand,
         'sprint metrics [0-9]+': jira.getSprintMetricsCommand,
-        'sprint report [0-9]+': jira.getSprintReportCommand
+        'sprint report [0-9]+': jira.getSprintReportCommand,
+        'sprint report [0-9]+ https://www.notion.so/.+': jira.getSprintReportCommand
     }
 
     assert jira.getCommandsRegex() == expected_response
@@ -38,7 +39,8 @@ def test_getCommandDescriptions():
     expected_response = {
         'test jira': 'tests my connection to jira',
         'sprint metrics [sprint-id]': 'get metrics for a given sprint',
-        'sprint report [sprint-id]': 'get a quick sprint report for a given sprint'
+        'sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
+        'sprint report [sprint-id] [notion-url]': 'get a quick sprint report for a given sprint and update the given notion page'
     }
 
     assert jira.getCommandDescriptions() == expected_response

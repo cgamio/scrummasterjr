@@ -491,12 +491,14 @@ class Jira:
         return {
             'test jira': self.testConnectionCommand,
             'sprint metrics [0-9]+': self.getSprintMetricsCommand,
-            'sprint report [0-9]+': self.getSprintReportCommand
+            'sprint report [0-9]+': self.getSprintReportCommand,
+            'sprint report [0-9]+ https://www.notion.so/.+': self.getSprintReportCommand
         }
 
     def getCommandDescriptions(self):
         return {
             'test jira': 'tests my connection to jira',
             'sprint metrics [sprint-id]': 'get metrics for a given sprint',
-            'sprint report [sprint-id]': 'get a quick sprint report for a given sprint'
+            'sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
+            'sprint report [sprint-id] [notion-url]': 'get a quick sprint report for a given sprint and update the given notion page'
         }
