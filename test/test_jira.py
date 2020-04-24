@@ -30,7 +30,7 @@ def test_getCommandsRegex():
         'test jira': jira.testConnectionCommand,
         'sprint metrics [0-9]+': jira.getSprintMetricsCommand,
         'sprint report [0-9]+': jira.getSprintReportCommand,
-        'sprint report [0-9]+ https://www.notion.so/.+': jira.getSprintReportCommand
+        'sprint report [0-9]+\s*https://www.notion.so/.+': jira.getSprintReportCommand
     }
 
     assert jira.getCommandsRegex() == expected_response
@@ -1599,12 +1599,189 @@ valid_blocks = {'blocks': [{'alt_text': 'Order Up!',
                                    'type': 'mrkdwn'},
                           'type': 'section'}]}
 
+valid_notion_blocks = {'blocks': [{'alt_text': 'Order Up!',
+                          'image_url': 'https://media.giphy.com/media/l1JojmmBMELYFKJc4/giphy.gif',
+                          'title': {'text': 'Order Up!', 'type': 'plain_text'},
+                          'type': 'image'},
+                         {'type': 'divider'},
+                         {'text': {'text': '*Project Name*: The Best Team\n'
+                                           '*Sprint 1*\n'
+                                           'Goal 1\n'
+                                           'Goal 2\n'
+                                           'Goal 3',
+                                   'type': 'mrkdwn'},
+                          'type': 'section'},
+                         {'type': 'divider'},
+                         {'text': {'text': '*Metrics:*', 'type': 'mrkdwn'},
+                          'type': 'section'},
+                         {'text': {'text': '*items*', 'type': 'mrkdwn'}, 'type': 'section'},
+                         {'fields': [{'text': 'committed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'completed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'planned_completed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'unplanned_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'stories_completed', 'type': 'plain_text'},
+                                     {'text': '1', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'fields': [{'text': 'unplanned_stories_completed',
+                                      'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'bugs_completed', 'type': 'plain_text'},
+                                     {'text': '1', 'type': 'plain_text'},
+                                     {'text': 'unplanned_bugs_completed',
+                                      'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'not_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'removed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'text': {'text': '*points*', 'type': 'mrkdwn'}, 'type': 'section'},
+                         {'fields': [{'text': 'committed', 'type': 'plain_text'},
+                                     {'text': '9', 'type': 'plain_text'},
+                                     {'text': 'completed', 'type': 'plain_text'},
+                                     {'text': '9', 'type': 'plain_text'},
+                                     {'text': 'planned_completed', 'type': 'plain_text'},
+                                     {'text': '9', 'type': 'plain_text'},
+                                     {'text': 'unplanned_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'feature_completed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'fields': [{'text': 'optimization_completed',
+                                      'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'not_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'removed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'text': {'text': '*meta*', 'type': 'mrkdwn'}, 'type': 'section'},
+                         {'fields': [{'text': 'predictability', 'type': 'plain_text'},
+                                     {'text': '100', 'type': 'plain_text'},
+                                     {'text': 'predictability_of_commitments',
+                                      'type': 'plain_text'},
+                                     {'text': '100', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'type': 'divider'},
+                         {'text': {'text': '<https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?entry.1082637073=TBT&entry.1975251686=1&entry.1427603868=9&entry.1486076673=9&entry.493624591=9&entry.1333444050=0&entry.254612996=3&entry.2092919144=3&entry.611444996=0&entry.976792423=0&entry.2095001800=3&entry.1399119358=3&entry.954885633=3&entry.485777497=0&entry.1980453543=1&entry.370334542=0&entry.448087930=1&entry.1252702382=0&entry.128659456=0&entry.1137054034=0&|Google '
+                                           'Form URL>',
+                                   'type': 'mrkdwn'},
+                          'type': 'section'},
+                          {'type': 'divider'},
+                          {
+                              "type": "section",
+                              "text": {
+                                  "type": "mrkdwn",
+                                  "text": "<https://www.notion.so/mediaos/some-test-document|Notion Page> updated!"
+                              }
+                              }]
+                              }
+
+notion_error_blocks = {'blocks': [{'alt_text': 'Order Up!',
+                          'image_url': 'https://media.giphy.com/media/l1JojmmBMELYFKJc4/giphy.gif',
+                          'title': {'text': 'Order Up!', 'type': 'plain_text'},
+                          'type': 'image'},
+                         {'type': 'divider'},
+                         {'text': {'text': '*Project Name*: The Best Team\n'
+                                           '*Sprint 1*\n'
+                                           'Goal 1\n'
+                                           'Goal 2\n'
+                                           'Goal 3',
+                                   'type': 'mrkdwn'},
+                          'type': 'section'},
+                         {'type': 'divider'},
+                         {'text': {'text': '*Metrics:*', 'type': 'mrkdwn'},
+                          'type': 'section'},
+                         {'text': {'text': '*items*', 'type': 'mrkdwn'}, 'type': 'section'},
+                         {'fields': [{'text': 'committed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'completed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'planned_completed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'unplanned_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'stories_completed', 'type': 'plain_text'},
+                                     {'text': '1', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'fields': [{'text': 'unplanned_stories_completed',
+                                      'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'bugs_completed', 'type': 'plain_text'},
+                                     {'text': '1', 'type': 'plain_text'},
+                                     {'text': 'unplanned_bugs_completed',
+                                      'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'not_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'removed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'text': {'text': '*points*', 'type': 'mrkdwn'}, 'type': 'section'},
+                         {'fields': [{'text': 'committed', 'type': 'plain_text'},
+                                     {'text': '9', 'type': 'plain_text'},
+                                     {'text': 'completed', 'type': 'plain_text'},
+                                     {'text': '9', 'type': 'plain_text'},
+                                     {'text': 'planned_completed', 'type': 'plain_text'},
+                                     {'text': '9', 'type': 'plain_text'},
+                                     {'text': 'unplanned_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'feature_completed', 'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'fields': [{'text': 'optimization_completed',
+                                      'type': 'plain_text'},
+                                     {'text': '3', 'type': 'plain_text'},
+                                     {'text': 'not_completed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'},
+                                     {'text': 'removed', 'type': 'plain_text'},
+                                     {'text': '0', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'text': {'text': '*meta*', 'type': 'mrkdwn'}, 'type': 'section'},
+                         {'fields': [{'text': 'predictability', 'type': 'plain_text'},
+                                     {'text': '100', 'type': 'plain_text'},
+                                     {'text': 'predictability_of_commitments',
+                                      'type': 'plain_text'},
+                                     {'text': '100', 'type': 'plain_text'}],
+                          'type': 'section'},
+                         {'type': 'divider'},
+                         {'text': {'text': '<https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?entry.1082637073=TBT&entry.1975251686=1&entry.1427603868=9&entry.1486076673=9&entry.493624591=9&entry.1333444050=0&entry.254612996=3&entry.2092919144=3&entry.611444996=0&entry.976792423=0&entry.2095001800=3&entry.1399119358=3&entry.954885633=3&entry.485777497=0&entry.1980453543=1&entry.370334542=0&entry.448087930=1&entry.1252702382=0&entry.128659456=0&entry.1137054034=0&|Google '
+                                           'Form URL>',
+                                   'type': 'mrkdwn'},
+                          'type': 'section'},
+                          {'type': 'divider'},
+                          {
+                              "type": "section",
+                              "text": {
+                                  "type": "mrkdwn",
+                                  "text": "There was an error updating the <https://www.notion.so/mediaos/some-test-document|Notion Page>."
+                              }
+                              }]
+                              }
+
+valid_notion_case = {
+    'dictionary': validNotionReplacementDictionary,
+    'exception': False
+}
+
+error_notion_case = {
+    'dictionary': validNotionReplacementDictionary,
+    'exception': True
+}
+
+@patch('jira.NotionPage')
 @patch('jira.requests')
-@pytest.mark.parametrize('message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response', [
-    ('sprint report 5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
-    ('sprint report 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_blocks)
+@pytest.mark.parametrize('message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, notion_case, expected_response', [
+    ('sprint report 5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, False, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
+    ('sprint report 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), False, valid_blocks),
+    ('sprint report 1234 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_notion_case, valid_notion_blocks),
+    ('sprint report 1234 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), error_notion_case, notion_error_blocks)
 ])
-def test_getSprintReportCommand(mock_requests, message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response):
+def test_getSprintReportCommand(mock_requests, mock_notion_page, message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, notion_case, expected_response):
     def request_side_effect(verb, url, *args, **kwargs):
         if 'sprint/' in url:
             return MagicMock(**sprint_get_response)
@@ -1617,8 +1794,18 @@ def test_getSprintReportCommand(mock_requests, message_text, sprint_get_response
 
     mock_requests.request.side_effect = request_side_effect
 
+    if notion_case:
+        mock_notion_page.return_value = mock_notion_page
+
+        if notion_case['exception']:
+            mock_notion_page.searchAndReplace.side_effect = lambda x: exec(f"raise(Exception())")
+
+
     if isinstance(expected_response, Exception):
         with pytest.raises(Exception, match=str(expected_response)):
             jira.getSprintReportCommand(message_text)
     else:
         assert jira.getSprintReportCommand(message_text) == expected_response
+
+    if notion_case:
+        mock_notion_page.searchAndReplace.assert_called_once_with(notion_case['dictionary'])

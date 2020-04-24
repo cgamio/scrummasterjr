@@ -4,6 +4,7 @@ import logging
 import re
 import json
 from datetime import datetime
+from notion_page import NotionPage
 
 class Jira:
     __auth = None
@@ -280,7 +281,9 @@ class Jira:
         return report
 
     def getSprintReportCommand(self, message):
-        sprintid = re.search('sprint report ([0-9]+)', message).group(1)
+        logging.error(f"Message: {message}")
+        regex_result = re.match('sprint report (?P<sprint_id>[0-9]+)\s*(?P<notion_url>https://www.notion.so/.+)?', message).groupdict()
+        sprintid = regex_result['sprint_id']
 
         try:
             report_data = self.generateAllSprintReportData(sprintid)
@@ -369,9 +372,47 @@ class Jira:
             }
             })
 
+        if regex_result['notion_url']:
+            result = self.updateNotionPage(regex_result['notion_url'], report_data)
+            logging.error(f"Notion Page Update Result: {result}")
+            if result:
+                blocks.append(divider_block)
+
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"There was an error updating the <{regex_result['notion_url']}|Notion Page>."
+                    }
+                    })
+            else:
+                blocks.append(divider_block)
+
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"<{regex_result['notion_url']}|Notion Page> updated!"
+                    }
+                    })
+
         return {
             "blocks": blocks
             }
+
+    def updateNotionPage(self, notion_url, sprint_report_data):
+        search_replace_dict = self.generateNotionReplacementDictionary(sprint_report_data)
+
+        page = NotionPage(notion_url)
+
+        logging.error(f"Notion Page: {page}")
+
+        try:
+            page.searchAndReplace(search_replace_dict)
+        except BaseException as e:
+            return e
+
+        return False
 
     def getAverageVelocity(self, board_id, sprint_id = None):
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
@@ -492,7 +533,7 @@ class Jira:
             'test jira': self.testConnectionCommand,
             'sprint metrics [0-9]+': self.getSprintMetricsCommand,
             'sprint report [0-9]+': self.getSprintReportCommand,
-            'sprint report [0-9]+ https://www.notion.so/.+': self.getSprintReportCommand
+            'sprint report [0-9]+\s*https://www.notion.so/.+': self.getSprintReportCommand
         }
 
     def getCommandDescriptions(self):
