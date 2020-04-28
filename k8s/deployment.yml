@@ -42,6 +42,8 @@ spec:
           value: {{ jira_user }}
         - name: JIRA_TOKEN
           value: {{ jira_token }}
+        - name: NOTION_TOKEN
+          value: {{notion_token}}
         ports:
         - containerPort: 80
           protocol: TCP
