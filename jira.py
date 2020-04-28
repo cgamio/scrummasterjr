@@ -248,7 +248,7 @@ class Jira:
         report = {}
 
         try:
-            report['sprint_number'] = re.search('(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
+            report['sprint_number'] = re.search(r'(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
         except:
             raise Exception(f"Could not find or parse sprint number")
 
@@ -282,7 +282,7 @@ class Jira:
 
     def getSprintReportCommand(self, message):
         logging.error(f"Message: {message}")
-        regex_result = re.match('sprint report (?P<sprint_id>[0-9]+)\s*(?P<notion_url>https://www.notion.so/.+)?', message).groupdict()
+        regex_result = re.match(r'sprint report (?P<sprint_id>[0-9]+)\s*(?P<notion_url>https://www.notion.so/.+)?', message).groupdict()
         sprintid = regex_result['sprint_id']
 
         try:
@@ -524,7 +524,7 @@ class Jira:
         for issue in issues:
             link += f"{issue}%2C"
 
-        link = re.sub('\%2C$', '', link) + ")"
+        link = re.sub(r'\%2C$', '', link) + ")"
 
         return link
 
@@ -533,7 +533,7 @@ class Jira:
             'test jira': self.testConnectionCommand,
             'sprint metrics [0-9]+': self.getSprintMetricsCommand,
             'sprint report [0-9]+': self.getSprintReportCommand,
-            'sprint report [0-9]+\s*https://www.notion.so/.+': self.getSprintReportCommand
+            r'sprint report [0-9]+\s*https://www.notion.so/.+': self.getSprintReportCommand
         }
 
     def getCommandDescriptions(self):
