@@ -104,7 +104,7 @@ class Jira:
             unplanned = False
             if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
-                points["unplanned_completed"] += issue_points_original
+                points["unplanned_completed"] += issue_points
                 items["unplanned_completed"] += 1
             else:
                 issue_keys["committed"].append(completed["key"])
