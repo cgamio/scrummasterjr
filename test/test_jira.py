@@ -545,7 +545,7 @@ added_sprint_data = {
                 },
                 'currentEstimateStatistic': {
                     'statFieldValue': {
-                        'value': 1
+                        'value': 3
                     }
                 }
             },
@@ -618,16 +618,16 @@ added_sprint_data = {
         },
         "points": {
             "committed": 6,
-            "completed": 8,
-            "feature_completed": 4,
+            "completed": 10,
+            "feature_completed": 6,
             "not_completed": 0,
             "optimization_completed": 0,
             "planned_completed": 6,
             "removed": 0,
-            "unplanned_completed": 2
+            "unplanned_completed": 4
         },
         "meta": {
-            "predictability": 133,
+            "predictability": 166,
             "predictability_of_commitments": 100
         }
     }

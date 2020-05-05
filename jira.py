@@ -104,7 +104,7 @@ class Jira:
             unplanned = False
             if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
-                points["unplanned_completed"] += issue_points_original
+                points["unplanned_completed"] += issue_points
                 items["unplanned_completed"] += 1
             else:
                 issue_keys["committed"].append(completed["key"])
@@ -242,7 +242,7 @@ class Jira:
         report = {}
 
         try:
-            report['sprint_number'] = re.search('(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
+            report['sprint_number'] = re.search('(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
         except:
             raise Exception(f"Could not parse sprint number from \"{sprint_report['name']}\"")
 
