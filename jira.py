@@ -282,7 +282,7 @@ class Jira:
 
     def getSprintReportCommand(self, message):
         logging.error(f"Message: {message}")
-        regex_result = re.match(r'sprint report (?P<sprint_id>[0-9]+)\s*(?P<notion_url>https://www.notion.so/.+)?', message).groupdict()
+        regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*(?P<notion_url>https://www.notion.so/.+)?', message).groupdict()
         sprintid = regex_result['sprint_id']
 
         try:
