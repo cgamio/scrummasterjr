@@ -282,7 +282,7 @@ class Jira:
 
     def getSprintReportCommand(self, message):
         logging.error(f"Message: {message}")
-        regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/.+)?>?', message).groupdict()
+        regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+)?', message).groupdict()
         sprintid = regex_result['sprint_id']
 
         try:
@@ -533,7 +533,7 @@ class Jira:
             'test jira': self.testConnectionCommand,
             'sprint metrics [0-9]+': self.getSprintMetricsCommand,
             'sprint report [0-9]+': self.getSprintReportCommand,
-            r'sprint report [0-9]+\s*<?(https://www.notion.so/.+)?>?': self.getSprintReportCommand
+            r'sprint report (?P<sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+)?': self.getSprintReportCommand
         }
 
     def getCommandDescriptions(self):

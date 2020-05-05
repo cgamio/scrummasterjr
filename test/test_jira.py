@@ -30,7 +30,7 @@ def test_getCommandsRegex():
         'test jira': jira.testConnectionCommand,
         'sprint metrics [0-9]+': jira.getSprintMetricsCommand,
         'sprint report [0-9]+': jira.getSprintReportCommand,
-        r'sprint report [0-9]+\s*<?(https://www.notion.so/.+)?>?': jira.getSprintReportCommand
+        r'sprint report (?P<sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+)?': jira.getSprintReportCommand
     }
 
     assert jira.getCommandsRegex() == expected_response
