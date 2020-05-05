@@ -489,9 +489,9 @@ class Jira:
         try:
             notion_dictionary['[team-name]'] = sprint_report_data['project_name']
             notion_dictionary['[sprint-number]'] = sprint_report_data['sprint_number']
-            start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%Y-%m-%d')
+            start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
             notion_dictionary['[sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
-            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%Y-%m-%d')
+            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
             notion_dictionary['[sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
             notion_dictionary['[sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
             notion_dictionary['[points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])

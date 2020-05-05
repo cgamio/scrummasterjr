@@ -57,8 +57,8 @@ valid_board_response = okRequestResponse({'location': {'projectName' : 'The Best
 normal_sprint_data = {
     'sprint_report_response' : {
         'sprint': {
-            'startDate': '2020-01-01T01:00:00.000Z',
-            'endDate': '2020-01-15T01:00:00.000Z',
+            'startDate': '01/Jan/20 1:00 AM',
+            'endDate': '15/Jan/20 1:00 AM',
             'name': 'Sprint 1',
             'goal': 'Goal 1\nGoal 2\nGoal 3'
         },
@@ -760,8 +760,8 @@ changed_estimate_sprint_data = {
 no_estimate_sprint_data = {
     'sprint_report_response' : {
         'sprint': {
-            'startDate': '2020-01-01T01:00:00.000Z',
-            'endDate': '2020-01-15T01:00:00.000Z',
+            'startDate': '01/Jan/20 1:00 AM',
+            'endDate': '15/Jan/20 1:00 AM',
             'name': 'Sprint 1',
             'goal': 'Goal 1\nGoal 2\nGoal 3'
         },
@@ -857,8 +857,8 @@ no_estimate_sprint_data = {
 no_committment_sprint_data = {
     'sprint_report_response' : {
         'sprint': {
-            'startDate': '2020-01-01T01:00:00.000Z',
-            'endDate': '2020-01-15T01:00:00.000Z',
+            'startDate': '01/Jan/20 1:00 AM',
+            'endDate': '15/Jan/20 1:00 AM',
             'name': 'Sprint 1',
             'goal': 'Goal 1\nGoal 2\nGoal 3'
         },
@@ -1399,8 +1399,8 @@ def test_getAverageVelocity(mock_requests, velocity_get_response, sprint_id,  ex
 
 valid_report = {
     'sprint_number': '1',
-    'sprint_start': '2020-01-01T01:00:00.000Z',
-    'sprint_end': '2020-01-15T01:00:00.000Z',
+    'sprint_start': '01/Jan/20 1:00 AM',
+    'sprint_end': '15/Jan/20 1:00 AM',
     'issue_metrics': normal_sprint_data['expected_response'],
     'sprint_goals': ['Goal 1', 'Goal 2', 'Goal 3'],
     'project_name': "The Best Team",
