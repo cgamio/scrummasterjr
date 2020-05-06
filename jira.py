@@ -297,7 +297,6 @@ class Jira:
         - 'sprint report 1234': Gets and prints the sprint report data for sprint 1234
         - 'spritn report 1234 5678 <https://notion.so/some-document': Gets and prints the sprint report data from sprint 1234, fetchs the data for sprint 5678 (assuming it's the next sprint) and updates the 'some-document' Notion page with that information
         """
-        logging.error(f"Message: {message}")
         regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?', message).groupdict()
 
         try:
