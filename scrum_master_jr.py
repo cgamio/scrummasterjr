@@ -14,6 +14,7 @@ app = Flask(__name__)
 
 @app.route("/health")
 def healthcheck():
+    """A simple health endpoint that returns 200 as long as the app is running"""
     return "Up and Running!", 200
 
 # Our app's Slack Event Adapter for receiving actions via the Events API
@@ -33,6 +34,7 @@ jira = Jira(jira_host, jira_user, jira_token)
 commandsets = [jira]
 
 def say_hello(text):
+    """A basic hello interaction with the bot"""
     responses = ["Hello there!",
                  "It's a pleasure to meet you! My name is Scrum Master Jr.",
                  "Oh! Sorry, you startled me. I didn't see you there.",
@@ -46,6 +48,7 @@ def say_hello(text):
     return {'text': random.choice(responses)}
 
 def get_help(text):
+    """Get help information for all of the command sets and share that with the user"""
     response = "These are the things I know how to respond to:\nhello - random greeting"
     for set in commandsets:
         for command in set.getCommandDescriptions().keys():
@@ -55,12 +58,14 @@ def get_help(text):
     return {'text': response.strip()}
 
 def handle_response(function, message):
+    """Takes the response back from a command and share that with the user"""
     response = function(message['text'])
     response['channel'] = message['channel']
     response = slack_client.chat_postMessage(**response)
 
 @slack_events_adapter.on("app_mention")
 def handle_mention(event_data):
+    """Handles slack @mentions"""
     message = event_data["event"]
 
     if message.get("subtype") is None:

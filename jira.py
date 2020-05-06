@@ -14,6 +14,7 @@ class Jira:
     __agile_url = None
 
     def __makeRequest(self, verb, url, params=None):
+        """Wrapper for a simple HTTP request"""
         response = requests.request(verb, url, headers={ 'Accept': 'application/json' }, auth=self.__auth, params=params)
         if response.status_code == 200:
             return(json.loads(response.text))
@@ -30,6 +31,7 @@ class Jira:
         self.__greenhopper_url = f"https://{self.__host}/rest/greenhopper/latest/"
 
     def __testConnection(self):
+        """Tests the connection to Jira by getting user data"""
         url = f"{self.__url}/myself"
 
         response = self.__makeRequest('GET', url)
@@ -37,6 +39,7 @@ class Jira:
         return response
 
     def testConnectionCommand(self, message):
+        """Wrapper for Jira connection test functionality with user-friendly responses"""
         response = self.__testConnection()
         text = "My connection to Jira is up and running!"
         if not response:
@@ -46,6 +49,7 @@ class Jira:
         return {'text': text}
 
     def __calculateSprintMetrics(self, sprint_report):
+        """Given the data from a Jira sprint report, calculates sprint metrics"""
         points = {
             "committed": 0,
             "completed": 0,
@@ -202,6 +206,7 @@ class Jira:
         }
 
     def __getSprint(self, sprint_id):
+        """Utility funtion to get sprint data from Jira"""
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
         if not sprint:
@@ -210,6 +215,7 @@ class Jira:
         return sprint
 
     def __getBoard(self, board_id):
+        """Utility funtion to get board data from Jira"""
         board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
         if not board:
             raise Exception(f"Could not find boad with id {board_id}")
@@ -217,7 +223,7 @@ class Jira:
         return board
 
     def __getSprintReport(self, sprint_id, board_id):
-
+        """Utility funtion to get sprint report data from Jira"""
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
         if not sprint_report:
             raise Exception(f"Could not find report for sprint {sprint_id} on board {board_id}")
@@ -225,6 +231,7 @@ class Jira:
         return sprint_report
 
     def getSprintMetricsCommand(self, message):
+        """User-friendly wrapper for getting the metrics for a given sprint"""
         try:
             sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
         except :
@@ -245,6 +252,7 @@ class Jira:
         return {'text': f"```{metrics_text}```"}
 
     def __getJiraSprintReportData(self, sprint_report):
+        """Utility funtion to parse general sprint information from a Jira sprint report"""
         report = {}
 
         try:
@@ -267,6 +275,7 @@ class Jira:
         return report
 
     def generateAllSprintReportData(self, sprint_id):
+        """Congomerates all the data from different Jira reports into one holistic Sprint Report data-set"""
         report = {}
 
         sprint = self.__getSprint(sprint_id)
@@ -281,6 +290,13 @@ class Jira:
         return report
 
     def getSprintReportCommand(self, message):
+        """
+        A user-friendly wrapper for getting sprint report data, having it displayed nicely, and optionally collect the next sprint's data to update a notion page.
+
+        Options:
+        - 'sprint report 1234': Gets and prints the sprint report data for sprint 1234
+        - 'spritn report 1234 5678 <https://notion.so/some-document': Gets and prints the sprint report data from sprint 1234, fetchs the data for sprint 5678 (assuming it's the next sprint) and updates the 'some-document' Notion page with that information
+        """
         logging.error(f"Message: {message}")
         regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?', message).groupdict()
 
@@ -406,6 +422,7 @@ class Jira:
             }
 
     def updateNotionPage(self, notion_url, sprint_report_data, next_sprint_report_data=False):
+        """Updates the notion page at the url with the sprint report data using a search / replace mechanism"""
         search_replace_dict = self.generateNotionReplacementDictionary(sprint_report_data)
 
         if next_sprint_report_data:
@@ -423,6 +440,7 @@ class Jira:
         return False
 
     def getAverageVelocity(self, board_id, sprint_id = None):
+        """"Gets the 3 sprint average velocity for a board as of a specific sprint"""
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
 
         if velocity_report == False:
@@ -445,6 +463,7 @@ class Jira:
         return int(total/sprints) if sprints > 0 else total
 
     def generateGoogleFormURL(self, sprint_report_data):
+        """Generates a URL that will pre-populate a specific AgileOps Google Form where teams submit their sprint metrics"""
         url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
 
         google_entry_translations = {
@@ -492,6 +511,12 @@ class Jira:
         return url
 
     def generateNextSprintNotionReplacementDictionary(self, sprint_report_data):
+        """
+        Generates a dictionary who's keys are special tags placed in notion docs like `[sprint-number]` and values are the relevant data.
+
+        This function assumes that the data being passed in is for the 'next sprint' and acts accordingly
+
+        """
         notion_dictionary = {}
 
         try:
@@ -515,6 +540,12 @@ class Jira:
         return notion_dictionary
 
     def generateNotionReplacementDictionary(self, sprint_report_data):
+        """
+        Generates a dictionary who's keys are special tags placed in notion docs like `[sprint-number]` and values are the relevant data.
+
+        This function assumes that the data being passed in is for the 'current sprint' and acts accordingly
+
+        """
         notion_dictionary = {}
 
         try:
@@ -551,6 +582,7 @@ class Jira:
         return notion_dictionary
 
     def generateJiraIssueLink(self, issues):
+        """Generates a link to a collection of Jira issues"""
         link =  "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20("
 
         for issue in issues:
@@ -561,6 +593,7 @@ class Jira:
         return link
 
     def getCommandsRegex(self):
+        """Used by the bot to retrieve regex strings and commands that we support"""
         return {
             'test jira': self.testConnectionCommand,
             'sprint metrics [0-9]+': self.getSprintMetricsCommand,
@@ -569,6 +602,7 @@ class Jira:
         }
 
     def getCommandDescriptions(self):
+        """Used by the bot to provide helpful information to the user about the commands we support"""
         return {
             'test jira': 'tests my connection to jira',
             'sprint metrics [sprint-id]': 'get metrics for a given sprint',
