@@ -30,7 +30,7 @@ def test_getCommandsRegex():
         'test jira': jira.testConnectionCommand,
         'sprint metrics [0-9]+': jira.getSprintMetricsCommand,
         'sprint report [0-9]+': jira.getSprintReportCommand,
-        r'sprint report (?P<sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+)?': jira.getSprintReportCommand
+        r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?': jira.getSprintReportCommand
     }
 
     assert jira.getCommandsRegex() == expected_response
@@ -40,7 +40,7 @@ def test_getCommandDescriptions():
         'test jira': 'tests my connection to jira',
         'sprint metrics [sprint-id]': 'get metrics for a given sprint',
         'sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
-        'sprint report [sprint-id] [notion-url]': 'get a quick sprint report for a given sprint and update the given notion page'
+        'sprint report [sprint-id] [next-sprint-id] [notion-url]': 'get a quick sprint report for a given sprint, the next sprint, and then update the given notion page'
     }
 
     assert jira.getCommandDescriptions() == expected_response
@@ -1502,17 +1502,56 @@ validNotionReplacementDictionary = {
     '[items-removed-link]': "[0 Removed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())"
 }
 
-@pytest.mark.parametrize('sprint_report_data, expected_response', [
-    ({}, Exception("Unable to generate a Notion Replacement Dictionary, keys not found")),
-    (valid_report, validNotionReplacementDictionary)
+validNextSprintNotionReplacementDictionary = {
+    '[next-sprint-number]': '1',
+    '[next-sprint-start]': '01/01/2020',
+    '[next-sprint-end]': '01/15/2020',
+    '[next-sprint-goal]': 'Goal 1\nGoal 2\nGoal 3',
+    '[next-points-committed]': '9',
+    '[next-items-committed]': '3',
+    '[next-original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))"
+}
+
+validTwoSprintNotionReplacementDictionary = {
+    '[sprint-number]': '1',
+    '[sprint-start]': '01/01/2020',
+    '[sprint-end]': '01/15/2020',
+    '[sprint-goal]': 'Goal 1\nGoal 2\nGoal 3',
+    '[team-name]': "The Best Team",
+    '[average-velocity]': '21',
+    '[points-committed]': '9',
+    '[points-completed]': '9',
+    '[items-committed]': '3',
+    '[items-completed]': '3',
+    '[bugs-completed]': '1',
+    '[predictability]': '100%',
+    '[predictability-commitments]': '100%',
+    '[average-velocity]': '21',
+    '[original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))",
+    '[completed-issues-link]': "[3 Completed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4%2CNORMAL-5))",
+    '[items-not-completed-link]': "[0 Incomplete Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())",
+    '[items-removed-link]': "[0 Removed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())",
+    '[next-sprint-number]': '1',
+    '[next-sprint-start]': '01/01/2020',
+    '[next-sprint-end]': '01/15/2020',
+    '[next-sprint-goal]': 'Goal 1\nGoal 2\nGoal 3',
+    '[next-points-committed]': '9',
+    '[next-items-committed]': '3',
+    '[next-original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))"
+}
+
+@pytest.mark.parametrize('sprint_report_data, next_sprint_flag, expected_response', [
+    ({}, False, Exception("Unable to generate a Notion Replacement Dictionary, keys not found")),
+    (valid_report, False, validNotionReplacementDictionary),
+    (valid_report, True, validNextSprintNotionReplacementDictionary)
 ])
-def test_generateNotionReplacementDictionary(sprint_report_data, expected_response):
+def test_generateNotionReplacementDictionary(sprint_report_data, next_sprint_flag, expected_response):
     if isinstance(expected_response, Exception):
         with pytest.raises(Exception, match=str(expected_response)):
-            jira.generateNotionReplacementDictionary(sprint_report_data)
+            jira.generateNotionReplacementDictionary(sprint_report_data, next_sprint_flag)
     else:
 
-        actual_response = jira.generateNotionReplacementDictionary(sprint_report_data)
+        actual_response = jira.generateNotionReplacementDictionary(sprint_report_data, next_sprint_flag)
 
         for key in sorted(expected_response):
             assert expected_response[key] == actual_response[key]
@@ -1764,12 +1803,12 @@ notion_error_blocks = {'blocks': [{'alt_text': 'Order Up!',
                               }
 
 valid_notion_case = {
-    'dictionary': validNotionReplacementDictionary,
+    'dictionary': validTwoSprintNotionReplacementDictionary,
     'exception': False
 }
 
 error_notion_case = {
-    'dictionary': validNotionReplacementDictionary,
+    'dictionary': validTwoSprintNotionReplacementDictionary,
     'exception': True
 }
 
@@ -1778,8 +1817,8 @@ error_notion_case = {
 @pytest.mark.parametrize('message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, notion_case, expected_response', [
     ('sprint report 5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, False, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
     ('sprint report 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), False, valid_blocks),
-    ('sprint report 1234 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_notion_case, valid_notion_blocks),
-    ('sprint report 1234 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), error_notion_case, notion_error_blocks)
+    ('sprint report 1234 5678 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_notion_case, valid_notion_blocks),
+    ('sprint report 1234 5678 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), error_notion_case, notion_error_blocks)
 ])
 def test_getSprintReportCommand(mock_requests, mock_notion_page, message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, notion_case, expected_response):
     def request_side_effect(verb, url, *args, **kwargs):
