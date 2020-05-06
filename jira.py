@@ -228,7 +228,7 @@ class Jira:
         try:
             sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
         except :
-            logging.error(f"Did not find a sprint number in \"{message}\"")
+            logging.error(f"Did not find a sprint number in: '{message}'")
             return {'text': "Sorry, I don't see a valid sprint number there"}
 
         try:
