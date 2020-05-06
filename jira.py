@@ -409,7 +409,7 @@ class Jira:
         search_replace_dict = self.generateNotionReplacementDictionary(sprint_report_data)
 
         if next_sprint_report_data:
-            search_replace_dict.update(self.generateNotionReplacementDictionary(next_sprint_report_data, True))
+            search_replace_dict.update(self.generateNextSprintNotionReplacementDictionary(next_sprint_report_data))
 
         page = NotionPage(notion_url)
 
@@ -491,46 +491,59 @@ class Jira:
 
         return url
 
-    def generateNotionReplacementDictionary(self, sprint_report_data, next=False):
+    def generateNextSprintNotionReplacementDictionary(self, sprint_report_data):
         notion_dictionary = {}
+
         try:
             start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
             end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
-            if next:
-                notion_dictionary['[next-sprint-number]'] = sprint_report_data['sprint_number']
-                notion_dictionary['[next-sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
-                notion_dictionary['[next-sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
 
-                notion_dictionary['[next-sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
+            notion_dictionary['[next-sprint-number]'] = sprint_report_data['sprint_number']
+            notion_dictionary['[next-sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
+            notion_dictionary['[next-sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
 
-                notion_dictionary['[next-points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
-                notion_dictionary['[next-items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
+            notion_dictionary['[next-sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
 
-                notion_dictionary['[next-original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
-            else:
-                notion_dictionary['[team-name]'] = sprint_report_data['project_name']
-                notion_dictionary['[sprint-number]'] = sprint_report_data['sprint_number']
-                notion_dictionary['[sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
-                notion_dictionary['[sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
-                notion_dictionary['[sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
-                notion_dictionary['[points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
-                notion_dictionary['[points-completed]'] = str(sprint_report_data['issue_metrics']['points']['completed'])
+            notion_dictionary['[next-points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
+            notion_dictionary['[next-items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
 
-                notion_dictionary['[items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
-                notion_dictionary['[items-completed]'] = str(sprint_report_data['issue_metrics']['items']['completed'])
-                notion_dictionary['[bugs-completed]'] = str(sprint_report_data['issue_metrics']['items']['bugs_completed'])
+            notion_dictionary['[next-original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
 
-                notion_dictionary['[predictability]'] = str(sprint_report_data['issue_metrics']['meta']['predictability']) + "%"
-                notion_dictionary['[predictability-commitments]'] = str(sprint_report_data['issue_metrics']['meta']['predictability_of_commitments']) + "%"
-                notion_dictionary['[average-velocity]'] = str(sprint_report_data['average_velocity'])
+        except KeyError:
+            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
 
-                notion_dictionary['[original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
+        return notion_dictionary
 
-                notion_dictionary['[completed-issues-link]'] = f"[{sprint_report_data['issue_metrics']['items']['completed']} Completed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['completed'])})"
+    def generateNotionReplacementDictionary(self, sprint_report_data):
+        notion_dictionary = {}
 
-                notion_dictionary['[items-not-completed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['not_completed']} Incomplete Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['incomplete'])})"
+        try:
+            start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
+            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
 
-                notion_dictionary['[items-removed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['removed']} Removed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['removed'])})"
+            notion_dictionary['[team-name]'] = sprint_report_data['project_name']
+            notion_dictionary['[sprint-number]'] = sprint_report_data['sprint_number']
+            notion_dictionary['[sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
+            notion_dictionary['[sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
+            notion_dictionary['[sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
+            notion_dictionary['[points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
+            notion_dictionary['[points-completed]'] = str(sprint_report_data['issue_metrics']['points']['completed'])
+
+            notion_dictionary['[items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
+            notion_dictionary['[items-completed]'] = str(sprint_report_data['issue_metrics']['items']['completed'])
+            notion_dictionary['[bugs-completed]'] = str(sprint_report_data['issue_metrics']['items']['bugs_completed'])
+
+            notion_dictionary['[predictability]'] = str(sprint_report_data['issue_metrics']['meta']['predictability']) + "%"
+            notion_dictionary['[predictability-commitments]'] = str(sprint_report_data['issue_metrics']['meta']['predictability_of_commitments']) + "%"
+            notion_dictionary['[average-velocity]'] = str(sprint_report_data['average_velocity'])
+
+            notion_dictionary['[original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
+
+            notion_dictionary['[completed-issues-link]'] = f"[{sprint_report_data['issue_metrics']['items']['completed']} Completed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['completed'])})"
+
+            notion_dictionary['[items-not-completed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['not_completed']} Incomplete Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['incomplete'])})"
+
+            notion_dictionary['[items-removed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['removed']} Removed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['removed'])})"
 
         except KeyError:
             raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")

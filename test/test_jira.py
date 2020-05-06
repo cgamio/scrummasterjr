@@ -1540,18 +1540,32 @@ validTwoSprintNotionReplacementDictionary = {
     '[next-original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))"
 }
 
-@pytest.mark.parametrize('sprint_report_data, next_sprint_flag, expected_response', [
-    ({}, False, Exception("Unable to generate a Notion Replacement Dictionary, keys not found")),
-    (valid_report, False, validNotionReplacementDictionary),
-    (valid_report, True, validNextSprintNotionReplacementDictionary)
+@pytest.mark.parametrize('sprint_report_data, expected_response', [
+    ({}, Exception("Unable to generate a Notion Replacement Dictionary, keys not found")),
+    (valid_report, validNotionReplacementDictionary)
 ])
-def test_generateNotionReplacementDictionary(sprint_report_data, next_sprint_flag, expected_response):
+def test_generateNotionReplacementDictionary(sprint_report_data,  expected_response):
     if isinstance(expected_response, Exception):
         with pytest.raises(Exception, match=str(expected_response)):
-            jira.generateNotionReplacementDictionary(sprint_report_data, next_sprint_flag)
+            jira.generateNotionReplacementDictionary(sprint_report_data)
     else:
 
-        actual_response = jira.generateNotionReplacementDictionary(sprint_report_data, next_sprint_flag)
+        actual_response = jira.generateNotionReplacementDictionary(sprint_report_data)
+
+        for key in sorted(expected_response):
+            assert expected_response[key] == actual_response[key]
+
+@pytest.mark.parametrize('sprint_report_data, expected_response', [
+    ({}, Exception("Unable to generate a Notion Replacement Dictionary, keys not found")),
+    (valid_report, validNextSprintNotionReplacementDictionary)
+])
+def test_generateNextSprintNotionReplacementDictionary(sprint_report_data,  expected_response):
+    if isinstance(expected_response, Exception):
+        with pytest.raises(Exception, match=str(expected_response)):
+            jira.generateNextSprintNotionReplacementDictionary(sprint_report_data)
+    else:
+
+        actual_response = jira.generateNextSprintNotionReplacementDictionary(sprint_report_data)
 
         for key in sorted(expected_response):
             assert expected_response[key] == actual_response[key]
