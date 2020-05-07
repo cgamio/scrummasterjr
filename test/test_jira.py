@@ -1445,7 +1445,7 @@ report_velocity_response = {
     ('5432', valid_sprint_response, {}, badRequestResponse('No Report Found!'), {}, Exception("Could not find report for sprint 5432 on board 123")),
     ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  badRequestResponse('No Board Found!'), okRequestResponse(report_velocity_response['velocity_get_response']), Exception('Could not find boad with id 123')),
     ('1234', valid_sprint_response, okRequestResponse(no_goals_or_dates_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), Exception('Could not find or parse sprint goal')),
-    ('1234', valid_sprint_response, okRequestResponse(no_sprint_number_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), Exception('Could not find or parse sprint number')),
+    ('1234', valid_sprint_response, okRequestResponse(no_sprint_number_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), Exception("Could not find or parse sprint number from: 'Sprint Blah'")),
     ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_report)
 ])
 def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response):
