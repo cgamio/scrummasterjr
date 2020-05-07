@@ -1441,11 +1441,11 @@ report_velocity_response = {
 
 @patch('jira.requests')
 @pytest.mark.parametrize('sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response', [
-    ('5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, Exception("Could not find sprint with id 5432")),
-    ('5432', valid_sprint_response, {}, badRequestResponse('No Report Found!'), {}, Exception("Could not find report for sprint 5432 on board 123")),
-    ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  badRequestResponse('No Board Found!'), okRequestResponse(report_velocity_response['velocity_get_response']), Exception('Could not find boad with id 123')),
-    ('1234', valid_sprint_response, okRequestResponse(no_goals_or_dates_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), Exception('Could not find or parse sprint goal')),
-    ('1234', valid_sprint_response, okRequestResponse(no_sprint_number_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), Exception("Could not find or parse sprint number from: 'Sprint Blah'")),
+    ('5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
+    ('5432', valid_sprint_response, {}, badRequestResponse('No Report Found!'), {}, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
+    ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  badRequestResponse('No Board Found!'), okRequestResponse(report_velocity_response['velocity_get_response']), {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
+    ('1234', valid_sprint_response, okRequestResponse(no_goals_or_dates_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
+    ('1234', valid_sprint_response, okRequestResponse(no_sprint_number_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
     ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_report)
 ])
 def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response):
@@ -1461,11 +1461,7 @@ def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_respon
 
     mock_requests.request.side_effect = request_side_effect
 
-    if isinstance(expected_response, Exception):
-        with pytest.raises(Exception, match=str(expected_response)):
-            jira.generateAllSprintReportData(sprint_id)
-    else:
-        assert jira.generateAllSprintReportData(sprint_id) == expected_response
+    assert jira.generateAllSprintReportData(sprint_id) == expected_response
 
 valid_google_form_url='https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?entry.1082637073=TBT&entry.1975251686=1&entry.448087930=1&entry.2095001800=3&entry.1399119358=3&entry.128659456=0&entry.954885633=3&entry.1137054034=0&entry.1980453543=1&entry.1252702382=0&entry.485777497=0&entry.370334542=0&entry.1427603868=9&entry.1486076673=9&entry.254612996=3&entry.611444996=0&entry.2092919144=3&entry.493624591=9&entry.976792423=0&entry.1333444050=0&'
 

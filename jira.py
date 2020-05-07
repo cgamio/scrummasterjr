@@ -278,14 +278,18 @@ class Jira:
         """Congomerates all the data from different Jira reports into one holistic Sprint Report data-set"""
         report = {}
 
-        sprint = self.__getSprint(sprint_id)
-        sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
-        report = self.__getJiraSprintReportData(sprint_report)
-        report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
-        board = self.__getBoard(sprint['originBoardId'])
-        report['project_name'] = board['location']['projectName']
-        report['project_key'] = board['location']['projectKey']
-        report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
+        try:
+            sprint = self.__getSprint(sprint_id)
+            sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
+            report = self.__getJiraSprintReportData(sprint_report)
+            report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
+            board = self.__getBoard(sprint['originBoardId'])
+            report['project_name'] = board['location']['projectName']
+            report['project_key'] = board['location']['projectKey']
+            report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
+        except BaseException as e:
+            logging.error(f"There was an error generating a report sprint {sprint_id}\n{str(e)}")
+            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
 
         return report
 
@@ -299,11 +303,8 @@ class Jira:
         """
         regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?', message).groupdict()
 
-        try:
-            report_data = self.generateAllSprintReportData(regex_result['sprint_id'])
-        except BaseException as e:
-            logging.error(f"There was an error generating a report sprint {regex_result['sprint_id']}\n{str(e)}")
-            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
+        report_data = self.generateAllSprintReportData(regex_result['sprint_id'])
+        if 'text' in report_data: return report_data
 
         blocks = []
 
@@ -387,11 +388,8 @@ class Jira:
             })
 
         if regex_result['notion_url'] and regex_result['next_sprint_id']:
-            try:
-                next_report_data = self.generateAllSprintReportData(regex_result['next_sprint_id'])
-            except BaseException as e:
-                logging.error(f"There was an error generating a report sprint {regex_result['next_sprint_id']}\n{str(e)}")
-                return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
+            next_report_data = self.generateAllSprintReportData(regex_result['next_sprint_id'])
+            if 'text' in next_report_data: return next_report_data
 
             result = self.updateNotionPage(regex_result['notion_url'], report_data, next_report_data)
             logging.error(f"Notion Page Update Result: {result}")
