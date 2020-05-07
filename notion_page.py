@@ -15,8 +15,14 @@ class NotionPage:
         """
         This function assumes that the document contains instances of the keys in the replacement dictionary. It will traverse the document structure and replace any instances of those keys, with the values in the dictionary.
 
-        Special cases:
-        - `[sprint-goal]` and `[next-sprint-goal]`: These assume that the value is an array of goals, and will replace the key with a series of Todo blocks for each goal in the array
+        Args:
+            replacement_dictionary - a dictionary who's keys we want to replace with their values in this Notion page.
+
+                Special cases:
+                - `[sprint-goal]` and `[next-sprint-goal]`: These assume that the value is an array of goals, and will replace the key with a series of Todo blocks for each goal in the array
+
+        Returns:
+            Nothing
         """
         queue = []
 
