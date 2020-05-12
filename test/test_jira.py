@@ -3,15 +3,9 @@ import jira
 from unittest.mock import MagicMock, patch
 import json
 import re
+from fixtures import *
 
 jira = jira.Jira(" ", " ", " ")
-
-def okRequestResponse(json_data):
-    return {'status_code': 200, 'text': json.dumps(json_data)}
-
-def badRequestResponse(text):
-    return {'status_code': 500, 'text': text}
-
 
 @patch('jira.requests')
 @pytest.mark.parametrize('http_code , expected_response', [
