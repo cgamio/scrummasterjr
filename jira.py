@@ -12,6 +12,10 @@ class Jira:
     __url = None
     __greenhopper_url = None
     __agile_url = None
+    __prefix = ''
+
+    __regex = {}
+    __descriptions = {}
 
     def __makeRequest(self, verb, url, params=None):
         """Wrapper for a simple HTTP request
@@ -31,13 +35,28 @@ class Jira:
             logging.error(response.text)
             return(False)
 
-    def __init__(self, host, user, token):
+    def __init__(self, host, user, token, prefix=False):
         self.__host = host
         self.__auth = HTTPBasicAuth(user, token)
+        self.__prefix = f'{prefix} ' if prefix else ''
 
         self.__url = f"https://{self.__host}/rest/api/latest/"
         self.__agile_url = f"https://{self.__host}/rest/agile/latest/"
         self.__greenhopper_url = f"https://{self.__host}/rest/greenhopper/latest/"
+
+        self.__regex = {
+            f'test {self.__prefix}jira': self.testConnectionCommand,
+            f'{self.__prefix}sprint metrics [0-9]+': self.getSprintMetricsCommand,
+            f'{self.__prefix}sprint report [0-9]+': self.getSprintReportCommand,
+            rf'{self.__prefix}sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?': self.getSprintReportCommand
+        }
+
+        self.__descriptions = {
+            f'test {self.__prefix}jira': 'tests my connection to jira',
+            f'{self.__prefix}sprint metrics [sprint-id]': 'get metrics for a given sprint',
+            f'{self.__prefix}sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
+            f'{self.__prefix}sprint report [sprint-id] [next-sprint-id] [notion-url]': 'get a quick sprint report for a given sprint, the next sprint, and then update the given notion page'
+        }
 
     def __testConnection(self):
         """Tests the connection to Jira by getting user data"""
@@ -703,29 +722,9 @@ class Jira:
         return link
 
     def getCommandsRegex(self):
-        """Used by the bot to retrieve regex strings and commands that we support
-
-        Returns:
-            A dictionary of regex keys that correspond to functions that should be called if the regex matches a user command
-
-        """
-        return {
-            'test jira': self.testConnectionCommand,
-            'sprint metrics [0-9]+': self.getSprintMetricsCommand,
-            'sprint report [0-9]+': self.getSprintReportCommand,
-            r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?': self.getSprintReportCommand
-        }
+        """Used by the bot to retrieve regex strings and commands that we support"""
+        return self.__regex
 
     def getCommandDescriptions(self):
-        """Used by the bot to provide helpful information to the user about the commands we support
-
-
-        Returns:
-            A dictionary of command name keys who's values correspond to a helpful description of that command for users who ask
-        """
-        return {
-            'test jira': 'tests my connection to jira',
-            'sprint metrics [sprint-id]': 'get metrics for a given sprint',
-            'sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
-            'sprint report [sprint-id] [next-sprint-id] [notion-url]': 'get a quick sprint report for a given sprint, the next sprint, and then update the given notion page'
-        }
+        """Used by the bot to provide helpful information to the user about the commands we support"""
+        return self.__descriptions
