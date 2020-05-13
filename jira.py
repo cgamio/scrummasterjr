@@ -703,7 +703,12 @@ class Jira:
         return link
 
     def getCommandsRegex(self):
-        """Used by the bot to retrieve regex strings and commands that we support"""
+        """Used by the bot to retrieve regex strings and commands that we support
+
+        Returns:
+            A dictionary of regex keys that correspond to functions that should be called if the regex matches a user command
+
+        """
         return {
             'test jira': self.testConnectionCommand,
             'sprint metrics [0-9]+': self.getSprintMetricsCommand,
@@ -712,7 +717,12 @@ class Jira:
         }
 
     def getCommandDescriptions(self):
-        """Used by the bot to provide helpful information to the user about the commands we support"""
+        """Used by the bot to provide helpful information to the user about the commands we support
+
+
+        Returns:
+            A dictionary of command name keys who's values correspond to a helpful description of that command for users who ask
+        """
         return {
             'test jira': 'tests my connection to jira',
             'sprint metrics [sprint-id]': 'get metrics for a given sprint',

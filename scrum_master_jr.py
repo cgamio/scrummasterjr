@@ -34,7 +34,14 @@ jira = Jira(jira_host, jira_user, jira_token)
 commandsets = [jira]
 
 def say_hello(text):
-    """A basic hello interaction with the bot"""
+    """ A basic hello interaction
+
+    Args:
+        text - the text the user sent that triggered this event (not used in this case, just meant to be consistent with all commands)
+
+    Returns:
+        A random "hello" response to be polite to users who greet the bot
+    """
     responses = ["Hello there!",
                  "It's a pleasure to meet you! My name is Scrum Master Jr.",
                  "Oh! Sorry, you startled me. I didn't see you there.",
@@ -48,7 +55,14 @@ def say_hello(text):
     return {'text': random.choice(responses)}
 
 def get_help(text):
-    """Get help information for all of the command sets and share that with the user"""
+    """Get help information for all of the command sets and share that with the user
+
+    Args:
+        text - the text the user sent that triggered this event (not used in this case, just meant to be consistent with all commands)
+
+    Returns:
+        Help text on all the commands that are currently registered with the bot
+    """
     response = "These are the things I know how to respond to:\nhello - random greeting"
     for set in commandsets:
         for command in set.getCommandDescriptions().keys():
@@ -58,14 +72,23 @@ def get_help(text):
     return {'text': response.strip()}
 
 def handle_response(function, message):
-    """Takes the response back from a command and share that with the user"""
+    """Executes a command and forwards the response back to the user
+
+    Args:
+        function - the function that should be called
+        message - the message that triggered this events
+    """
     response = function(message['text'])
     response['channel'] = message['channel']
     response = slack_client.chat_postMessage(**response)
 
 @slack_events_adapter.on("app_mention")
 def handle_mention(event_data):
-    """Handles slack @mentions"""
+    """Handles slack @mentions
+
+    Args:
+        event-data - the slack event data that triggered this adapter (contains the message and other metadata)
+    """
     message = event_data["event"]
 
     if message.get("subtype") is None:
