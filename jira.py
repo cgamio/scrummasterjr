@@ -465,9 +465,10 @@ class Jira:
 
             result = self.updateNotionPage(regex_result['notion_url'], report_data, next_report_data)
             logging.error(f"Notion Page Update Result: {result}")
-            if result:
-                blocks.append(divider_block)
 
+            blocks.append(divider_block)
+
+            if result:
                 blocks.append({
                     "type": "section",
                     "text": {
@@ -476,8 +477,6 @@ class Jira:
                     }
                     })
             else:
-                blocks.append(divider_block)
-
                 blocks.append({
                     "type": "section",
                     "text": {
