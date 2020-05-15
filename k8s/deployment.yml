@@ -44,6 +44,12 @@ spec:
           value: {{ jira_token }}
         - name: NOTION_TOKEN
           value: {{notion_token}}
+        - name: CDS_JIRA_HOST
+          value: {{ cds_jira_host }}
+        - name: CDS_JIRA_USER
+          value: {{ cds_jira_user }}
+        - name: CDS_JIRA_TOKEN
+          value: {{ jira_token }}
         ports:
         - containerPort: 80
           protocol: TCP
