@@ -49,7 +49,7 @@ spec:
         - name: CDS_JIRA_USER
           value: {{ cds_jira_user }}
         - name: CDS_JIRA_TOKEN
-          value: {{ jira_token }}
+          value: {{ cds_jira_token }}
         ports:
         - containerPort: 80
           protocol: TCP
