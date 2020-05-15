@@ -27,16 +27,6 @@ slack_client = slack.WebClient(slack_bot_token)
 
 commandsets = []
 
-# Set up for Jira Commands
-try:
-    jira_host = os.environ["JIRA_HOST"]
-    jira_user = os.environ["JIRA_USER"]
-    jira_token = os.environ["JIRA_TOKEN"]
-    jira = Jira(jira_host, jira_user, jira_token)
-    commandsets.append(jira)
-except KeyError:
-    logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
-
 # Set up for CDS Jira Commands (if configured)
 try:
     cds_jira_host = os.environ["CDS_JIRA_HOST"]
@@ -46,6 +36,16 @@ try:
     commandsets.append(cds_jira)
 except KeyError:
     logging.warning("Did not find CDS Jira Environment Variables. Continuing without registering that command set")
+
+# Set up for Jira Commands
+try:
+    jira_host = os.environ["JIRA_HOST"]
+    jira_user = os.environ["JIRA_USER"]
+    jira_token = os.environ["JIRA_TOKEN"]
+    jira = Jira(jira_host, jira_user, jira_token)
+    commandsets.append(jira)
+except KeyError:
+    logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
 
 def say_hello(text):
     """ A basic hello interaction
