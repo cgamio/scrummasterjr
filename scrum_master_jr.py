@@ -97,6 +97,7 @@ def handle_response(function, message):
     response = slack_client.chat_postMessage(**response)
 
 @slack_events_adapter.on("app_mention")
+@slack_events_adapter.on("message.im")
 def handle_mention(event_data):
     """Handles slack @mentions
 
