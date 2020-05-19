@@ -3,6 +3,8 @@ import requests
 import logging
 import re
 import json
+from datetime import datetime
+from notion_page import NotionPage
 
 class Jira:
     __auth = None
@@ -12,6 +14,16 @@ class Jira:
     __agile_url = None
 
     def __makeRequest(self, verb, url, params=None):
+        """Wrapper for a simple HTTP request
+
+            Args:
+                verb - HTTP verb as string (ie. 'GET' or 'POST')
+                url - URL to make HTTP requests against
+                params - Any request parameters to pass along (defaults to None)
+
+            Returns:
+                A JSON represenatation of the response text, or False in the case of an error
+        """
         response = requests.request(verb, url, headers={ 'Accept': 'application/json' }, auth=self.__auth, params=params)
         if response.status_code == 200:
             return(json.loads(response.text))
@@ -28,6 +40,7 @@ class Jira:
         self.__greenhopper_url = f"https://{self.__host}/rest/greenhopper/latest/"
 
     def __testConnection(self):
+        """Tests the connection to Jira by getting user data"""
         url = f"{self.__url}/myself"
 
         response = self.__makeRequest('GET', url)
@@ -35,6 +48,14 @@ class Jira:
         return response
 
     def testConnectionCommand(self, message):
+        """Wrapper for Jira connection test functionality with user-friendly responses
+
+        Args:
+            message - a string containing the message from the user that initiated this command
+
+        Returns:
+            A slack message response
+        """
         response = self.__testConnection()
         text = "My connection to Jira is up and running!"
         if not response:
@@ -44,6 +65,14 @@ class Jira:
         return {'text': text}
 
     def __calculateSprintMetrics(self, sprint_report):
+        """Given the data from a Jira sprint report, calculates sprint metrics
+
+        Args:
+            sprint_report - the data from a Jira sprint reports
+
+        Returns:
+            A dictionary with metrics
+        """
         points = {
             "committed": 0,
             "completed": 0,
@@ -200,6 +229,14 @@ class Jira:
         }
 
     def __getSprint(self, sprint_id):
+        """Utility funtion to get sprint data from Jira
+
+        Args:
+            sprint_id - the id of a Jira sprint
+
+        Returns:
+            A JSON encoded represenatation of the Jira sprint object
+        """
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
         if not sprint:
@@ -208,6 +245,14 @@ class Jira:
         return sprint
 
     def __getBoard(self, board_id):
+        """Utility funtion to get board data from Jira
+
+        Args:
+            board_id - the id of a Jira board
+
+        Returns:
+            A JSON encoded represenatation of Jira board object
+        """
         board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
         if not board:
             raise Exception(f"Could not find boad with id {board_id}")
@@ -215,7 +260,15 @@ class Jira:
         return board
 
     def __getSprintReport(self, sprint_id, board_id):
+        """Utility funtion to get sprint report data from Jira
 
+        Args:
+            sprint_id - the id of a Jira sprint
+            board_id - the id of a Jira board
+
+        Returns:
+            A JSON encoded represenatation of a Jira Sprint Report for the given sprint and board
+        """
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
         if not sprint_report:
             raise Exception(f"Could not find report for sprint {sprint_id} on board {board_id}")
@@ -223,7 +276,19 @@ class Jira:
         return sprint_report
 
     def getSprintMetricsCommand(self, message):
-        sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
+        """User-friendly wrapper for getting the metrics for a given sprint
+
+        Args:
+            message - a string containing the message from the user that initiated this command
+
+        Returns:
+            A slack message response
+        """
+        try:
+            sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
+        except :
+            logging.error(f"Did not find a sprint number in: '{message}'")
+            return {'text': "Sorry, I don't see a valid sprint number there"}
 
         try:
             sprint = self.__getSprint(sprintid)
@@ -239,12 +304,20 @@ class Jira:
         return {'text': f"```{metrics_text}```"}
 
     def __getJiraSprintReportData(self, sprint_report):
+        """Utility funtion to parse general sprint information from a Jira sprint report
+
+        Args:
+            sprint_report - raw data from a Jira Sprint Report
+
+        Returns:
+            A dictionary with specific information parsed from the report
+        """
         report = {}
 
         try:
-            report['sprint_number'] = re.search('(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
-        except:
-            raise Exception(f"Could not parse sprint number from \"{sprint_report['name']}\"")
+            report['sprint_number'] = re.search(r'(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
+        except AttributeError:
+            raise Exception(f"Could not find or parse sprint number from: '{sprint_report['sprint']['name']}'")
 
         try:
             report['sprint_start'] = sprint_report['sprint']['startDate']
@@ -255,33 +328,55 @@ class Jira:
 
         try:
             report['sprint_goals'] = sprint_report['sprint']['goal'].split("\n")
-        except:
+        except (AttributeError, KeyError):
             raise Exception(f"Could not find or parse sprint goal")
 
         return report
 
     def generateAllSprintReportData(self, sprint_id):
+        """Congomerates all the data from different Jira reports into one holistic Sprint Report data-set
+
+        Args:
+            sprint_id - the id of a Jira sprint
+
+        Returns:
+            A dictionary containing the information necessary for creating an AgileOps Sprint Report
+        """
         report = {}
 
-        sprint = self.__getSprint(sprint_id)
-        sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
-        report = self.__getJiraSprintReportData(sprint_report)
-        report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
-        board = self.__getBoard(sprint['originBoardId'])
-        report['project_name'] = board['location']['projectName']
-        report['project_key'] = board['location']['projectKey']
-        report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
+        try:
+            sprint = self.__getSprint(sprint_id)
+            sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
+            report = self.__getJiraSprintReportData(sprint_report)
+            report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
+            board = self.__getBoard(sprint['originBoardId'])
+            report['project_name'] = board['location']['projectName']
+            report['project_key'] = board['location']['projectKey']
+            report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
+        except BaseException as e:
+            logging.error(f"There was an error generating a report sprint {sprint_id}\n{str(e)}")
+            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
 
         return report
 
     def getSprintReportCommand(self, message):
-        sprintid = re.search('sprint report ([0-9]+)', message).group(1)
+        """
+        A user-friendly wrapper for getting sprint report data, having it displayed nicely, and optionally collect the next sprint's data to update a notion page.
 
-        try:
-            report_data = self.generateAllSprintReportData(sprintid)
-        except BaseException as e:
-            logging.error(f"There was an error generating a report sprint {sprintid}\n{str(e)}")
-            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
+        Args:
+            message - a string containing the message from the user that initiated this commands
+
+            Options:
+            - 'sprint report 1234': Gets and prints the sprint report data for sprint 1234
+            - 'spritn report 1234 5678 <https://notion.so/some-document': Gets and prints the sprint report data from sprint 1234, fetchs the data for sprint 5678 (assuming it's the next sprint) and updates the 'some-document' Notion page with that information
+
+        Returns:
+            A slack response
+        """
+        regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?', message).groupdict()
+
+        report_data = self.generateAllSprintReportData(regex_result['sprint_id'])
+        if 'text' in report_data: return report_data
 
         blocks = []
 
@@ -364,11 +459,74 @@ class Jira:
             }
             })
 
+        if regex_result['notion_url'] and regex_result['next_sprint_id']:
+            next_report_data = self.generateAllSprintReportData(regex_result['next_sprint_id'])
+            if 'text' in next_report_data: return next_report_data
+
+            result = self.updateNotionPage(regex_result['notion_url'], report_data, next_report_data)
+            logging.error(f"Notion Page Update Result: {result}")
+
+            blocks.append(divider_block)
+
+            if result:
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"There was an error updating the <{regex_result['notion_url']}|Notion Page>."
+                    }
+                    })
+            else:
+                blocks.append({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": f"<{regex_result['notion_url']}|Notion Page> updated!"
+                    }
+                    })
+
         return {
             "blocks": blocks
             }
 
+    def updateNotionPage(self, notion_url, sprint_report_data, next_sprint_report_data=False):
+        """Updates the notion page at the url with the sprint report data using a search / replace mechanism
+
+        Args:
+            notion_url - the URL to a notion page
+            sprint_report_data - a dictionary of AgileOps Sprint Report Data
+            next_sprint_report_data - a dictionary of AgileOps Sprint Report Data (defaults to False if there is no next sprint)
+
+        Returns:
+            A BaseException if there was a problem
+            False if everything ran smoothly
+        """
+        search_replace_dict = self.generateNotionReplacementDictionary(sprint_report_data)
+
+        if next_sprint_report_data:
+            search_replace_dict.update(self.generateNextSprintNotionReplacementDictionary(next_sprint_report_data))
+
+        page = NotionPage(notion_url)
+
+        logging.error(f"Notion Page: {page}")
+
+        try:
+            page.searchAndReplace(search_replace_dict)
+        except BaseException as e:
+            return e
+
+        return False
+
     def getAverageVelocity(self, board_id, sprint_id = None):
+        """"Gets the 3 sprint average velocity for a board as of a specific sprint
+
+        Args:
+            board_id - the id of a Jira board
+            sprint_id - the id of a Jira sprint (defaults to None, in which case it assumes the most recently completely sprint)
+
+        Returns:
+            The 3 sprint average velocity (as an integer) for the board_id as of the sprint_id provided
+        """
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
 
         if velocity_report == False:
@@ -391,6 +549,14 @@ class Jira:
         return int(total/sprints) if sprints > 0 else total
 
     def generateGoogleFormURL(self, sprint_report_data):
+        """Generates a URL that will pre-populate a specific AgileOps Google Form where teams submit their sprint metrics
+
+        Args:
+            sprint_report_data - a dictionary containing AgileOps Sprint Report Data
+
+        Returns:
+            A URL to a google form with relevant information pre-populate via query parameters
+        """
         url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
 
         google_entry_translations = {
@@ -437,16 +603,129 @@ class Jira:
 
         return url
 
+    def generateNextSprintNotionReplacementDictionary(self, sprint_report_data):
+        """
+        Generates a dictionary who's keys are special tags placed in notion docs like `[sprint-number]` and values are the relevant data.
+
+        This function assumes that the data being passed in is for the 'next sprint' and acts accordingly
+
+        Args:
+            sprint_report_data - A dictionary containing AgileOps Sprint Report data
+
+        Returns:
+            A dictionary containing key / value pairs that will facilitate a search and replace in a notion document to populate it with relevant data
+        """
+        notion_dictionary = {}
+
+        try:
+            start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
+            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
+
+            notion_dictionary['[next-sprint-number]'] = sprint_report_data['sprint_number']
+            notion_dictionary['[next-sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
+            notion_dictionary['[next-sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
+
+            notion_dictionary['[next-sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
+
+            notion_dictionary['[next-points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
+            notion_dictionary['[next-items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
+
+            notion_dictionary['[next-original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
+
+        except KeyError:
+            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
+
+        return notion_dictionary
+
+    def generateNotionReplacementDictionary(self, sprint_report_data):
+        """
+        Generates a dictionary who's keys are special tags placed in notion docs like `[sprint-number]` and values are the relevant data.
+
+        This function assumes that the data being passed in is for the 'current sprint' and acts accordingly
+
+        Args:
+            sprint_report_data - A dictionary containing AgileOps Sprint Report data
+
+        Returns:
+            A dictionary containing key / value pairs that will facilitate a search and replace in a notion document to populate it with relevant data
+        """
+        notion_dictionary = {}
+
+        try:
+            start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
+            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
+
+            notion_dictionary['[team-name]'] = sprint_report_data['project_name']
+            notion_dictionary['[sprint-number]'] = sprint_report_data['sprint_number']
+            notion_dictionary['[sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
+            notion_dictionary['[sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
+            notion_dictionary['[sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
+            notion_dictionary['[points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
+            notion_dictionary['[points-completed]'] = str(sprint_report_data['issue_metrics']['points']['completed'])
+
+            notion_dictionary['[items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
+            notion_dictionary['[items-completed]'] = str(sprint_report_data['issue_metrics']['items']['completed'])
+            notion_dictionary['[bugs-completed]'] = str(sprint_report_data['issue_metrics']['items']['bugs_completed'])
+
+            notion_dictionary['[predictability]'] = str(sprint_report_data['issue_metrics']['meta']['predictability']) + "%"
+            notion_dictionary['[predictability-commitments]'] = str(sprint_report_data['issue_metrics']['meta']['predictability_of_commitments']) + "%"
+            notion_dictionary['[average-velocity]'] = str(sprint_report_data['average_velocity'])
+
+            notion_dictionary['[original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
+
+            notion_dictionary['[completed-issues-link]'] = f"[{sprint_report_data['issue_metrics']['items']['completed']} Completed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['completed'])})"
+
+            notion_dictionary['[items-not-completed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['not_completed']} Incomplete Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['incomplete'])})"
+
+            notion_dictionary['[items-removed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['removed']} Removed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['removed'])})"
+
+        except KeyError:
+            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
+
+        return notion_dictionary
+
+    def generateJiraIssueLink(self, issues):
+        """Generates a link to a collection of Jira issues
+
+        Args:
+            issues - a list of Jira issue id's
+
+        Returns:
+            A Jira link that will display the passed in issues
+        """
+        link =  "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20("
+
+        for issue in issues:
+            link += f"{issue}%2C"
+
+        link = re.sub(r'\%2C$', '', link) + ")"
+
+        return link
+
     def getCommandsRegex(self):
+        """Used by the bot to retrieve regex strings and commands that we support
+
+        Returns:
+            A dictionary of regex keys that correspond to functions that should be called if the regex matches a user command
+
+        """
         return {
             'test jira': self.testConnectionCommand,
             'sprint metrics [0-9]+': self.getSprintMetricsCommand,
-            'sprint report [0-9]+': self.getSprintReportCommand
+            'sprint report [0-9]+': self.getSprintReportCommand,
+            r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?': self.getSprintReportCommand
         }
 
     def getCommandDescriptions(self):
+        """Used by the bot to provide helpful information to the user about the commands we support
+
+
+        Returns:
+            A dictionary of command name keys who's values correspond to a helpful description of that command for users who ask
+        """
         return {
             'test jira': 'tests my connection to jira',
             'sprint metrics [sprint-id]': 'get metrics for a given sprint',
-            'sprint report [sprint-id]': 'get a quick sprint report for a given sprint'
+            'sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
+            'sprint report [sprint-id] [next-sprint-id] [notion-url]': 'get a quick sprint report for a given sprint, the next sprint, and then update the given notion page'
         }

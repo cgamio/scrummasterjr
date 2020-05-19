@@ -43,9 +43,31 @@ def test_help_mock_set():
     )
 ])
 def test_handle_mention(message, expected_response):
-
     mock_slack_client = MagicMock()
     scrum_master_jr.slack_client = mock_slack_client
+
     scrum_master_jr.handle_mention(message)
 
     mock_slack_client.chat_postMessage.assert_called_with(**expected_response)
+
+hello_responses = ["Hello there!",
+             "It's a pleasure to meet you! My name is Scrum Master Jr.",
+             "Oh! Sorry, you startled me. I didn't see you there.",
+             "Hi!",
+             "Howdy!",
+             "Aloha!",
+             "Hola!",
+             "Bonjour!"
+            ]
+
+def test_handle_mention_hello():
+    mock_slack_client = MagicMock()
+    def side_effect(*args, **kwargs):
+        assert kwargs['text'] in hello_responses
+
+    mock_slack_client.side_effect = side_effect
+    scrum_master_jr.slack_client = mock_slack_client
+
+    scrum_master_jr.handle_mention({'event': {'subtype': None, 'text':'hello', 'channel': '1234'}})
+
+    mock_slack_client.chat_postMessage.assert_called_once()

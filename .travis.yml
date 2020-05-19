@@ -21,7 +21,8 @@ install:
   - docker pull quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} || docker build -t quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} .
 
 script:
-  - docker run -e SLACK_SIGNING_SECRET="test-signing-secret" -e SLACK_BOT_TOKEN="test-slack-bot-token" -e JIRA_HOST="test-jira-host" -e JIRA_USER="test-jira-user" -e JIRA_TOKEN="test-jira-token" quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} bin/run-tests.sh
+  - ci_env=`bash <(curl -s https://codecov.io/env)`
+  - docker run -e SLACK_SIGNING_SECRET="test-signing-secret" -e SLACK_BOT_TOKEN="test-slack-bot-token" -e JIRA_HOST="test-jira-host" -e JIRA_USER="test-jira-user" -e JIRA_TOKEN="test-jira-token" -e NOTION_TOKEN-"test-notion-token" quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} bin/run-tests.sh
 
 after_success: >-
   if [ "$TRAVIS_PULL_REQUEST" != "false" ];then
