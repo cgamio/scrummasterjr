@@ -98,6 +98,11 @@ def handle_response(function, message):
 
 @slack_events_adapter.on("message")
 def handle_message(event_data):
+    """Handles all messages
+
+    Args:
+        event-data - the slack event data that triggered this adapter (contains the message and other metadata)
+    """
     if event_data['event']['channel_type'] == 'im':
         # Treat DM's as @mentions
         handle_mention(event_data)
@@ -110,7 +115,7 @@ def handle_mention(event_data):
         event-data - the slack event data that triggered this adapter (contains the message and other metadata)
     """
     message = event_data["event"]
-    
+
     if 'bot_id' in message.keys():
         # We don't want to respond to other bots, so bail
         return
