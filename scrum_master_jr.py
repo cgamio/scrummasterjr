@@ -25,13 +25,27 @@ slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events", 
 slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
 slack_client = slack.WebClient(slack_bot_token)
 
-# Set up for Jira Commands
-jira_host = os.environ["JIRA_HOST"]
-jira_user = os.environ["JIRA_USER"]
-jira_token = os.environ["JIRA_TOKEN"]
-jira = Jira(jira_host, jira_user, jira_token)
+commandsets = []
 
-commandsets = [jira]
+# Set up for CDS Jira Commands (if configured)
+try:
+    cds_jira_host = os.environ["CDS_JIRA_HOST"]
+    cds_jira_user = os.environ["CDS_JIRA_USER"]
+    cds_jira_token = os.environ["CDS_JIRA_TOKEN"]
+    cds_jira = Jira(cds_jira_host, cds_jira_user, cds_jira_token, "cds")
+    commandsets.append(cds_jira)
+except KeyError:
+    logging.warning("Did not find CDS Jira Environment Variables. Continuing without registering that command set")
+
+# Set up for Jira Commands
+try:
+    jira_host = os.environ["JIRA_HOST"]
+    jira_user = os.environ["JIRA_USER"]
+    jira_token = os.environ["JIRA_TOKEN"]
+    jira = Jira(jira_host, jira_user, jira_token)
+    commandsets.append(jira)
+except KeyError:
+    logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
 
 def say_hello(text):
     """ A basic hello interaction
@@ -82,6 +96,17 @@ def handle_response(function, message):
     response['channel'] = message['channel']
     response = slack_client.chat_postMessage(**response)
 
+@slack_events_adapter.on("message")
+def handle_message(event_data):
+    """Handles all messages
+
+    Args:
+        event-data - the slack event data that triggered this adapter (contains the message and other metadata)
+    """
+    if event_data['event']['channel_type'] == 'im':
+        # Treat DM's as @mentions
+        handle_mention(event_data)
+
 @slack_events_adapter.on("app_mention")
 def handle_mention(event_data):
     """Handles slack @mentions
@@ -90,6 +115,10 @@ def handle_mention(event_data):
         event-data - the slack event data that triggered this adapter (contains the message and other metadata)
     """
     message = event_data["event"]
+
+    if 'bot_id' in message.keys():
+        # We don't want to respond to other bots, so bail
+        return
 
     if message.get("subtype") is None:
         text = message.get("text")
