@@ -104,7 +104,7 @@ def handle_response(function, message):
             response, errortext = function_response
             errormessage={
                 'channel': slack_error_channel,
-                'text': errortext}
+                'text': f"@here {errortext}\nMessage that generated this error:\n```{message}```"}
             slack_client.chat_postMessage(**errormessage)
 
             function_response = response
