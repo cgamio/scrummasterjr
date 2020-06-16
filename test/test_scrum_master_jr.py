@@ -87,6 +87,6 @@ def test_handle_response_error():
     scrum_master_jr.handle_response(throw_error, message)
 
     mock_slack_client.chat_postMessage.assert_has_calls([
-        call(channel='4321', text="@here This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```"),
+        call(channel='4321', text="<!here> This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```"),
         call(channel='1234', text='This is a user-facing error message')
     ])
