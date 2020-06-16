@@ -509,14 +509,7 @@ class Jira:
                     }
                     })
 
-        if error:
-            return {
-                "blocks": blocks
-                }, error
-        else:
-            return {
-                "blocks": blocks
-                }
+        return ({"blocks": blocks}, error) if error else {"blocks": blocks}
 
     def updateNotionPage(self, notion_url, sprint_report_data, next_sprint_report_data=False):
         """Updates the notion page at the url with the sprint report data using a search / replace mechanism
