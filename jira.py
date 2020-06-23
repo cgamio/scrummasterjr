@@ -390,8 +390,11 @@ class Jira:
             - 'spritn report 1234 5678 <https://notion.so/some-document': Gets and prints the sprint report data from sprint 1234, fetchs the data for sprint 5678 (assuming it's the next sprint) and updates the 'some-document' Notion page with that information
 
         Returns:
-            A slack response
+            A slack response and an error message if applicable
         """
+
+        error = None
+
         regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?', message).groupdict()
 
         report_data = self.generateAllSprintReportData(regex_result['sprint_id'])
@@ -492,9 +495,11 @@ class Jira:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"There was an error updating the <{regex_result['notion_url']}|Notion Page>."
+                        "text": f"There was an error updating the <{regex_result['notion_url']}|Notion Page>. I've notified my overlords and I'm sure they're looking into it"
                     }
                     })
+
+                error = f"A user trying to update a Notion page got the following error. You might want to check / update the Notion token\n `{result}`"
             else:
                 blocks.append({
                     "type": "section",
@@ -504,9 +509,7 @@ class Jira:
                     }
                     })
 
-        return {
-            "blocks": blocks
-            }
+        return ({"blocks": blocks}, error) if error else {"blocks": blocks}
 
     def updateNotionPage(self, notion_url, sprint_report_data, next_sprint_report_data=False):
         """Updates the notion page at the url with the sprint report data using a search / replace mechanism
@@ -525,11 +528,9 @@ class Jira:
         if next_sprint_report_data:
             search_replace_dict.update(self.generateNextSprintNotionReplacementDictionary(next_sprint_report_data))
 
-        page = NotionPage(notion_url)
-
-        logging.error(f"Notion Page: {page}")
-
         try:
+            page = NotionPage(notion_url)
+            logging.info(f"Notion Page: {page}")
             page.searchAndReplace(search_replace_dict)
         except BaseException as e:
             return e

@@ -50,6 +50,8 @@ spec:
           value: {{ cds_jira_user }}
         - name: CDS_JIRA_TOKEN
           value: {{ cds_jira_token }}
+        - name: SLACK_ERROR_CHANNEL
+          value: {{ slack_error_channel }}
         ports:
         - containerPort: 80
           protocol: TCP

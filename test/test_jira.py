@@ -193,7 +193,7 @@ def test_getSprintReportCommand(mock_requests, mock_notion_page, message_text, s
         mock_notion_page.return_value = mock_notion_page
 
         if notion_case['exception']:
-            mock_notion_page.searchAndReplace.side_effect = lambda x: exec(f"raise(Exception())")
+            mock_notion_page.searchAndReplace.side_effect = lambda x: exec(f"raise(Exception('An Error!'))")
 
 
     if isinstance(expected_response, Exception):

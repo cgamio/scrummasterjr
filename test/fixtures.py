@@ -1562,7 +1562,7 @@ valid_notion_blocks = {'blocks': [{'alt_text': 'Order Up!',
                               }]
                               }
 
-notion_error_blocks = {'blocks': [{'alt_text': 'Order Up!',
+notion_error_blocks = ({'blocks': [{'alt_text': 'Order Up!',
                           'image_url': 'https://media.giphy.com/media/l1JojmmBMELYFKJc4/giphy.gif',
                           'title': {'text': 'Order Up!', 'type': 'plain_text'},
                           'type': 'image'},
@@ -1639,10 +1639,10 @@ notion_error_blocks = {'blocks': [{'alt_text': 'Order Up!',
                               "type": "section",
                               "text": {
                                   "type": "mrkdwn",
-                                  "text": "There was an error updating the <https://www.notion.so/mediaos/some-test-document|Notion Page>."
+                                  "text": "There was an error updating the <https://www.notion.so/mediaos/some-test-document|Notion Page>. I've notified my overlords and I'm sure they're looking into it"
                               }
                               }]
-                              }
+                              }, 'A user trying to update a Notion page got the following error. You might want to check / update the Notion token\n `An Error!`')
 
 valid_notion_case = {
     'dictionary': validTwoSprintNotionReplacementDictionary,

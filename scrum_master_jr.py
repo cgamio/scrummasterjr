@@ -25,6 +25,12 @@ slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events", 
 slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
 slack_client = slack.WebClient(slack_bot_token)
 
+# Get Channel to post error messages to
+try:
+    slack_error_channel = os.environ["SLACK_ERROR_CHANNEL"]
+except KeyError:
+    slack_error_channel = None
+
 commandsets = []
 
 # Set up for CDS Jira Commands (if configured)
@@ -92,9 +98,20 @@ def handle_response(function, message):
         function - the function that should be called
         message - the message that triggered this events
     """
-    response = function(message['text'])
-    response['channel'] = message['channel']
-    response = slack_client.chat_postMessage(**response)
+    function_response = function(message['text'])
+    if type(function_response) is tuple:
+        if slack_error_channel:
+            response, errortext = function_response
+            errormessage={
+                'channel': slack_error_channel,
+                'text': f"<!here> {errortext}\nMessage that generated this error:\n```{message}```"}
+            slack_client.chat_postMessage(**errormessage)
+
+            function_response = response
+
+    function_response['channel'] = message['channel']
+    slack_client.chat_postMessage(**function_response)
+
 
 @slack_events_adapter.on("message")
 def handle_message(event_data):
