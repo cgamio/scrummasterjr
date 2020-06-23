@@ -10,8 +10,8 @@ slackclient = "*"
 slackeventsapi = "*"
 flask = "*"
 pytest = "*"
-notion = "*"
 pytest-cov = "*"
+notion = "==0.0.24"
 
 [requires]
 python_version = "3.7"
