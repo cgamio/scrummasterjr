@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request
 import logging
 logging.basicConfig(format='%(message)s')
 import threading
+import time
 
 from jira import Jira
 
@@ -112,6 +113,13 @@ def handle_response(function, message):
     function_response['channel'] = message['channel']
     slack_client.chat_postMessage(**function_response)
 
+def response_timer(handle_response_thread, message):
+    time.sleep(3)
+    if handle_response_thread.isAlive():
+        slow_execution_message={
+            'channel': message['channel'],
+            'text': "Hmmmm... That's a tough one. Let me think about it for a minute"}
+        slack_client.chat_postMessage(**slow_execution_message)
 
 @slack_events_adapter.on("message")
 def handle_message(event_data):
@@ -150,7 +158,9 @@ def handle_mention(event_data):
             for regex in set.getCommandsRegex().keys():
                 if re.search(regex, text):
                     thread = threading.Thread(target=handle_response, args=(set.getCommandsRegex()[regex], message))
+                    timer_thread = threading.Thread(target=response_timer, args(thread, message))
                     thread.start()
+                    timer_thread.start()
                     return
 
         slack_client.chat_postMessage(channel=message["channel"], text="I'm sorry, I don't understand you. Try asking me for `help`")
