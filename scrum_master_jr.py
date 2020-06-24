@@ -114,6 +114,12 @@ def handle_response(function, message):
     slack_client.chat_postMessage(**function_response)
 
 def response_timer(handle_response_thread, message):
+    """Ensures that the user always gets some response within 3 seconds
+
+    Args:
+        handle_response_thread - a reference to the main execution thread
+        message - the message that triggered the main execution thread (so we know where to post the follow up message)
+    """
     time.sleep(3)
     if handle_response_thread.isAlive():
         slow_execution_message={
@@ -158,7 +164,7 @@ def handle_mention(event_data):
             for regex in set.getCommandsRegex().keys():
                 if re.search(regex, text):
                     thread = threading.Thread(target=handle_response, args=(set.getCommandsRegex()[regex], message))
-                    timer_thread = threading.Thread(target=response_timer, args(thread, message))
+                    timer_thread = threading.Thread(target=response_timer, args=(thread, message))
                     thread.start()
                     timer_thread.start()
                     return
