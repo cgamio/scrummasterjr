@@ -117,7 +117,7 @@ def response_timer(handle_response_thread, message):
     """Ensures that the user always gets some response within 3 seconds
 
     Args:
-        handle_response_thread - a reference to the main execution thread
+        handle_response_thread - (thread reference) the main execution thread. If this thread is still alive after 3 seconds, we want to give the user a heads up
         message - the message that triggered the main execution thread (so we know where to post the follow up message)
     """
     time.sleep(3)
