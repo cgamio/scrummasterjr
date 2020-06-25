@@ -21,12 +21,12 @@ class Jira:
         """Wrapper for a simple HTTP request
 
             Args:
-                verb - HTTP verb as string (ie. 'GET' or 'POST')
-                url - URL to make HTTP requests against
-                params - Any request parameters to pass along (defaults to None)
+                verb: string - HTTP verb as string (ie. 'GET' or 'POST')
+                url: string - URL to make HTTP requests against
+                params: dictionary - Any request parameters to pass along (defaults to None)
 
             Returns:
-                A JSON represenatation of the response text, or False in the case of an error
+                dictionary - A JSON represenatation of the response text, or False in the case of an error
         """
         response = requests.request(verb, url, headers={ 'Accept': 'application/json' }, auth=self.__auth, params=params)
         if response.status_code == 200:
@@ -70,10 +70,10 @@ class Jira:
         """Wrapper for Jira connection test functionality with user-friendly responses
 
         Args:
-            message - a string containing the message from the user that initiated this command
+            message: string - the message from the user that initiated this command
 
         Returns:
-            A slack message response
+            dictionary - A slack message response
         """
         response = self.__testConnection()
         text = "My connection to Jira is up and running!"
@@ -87,10 +87,10 @@ class Jira:
         """Given the data from a Jira sprint report, calculates sprint metrics
 
         Args:
-            sprint_report - the data from a Jira sprint reports
+            sprint_report: dictionary - the data from a Jira sprint reports
 
         Returns:
-            A dictionary with metrics
+            dictionary - calculated metrics
         """
         points = {
             "committed": 0,
@@ -251,10 +251,10 @@ class Jira:
         """Utility funtion to get sprint data from Jira
 
         Args:
-            sprint_id - the id of a Jira sprint
+            sprint_id: string - the id of a Jira sprint
 
         Returns:
-            A JSON encoded represenatation of the Jira sprint object
+            dictionary - A JSON encoded represenatation of the Jira sprint object
         """
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
@@ -267,10 +267,10 @@ class Jira:
         """Utility funtion to get board data from Jira
 
         Args:
-            board_id - the id of a Jira board
+            board_id: string - the id of a Jira board
 
         Returns:
-            A JSON encoded represenatation of Jira board object
+            dictionary - A JSON encoded represenatation of Jira board object
         """
         board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
         if not board:
@@ -282,11 +282,11 @@ class Jira:
         """Utility funtion to get sprint report data from Jira
 
         Args:
-            sprint_id - the id of a Jira sprint
-            board_id - the id of a Jira board
+            sprint_id: string - the id of a Jira sprint
+            board_id: string - the id of a Jira board
 
         Returns:
-            A JSON encoded represenatation of a Jira Sprint Report for the given sprint and board
+            dictionary - A JSON encoded represenatation of a Jira Sprint Report for the given sprint and board
         """
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
         if not sprint_report:
@@ -298,10 +298,10 @@ class Jira:
         """User-friendly wrapper for getting the metrics for a given sprint
 
         Args:
-            message - a string containing the message from the user that initiated this command
+            message: string - the message from the user that initiated this command
 
         Returns:
-            A slack message response
+            dictionary - A slack message response
         """
         try:
             sprintid = re.search('sprint metrics ([0-9]+)', message).group(1)
@@ -326,10 +326,10 @@ class Jira:
         """Utility funtion to parse general sprint information from a Jira sprint report
 
         Args:
-            sprint_report - raw data from a Jira Sprint Report
+            sprint_report: string - raw data from a Jira Sprint Report
 
         Returns:
-            A dictionary with specific information parsed from the report
+            dictionary - relevant information parsed from the report
         """
         report = {}
 
@@ -356,10 +356,10 @@ class Jira:
         """Congomerates all the data from different Jira reports into one holistic Sprint Report data-set
 
         Args:
-            sprint_id - the id of a Jira sprint
+            sprint_id: string - the id of a Jira sprint
 
         Returns:
-            A dictionary containing the information necessary for creating an AgileOps Sprint Report
+            dictionary - the information necessary for creating an AgileOps Sprint Report
         """
         report = {}
 
@@ -383,14 +383,14 @@ class Jira:
         A user-friendly wrapper for getting sprint report data, having it displayed nicely, and optionally collect the next sprint's data to update a notion page.
 
         Args:
-            message - a string containing the message from the user that initiated this commands
+            message: string - containing the message from the user that initiated this commands
 
             Options:
             - 'sprint report 1234': Gets and prints the sprint report data for sprint 1234
             - 'spritn report 1234 5678 <https://notion.so/some-document': Gets and prints the sprint report data from sprint 1234, fetchs the data for sprint 5678 (assuming it's the next sprint) and updates the 'some-document' Notion page with that information
 
         Returns:
-            A slack response and an error message if applicable
+            dictionary - A slack response and an error message if applicable
         """
 
         error = None
@@ -515,13 +515,13 @@ class Jira:
         """Updates the notion page at the url with the sprint report data using a search / replace mechanism
 
         Args:
-            notion_url - the URL to a notion page
-            sprint_report_data - a dictionary of AgileOps Sprint Report Data
-            next_sprint_report_data - a dictionary of AgileOps Sprint Report Data (defaults to False if there is no next sprint)
+            notion_url: string - the URL to a notion page
+            sprint_report_data: dictionary - AgileOps Sprint Report Data
+            next_sprint_report_data: dictionary - AgileOps Sprint Report Data for the subsequent sprint (defaults to False if there is no next sprint)
 
         Returns:
             A BaseException if there was a problem
-            False if everything ran smoothly
+            boolean - False if everything ran smoothly
         """
         search_replace_dict = self.generateNotionReplacementDictionary(sprint_report_data)
 
@@ -541,11 +541,11 @@ class Jira:
         """"Gets the 3 sprint average velocity for a board as of a specific sprint
 
         Args:
-            board_id - the id of a Jira board
-            sprint_id - the id of a Jira sprint (defaults to None, in which case it assumes the most recently completely sprint)
+            board_id: string - the id of a Jira board
+            sprint_id: string - the id of a Jira sprint (defaults to None, in which case it assumes the most recently completely sprint)
 
         Returns:
-            The 3 sprint average velocity (as an integer) for the board_id as of the sprint_id provided
+            integer - The 3 sprint average velocity for the board_id as of the sprint_id provided
         """
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
 
@@ -572,10 +572,10 @@ class Jira:
         """Generates a URL that will pre-populate a specific AgileOps Google Form where teams submit their sprint metrics
 
         Args:
-            sprint_report_data - a dictionary containing AgileOps Sprint Report Data
+            sprint_report_data: dictionary - AgileOps Sprint Report Data
 
         Returns:
-            A URL to a google form with relevant information pre-populate via query parameters
+            string - A URL to a google form with relevant information pre-populate via query parameters
         """
         url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
 
@@ -630,10 +630,10 @@ class Jira:
         This function assumes that the data being passed in is for the 'next sprint' and acts accordingly
 
         Args:
-            sprint_report_data - A dictionary containing AgileOps Sprint Report data
+            sprint_report_data: dictionary - AgileOps Sprint Report data
 
         Returns:
-            A dictionary containing key / value pairs that will facilitate a search and replace in a notion document to populate it with relevant data
+            dictionary - key / value pairs that will facilitate a search and replace in a notion document to populate it with relevant data
         """
         notion_dictionary = {}
 
@@ -664,10 +664,10 @@ class Jira:
         This function assumes that the data being passed in is for the 'current sprint' and acts accordingly
 
         Args:
-            sprint_report_data - A dictionary containing AgileOps Sprint Report data
+            sprint_report_data: dictionary - AgileOps Sprint Report data
 
         Returns:
-            A dictionary containing key / value pairs that will facilitate a search and replace in a notion document to populate it with relevant data
+            dictionary - key / value pairs that will facilitate a search and replace in a notion document to populate it with relevant data
         """
         notion_dictionary = {}
 
@@ -708,10 +708,10 @@ class Jira:
         """Generates a link to a collection of Jira issues
 
         Args:
-            issues - a list of Jira issue id's
+            issues: list - Jira issue id's
 
         Returns:
-            A Jira link that will display the passed in issues
+            string - A Jira link that will display the passed in issues
         """
         link =  "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20("
 
@@ -723,9 +723,17 @@ class Jira:
         return link
 
     def getCommandsRegex(self):
-        """Used by the bot to retrieve regex strings and commands that we support"""
+        """Used by the bot to retrieve regex strings and commands that we support
+
+        Returns:
+            dictionary - regex strings and function references that are associated with them
+        """
         return self.__regex
 
     def getCommandDescriptions(self):
-        """Used by the bot to provide helpful information to the user about the commands we support"""
+        """Used by the bot to provide helpful information to the user about the commands we support
+
+        Returns:
+            dictionary - commands and their associated helpful descriptions
+        """
         return self.__descriptions
