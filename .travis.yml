@@ -13,20 +13,25 @@ env:
     - APP_NAME=scrum-master-jr
 
 before_install:
-  - wget https://hearst-hatchery.github.io/atlas/v3/vault.sh;
+  - wget https://hearst-hatchery.github.io/atlas/ecr/vault.sh;
   - chmod +x vault.sh;
   - source vault.sh;
 
 install:
-  - docker pull quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} || docker build -t quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} .
+  - wget https://hearst-hatchery.github.io/atlas/ecr/ecr_login.sh;
+  - chmod +x ecr_login.sh;
+  - source ecr_login.sh;
+  - wget https://hearst-hatchery.github.io/atlas/ecr/docker_pull_or_build.sh;
+  - chmod +x docker_pull_or_build.sh;
+  - source docker_pull_or_build.sh;
 
 script:
   - ci_env=`bash <(curl -s https://codecov.io/env)`
-  - docker run -e SLACK_SIGNING_SECRET="test-signing-secret" -e SLACK_BOT_TOKEN="test-slack-bot-token" -e JIRA_HOST="test-jira-host" -e JIRA_USER="test-jira-user" -e JIRA_TOKEN="test-jira-token" -e NOTION_TOKEN-"test-notion-token" quay.io/hearst/${APP_NAME}:${TRAVIS_COMMIT:0:7} bin/run-tests.sh
+  - docker run -e SLACK_SIGNING_SECRET="test-signing-secret" -e SLACK_BOT_TOKEN="test-slack-bot-token" -e JIRA_HOST="test-jira-host" -e JIRA_USER="test-jira-user" -e JIRA_TOKEN="test-jira-token" -e NOTION_TOKEN-"test-notion-token" ${REGISTRY_HOST}/${APP_NAME}:${TRAVIS_COMMIT:0:7} bin/run-tests.sh
 
 after_success: >-
   if [ "$TRAVIS_PULL_REQUEST" != "false" ];then
-    wget https://hearst-hatchery.github.io/atlas/v2/deploy_pull_request.sh;
+    wget https://hearst-hatchery.github.io/atlas/ecr/deploy_pull_request.sh;
     chmod +x deploy_pull_request.sh;
     ./deploy_pull_request.sh "${APP_NAME}" ${TRAVIS_PULL_REQUEST} ${TRAVIS_COMMIT:0:7};
   fi;
@@ -34,17 +39,17 @@ after_success: >-
 deploy:
   - provider: script
     script: >-
-      wget https://hearst-hatchery.github.io/atlas/v2/deploy_master.sh;
+      wget https://hearst-hatchery.github.io/atlas/ecr/deploy_master.sh;
       chmod +x deploy_master.sh;
       ./deploy_master.sh;
     on:
       branch: master
   - provider: script
     script: >-
-      wget https://hearst-hatchery.github.io/atlas/v2/deploy_semver.sh;
+      wget https://hearst-hatchery.github.io/atlas/ecr/deploy_semver.sh;
       chmod +x deploy_semver.sh;
       ./deploy_semver.sh;
-      wget https://hearst-hatchery.github.io/atlas/v2/auto_deploy.sh;
+      wget https://hearst-hatchery.github.io/atlas/ecr/auto_deploy.sh;
       chmod +x auto_deploy.sh;
       ./auto_deploy.sh "${APP_NAME}" ${TRAVIS_TAG} kubefeature;
     on:
