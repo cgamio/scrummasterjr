@@ -713,7 +713,7 @@ class Jira:
         Returns:
             string - A Jira link that will display the passed in issues
         """
-        link =  "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20("
+        link =  f"https://{self.__host}/issues/?jql=issueKey%20in%20("
 
         for issue in issues:
             link += f"{issue}%2C"
