@@ -5,7 +5,7 @@ import json
 import re
 from fixtures import *
 
-jira = jira.Jira(" ", " ", " ")
+jira = jira.Jira(jira_test_instance, " ", " ")
 
 @patch('jira.requests')
 @pytest.mark.parametrize('http_code , expected_response', [
@@ -162,8 +162,8 @@ def test_generateNextSprintNotionReplacementDictionary(sprint_report_data,  expe
             assert expected_response[key] == actual_response[key]
 
 @pytest.mark.parametrize('issue_numbers, expected_response', [
-    (normal_sprint_data['expected_response']['issue_keys']['completed'], "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4%2CNORMAL-5)"),
-    ([], "https://thetower.atlassian.net/issues/?jql=issueKey%20in%20()")
+    (normal_sprint_data['expected_response']['issue_keys']['completed'], f"https://{jira_test_instance}/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4%2CNORMAL-5)"),
+    ([], f"https://{jira_test_instance}/issues/?jql=issueKey%20in%20()")
 ])
 def test_generateJiraIssueLink(issue_numbers, expected_response):
     assert jira.generateJiraIssueLink(issue_numbers) == expected_response
