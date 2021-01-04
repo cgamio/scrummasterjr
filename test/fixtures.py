@@ -10,6 +10,7 @@ def badRequestResponse(text):
 sprint_id = '1234'
 board_id = '4321'
 error_response = "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
+jira_test_instance = "example.atlassian.net"
 
 valid_sprint_response = okRequestResponse({'originBoardId': 123})
 
@@ -1363,10 +1364,10 @@ validNotionReplacementDictionary = {
     '[predictability]': '100%',
     '[predictability-commitments]': '100%',
     '[average-velocity]': '21',
-    '[original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))",
-    '[completed-issues-link]': "[3 Completed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4%2CNORMAL-5))",
-    '[items-not-completed-link]': "[0 Incomplete Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())",
-    '[items-removed-link]': "[0 Removed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())"
+    '[original-committed-link]': f"[3 Committed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))",
+    '[completed-issues-link]': f"[3 Completed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4%2CNORMAL-5))",
+    '[items-not-completed-link]': f"[0 Incomplete Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20())",
+    '[items-removed-link]': f"[0 Removed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20())"
 }
 
 validNextSprintNotionReplacementDictionary = {
@@ -1376,7 +1377,7 @@ validNextSprintNotionReplacementDictionary = {
     '[next-sprint-goal]': 'Goal 1\nGoal 2\nGoal 3',
     '[next-points-committed]': '9',
     '[next-items-committed]': '3',
-    '[next-original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))"
+    '[next-original-committed-link]': f"[3 Committed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))"
 }
 
 validTwoSprintNotionReplacementDictionary = {
@@ -1394,17 +1395,17 @@ validTwoSprintNotionReplacementDictionary = {
     '[predictability]': '100%',
     '[predictability-commitments]': '100%',
     '[average-velocity]': '21',
-    '[original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))",
-    '[completed-issues-link]': "[3 Completed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4%2CNORMAL-5))",
-    '[items-not-completed-link]': "[0 Incomplete Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())",
-    '[items-removed-link]': "[0 Removed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20())",
+    '[original-committed-link]': f"[3 Committed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))",
+    '[completed-issues-link]': f"[3 Completed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-3%2CNORMAL-4%2CNORMAL-5))",
+    '[items-not-completed-link]': f"[0 Incomplete Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20())",
+    '[items-removed-link]': f"[0 Removed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20())",
     '[next-sprint-number]': '1',
     '[next-sprint-start]': '01/01/2020',
     '[next-sprint-end]': '01/15/2020',
     '[next-sprint-goal]': 'Goal 1\nGoal 2\nGoal 3',
     '[next-points-committed]': '9',
     '[next-items-committed]': '3',
-    '[next-original-committed-link]': "[3 Committed Issues](https://thetower.atlassian.net/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))"
+    '[next-original-committed-link]': f"[3 Committed Issues](https://{jira_test_instance}/issues/?jql=issueKey%20in%20(NORMAL-1%2CNORMAL-2%2CNORMAL-5))"
 }
 
 valid_blocks = {'blocks': [{'alt_text': 'Order Up!',

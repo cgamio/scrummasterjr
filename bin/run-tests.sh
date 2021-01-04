@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 python -m pytest -vv --cov-report=xml --cov-report=html --cov=scrum_master_jr --cov=jira --cov-fail-under=90
 
