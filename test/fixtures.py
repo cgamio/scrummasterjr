@@ -10,7 +10,7 @@ def badRequestResponse(text):
 sprint_id = '1234'
 board_id = '4321'
 error_response = "Sorry, I had trouble getting metrics for that sprint. I've logged an error"
-jira_test_instance = "jiratestinstance"
+jira_test_instance = "example.atlassian.net"
 
 valid_sprint_response = okRequestResponse({'originBoardId': 123})
 
