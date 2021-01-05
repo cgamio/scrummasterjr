@@ -11,7 +11,7 @@ slackeventsapi = "*"
 flask = "*"
 pytest = "*"
 pytest-cov = "*"
-notion = {editable = true,git = "https://github.com/cgamio/notion-py.git",ref = "markdown-dashes"}
+notion = ">=0.0.27"
 
 [requires]
 python_version = "3.7"
