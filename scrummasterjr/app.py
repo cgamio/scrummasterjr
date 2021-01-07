@@ -9,7 +9,7 @@ logging.basicConfig(format='%(message)s')
 import threading
 import time
 
-from jira import Jira
+from scrummasterjr.jira import Jira
 
 app = Flask(__name__)
 
