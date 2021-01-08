@@ -1,10 +1,10 @@
 import pytest
-import scrum_master_jr
+from scrummasterjr import app
 from unittest.mock import MagicMock, call
 
 @pytest.fixture
 def client():
-    with scrum_master_jr.app.test_client() as client:
+    with app.app.test_client() as client:
         yield client
 
 def test_healthcheck(client):
@@ -16,9 +16,9 @@ def test_help_no_set():
     # Test getting help with no command sets
     default_response = {'text': "These are the things I know how to respond to:\nhello - random greeting"}
 
-    scrum_master_jr.commandsets = []
+    app.commandsets = []
 
-    response = scrum_master_jr.get_help("help")
+    response = app.get_help("help")
     assert response == default_response
 
 def test_help_mock_set():
@@ -26,10 +26,10 @@ def test_help_mock_set():
     set = MagicMock()
     set.getCommandDescriptions.return_value = {"some command": "does a test thing"}
 
-    scrum_master_jr.commandsets = [set]
+    app.commandsets = [set]
 
     expected_response = {'text': "These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"}
-    response = scrum_master_jr.get_help("help")
+    response = app.get_help("help")
 
     set.getCommandDescriptions.assert_called()
     assert response == expected_response
@@ -44,9 +44,9 @@ def test_help_mock_set():
 ])
 def test_handle_mention(message, expected_response):
     mock_slack_client = MagicMock()
-    scrum_master_jr.slack_client = mock_slack_client
+    app.slack_client = mock_slack_client
 
-    scrum_master_jr.handle_mention(message)
+    app.handle_mention(message)
 
     mock_slack_client.chat_postMessage.assert_called_with(**expected_response)
 
@@ -66,9 +66,9 @@ def test_handle_mention_hello():
         assert kwargs['text'] in hello_responses
 
     mock_slack_client.side_effect = side_effect
-    scrum_master_jr.slack_client = mock_slack_client
+    app.slack_client = mock_slack_client
 
-    scrum_master_jr.handle_mention({'event': {'subtype': None, 'text':'hello',
+    app.handle_mention({'event': {'subtype': None, 'text':'hello',
     'channel': '1234'}})
 
     mock_slack_client.chat_postMessage.assert_called_once()
@@ -80,11 +80,11 @@ def test_handle_response_error():
         return ({'text': 'This is a user-facing error message'}, 'This is an admin error notification.')
 
     mock_slack_client = MagicMock()
-    scrum_master_jr.slack_client = mock_slack_client
+    app.slack_client = mock_slack_client
 
-    scrum_master_jr.slack_error_channel = '4321'
+    app.slack_error_channel = '4321'
 
-    scrum_master_jr.handle_response(throw_error, message)
+    app.handle_response(throw_error, message)
 
     mock_slack_client.chat_postMessage.assert_has_calls([
         call(channel='4321', text="<!here> This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```"),
