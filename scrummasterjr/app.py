@@ -1,30 +1,47 @@
-from slackeventsapi import SlackEventAdapter
-import slack
 import os
 import re
 import random
-from flask import Flask, jsonify, request
 import logging
-logging.basicConfig(format='%(message)s')
 import threading
 import time
 
+from flask import Flask, request
+from slack_bolt import App
+from slack_bolt.adapter.flask import SlackRequestHandler
+
+logging.basicConfig(
+    format="[%(asctime)-15s] %(levelname)-8s %(module)-15s l:%(lineno)-4d msg: %(message)s",
+    level=os.getenv('LOG_LEVEL', 'INFO')
+)
+
 from scrummasterjr.jira import Jira
 
-app = Flask(__name__)
+# flask / bolt apps
+flask_app = Flask(__name__)
+app = App(token=os.environ["SLACK_BOT_TOKEN"], signing_secret=os.environ["SLACK_SIGNING_SECRET"])
+handler = SlackRequestHandler(app)
 
-@app.route("/health")
-def healthcheck():
-    """A simple health endpoint that returns 200 as long as the app is running"""
-    return "Up and Running!", 200
+@app.middleware
+def log_request(logger, body, next):
+    logger.debug(body)
+    return next()
 
-# Our app's Slack Event Adapter for receiving actions via the Events API
-slack_signing_secret = os.environ["SLACK_SIGNING_SECRET"]
-slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events", app)
+def dms_only(message, next, logger):
+    channel_type = message.get('channel_type')
 
-# Create a SlackClient for your bot to use for Web API requests
-slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
-slack_client = slack.WebClient(slack_bot_token)
+    if channel_type == "im":
+        return next()
+
+    logger.debug("This message was not a DM")
+
+def no_bot_messages(message, next, logger):
+    """Listener middleware which filters out messages from bots by checking 'bot_id'"""
+    bot_id = message.get('bot_id')
+
+    if bot_id is None:
+        return next()
+
+    logger.debug(f'Ignoring message from bot: {bot_id}')
 
 # Get Channel to post error messages to
 try:
@@ -54,6 +71,37 @@ try:
 except KeyError:
     logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
 
+def handle_response(function, message, say):
+    """Executes a command and forwards the response back to the user
+
+    Args:
+        function: function reference - the function that should be called
+        message: string - the message that triggered this events
+    """
+    function_response = function(message['text'])
+    if type(function_response) is tuple:
+        if slack_error_channel:
+            response, errortext = function_response
+            errormessage={
+                'channel': slack_error_channel,
+                'text': f"<!here> {errortext}\nMessage that generated this error:\n```{message}```"}
+            app.client.chat_postMessage(**errormessage)
+
+            function_response = response
+
+    say(function_response)
+
+def response_timer(handle_response_thread, message, say):
+    """Ensures that the user always gets some response within 3 seconds
+
+    Args:
+        handle_response_thread: thread reference - the main execution thread. If this thread is still alive after 3 seconds, we want to give the user a heads up
+        message: slack message - the message that triggered the main execution thread (so we know where to post the follow up message)
+    """
+    time.sleep(3)
+    if handle_response_thread.isAlive():
+        say("Hmmmm... That's a tough one. Let me think about it for a minute")
+
 def say_hello(text):
     """ A basic hello interaction
 
@@ -73,7 +121,7 @@ def say_hello(text):
                  "Bonjour!"
                 ]
 
-    return {'text': random.choice(responses)}
+    return(random.choice(responses))
 
 def get_help(text):
     """Get help information for all of the command sets and share that with the user
@@ -90,87 +138,41 @@ def get_help(text):
             response = f"{response}\n{command} - {set.getCommandDescriptions()[command]}"
         response = f"{response}\n"
 
-    return {'text': response.strip()}
+    return(response.strip())
 
-def handle_response(function, message):
-    """Executes a command and forwards the response back to the user
+@app.event("app_mention")
+@app.event("message", middleware=[dms_only, no_bot_messages])
+def handle_message(event, say):
 
-    Args:
-        function: function reference - the function that should be called
-        message: string - the message that triggered this events
-    """
-    function_response = function(message['text'])
-    if type(function_response) is tuple:
-        if slack_error_channel:
-            response, errortext = function_response
-            errormessage={
-                'channel': slack_error_channel,
-                'text': f"<!here> {errortext}\nMessage that generated this error:\n```{message}```"}
-            slack_client.chat_postMessage(**errormessage)
+    text = event["text"]
 
-            function_response = response
-
-    function_response['channel'] = message['channel']
-    slack_client.chat_postMessage(**function_response)
-
-def response_timer(handle_response_thread, message):
-    """Ensures that the user always gets some response within 3 seconds
-
-    Args:
-        handle_response_thread: thread reference - the main execution thread. If this thread is still alive after 3 seconds, we want to give the user a heads up
-        message: slack message - the message that triggered the main execution thread (so we know where to post the follow up message)
-    """
-    time.sleep(3)
-    if handle_response_thread.isAlive():
-        slow_execution_message={
-            'channel': message['channel'],
-            'text': "Hmmmm... That's a tough one. Let me think about it for a minute"}
-        slack_client.chat_postMessage(**slow_execution_message)
-
-@slack_events_adapter.on("message")
-def handle_message(event_data):
-    """Handles all messages
-
-    Args:
-        event-data: slack event data - the slack event data that triggered this adapter (contains the message and other metadata)
-    """
-    if event_data['event']['channel_type'] == 'im':
-        # Treat DM's as @mentions
-        handle_mention(event_data)
-
-@slack_events_adapter.on("app_mention")
-def handle_mention(event_data):
-    """Handles slack @mentions
-
-    Args:
-        event-data: slack event data - the slack event data that triggered this adapter (contains the message and other metadata)
-    """
-    message = event_data["event"]
-
-    if 'bot_id' in message.keys():
-        # We don't want to respond to other bots, so bail
+    if re.search('h(ello|i)', text):
+        handle_response(say_hello, event, say)
         return
+    if re.search('help', text):
+        handle_response(get_help, event, say)
+        return
+    for set in commandsets:
+        for regex in set.getCommandsRegex().keys():
+            if re.search(regex, text):
+                thread = threading.Thread(target=handle_response, args=(set.getCommandsRegex()[regex], event, say))
+                timer_thread = threading.Thread(target=response_timer, args=(thread, event, say))
+                thread.start()
+                timer_thread.start()
+                return
 
-    if message.get("subtype") is None:
-        text = message.get("text")
+    say("I'm sorry, I don't understand you. Try asking me for `help`")
 
-        if re.search('h(ello|i)', text):
-            handle_response(say_hello, message)
-            return
-        if re.search('help', text):
-            handle_response(get_help, message)
-            return
-        for set in commandsets:
-            for regex in set.getCommandsRegex().keys():
-                if re.search(regex, text):
-                    thread = threading.Thread(target=handle_response, args=(set.getCommandsRegex()[regex], message))
-                    timer_thread = threading.Thread(target=response_timer, args=(thread, message))
-                    thread.start()
-                    timer_thread.start()
-                    return
+@app.event({"type": "message"})
+def just_ack(ack, logger):
+    """This listener handles all uncaught message events and just acks"""
+    logger.debug('ignored message.')
+    ack()
 
-        slack_client.chat_postMessage(channel=message["channel"], text="I'm sorry, I don't understand you. Try asking me for `help`")
+@flask_app.route("/slack/events", methods=["POST"])
+def slack_events():
+    return handler.handle(request)
 
-# Start the server on port 80
-if __name__ == "__main__":
-  app.run(host='0.0.0.0', port=80)
+if __name__ == '__main__':
+    debug = True if 'prod' not in str(os.getenv('ENV')) else False
+    flask_app.run(host='0.0.0.0', port=8081, debug=debug)

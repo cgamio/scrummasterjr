@@ -1,13 +1,18 @@
-FROM library/python:3.7.5-slim
 
-# install python
-COPY ./requirements.txt /tmp/requirements.txt
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+FROM python:3.8.6-slim-buster
 
-# copy application and set work directory
+ARG GUNICORN_CMD_ARGS
+
+ENV PYTHONPATH=/app/\
+    PYTHONUNBUFFERED=1\
+    GUNICORN_CMD_ARGS="--workers 4 -b 0.0.0.0:80 --timeout 30"
+
+RUN mkdir /app
 WORKDIR /app
-COPY . /app
+ADD requirements.txt /app/
+RUN pip install -r requirements.txt
+ADD . /app/
 
-# expose ports and set command
 EXPOSE 80
-CMD python scrum_master_jr.py
+
+CMD gunicorn scrummasterjr.app:flask_app

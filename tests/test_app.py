@@ -1,25 +1,15 @@
 import pytest
 from scrummasterjr import app
-from unittest.mock import MagicMock, call
-
-@pytest.fixture
-def client():
-    with app.app.test_client() as client:
-        yield client
-
-def test_healthcheck(client):
-    rv = client.get('/health')
-
-    assert 200 is rv.status_code
+from unittest.mock import MagicMock, call, patch
 
 def test_help_no_set():
     # Test getting help with no command sets
-    default_response = {'text': "These are the things I know how to respond to:\nhello - random greeting"}
+    expected_response = "These are the things I know how to respond to:\nhello - random greeting"
 
     app.commandsets = []
 
     response = app.get_help("help")
-    assert response == default_response
+    assert response == expected_response
 
 def test_help_mock_set():
     # Test getting help with a Mock command set
@@ -28,27 +18,27 @@ def test_help_mock_set():
 
     app.commandsets = [set]
 
-    expected_response = {'text': "These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"}
+    expected_response = "These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"
+
     response = app.get_help("help")
 
     set.getCommandDescriptions.assert_called()
     assert response == expected_response
 
 @pytest.mark.parametrize('message , expected_response', [
-    ({'event': {'subtype': None, 'text':'help', 'channel': '1234'}},
-     {'channel':'1234', 'text':"These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"}
+    ({'text':'help', 'channel': '1234'},
+     "These are the things I know how to respond to:\nhello - random greeting\nsome command - does a test thing"
     ),
-    ({'event': {'subtype': None, 'text':'asldkfjaslkdjhfa', 'channel': '1234'}},
-     {'channel':'1234', 'text':"I'm sorry, I don't understand you. Try asking me for `help`"}
+    ({'text':'asldkfjaslkdjhfa', 'channel': '1234'},
+     "I'm sorry, I don't understand you. Try asking me for `help`"
     )
 ])
 def test_handle_mention(message, expected_response):
-    mock_slack_client = MagicMock()
-    app.slack_client = mock_slack_client
+    mock_say = MagicMock()
 
-    app.handle_mention(message)
+    app.handle_message(message, mock_say.say)
 
-    mock_slack_client.chat_postMessage.assert_called_with(**expected_response)
+    mock_say.say.assert_called_with(expected_response)
 
 hello_responses = ["Hello there!",
              "It's a pleasure to meet you! My name is Scrum Master Jr.",
@@ -61,30 +51,27 @@ hello_responses = ["Hello there!",
             ]
 
 def test_handle_mention_hello():
-    mock_slack_client = MagicMock()
+    mock_say = MagicMock()
     def side_effect(*args, **kwargs):
-        assert kwargs['text'] in hello_responses
+        assert args[0] in hello_responses
 
-    mock_slack_client.side_effect = side_effect
-    app.slack_client = mock_slack_client
+    mock_say.side_effect = side_effect
 
-    app.handle_mention({'event': {'subtype': None, 'text':'hello',
-    'channel': '1234'}})
+    app.handle_message({'text':'hello',
+    'channel': '1234'}, mock_say.say)
 
-    mock_slack_client.chat_postMessage.assert_called_once()
-
-def test_handle_response_error():
+@patch('scrummasterjr.app.app.client')
+def test_handle_response_error(mock_slack_client):
     message = {'subtype': None, 'text':'This was a message that generated and error', 'channel': '1234'}
     def throw_error(message_arg):
         assert message['text'] == message_arg
         return ({'text': 'This is a user-facing error message'}, 'This is an admin error notification.')
 
-    mock_slack_client = MagicMock()
-    app.slack_client = mock_slack_client
+    mock_say = MagicMock()
 
     app.slack_error_channel = '4321'
 
-    app.handle_response(throw_error, message)
+    app.handle_response(throw_error, message, mock_say.say)
 
     mock_slack_client.chat_postMessage.assert_has_calls([
         call(channel='4321', text="<!here> This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```"),
