@@ -60,12 +60,11 @@ def test_handle_mention_hello():
     app.handle_message({'text':'hello',
     'channel': '1234'}, mock_say.say)
 
-@patch('scrummasterjr.app.app.client')
-def test_handle_response_error(mock_slack_client):
+def test_handle_response_error():
     message = {'subtype': None, 'text':'This was a message that generated and error', 'channel': '1234'}
     def throw_error(message_arg):
         assert message['text'] == message_arg
-        return ({'text': 'This is a user-facing error message'}, 'This is an admin error notification.')
+        return ('This is a user-facing error message', 'This is an admin error notification.')
 
     mock_say = MagicMock()
 
@@ -73,7 +72,9 @@ def test_handle_response_error(mock_slack_client):
 
     app.handle_response(throw_error, message, mock_say.say)
 
-    mock_slack_client.chat_postMessage.assert_has_calls([
+    mock_say.say.assert_called_with('This is a user-facing error message')
+
+    app.chat_postMessage.assert_has_calls([
         call(channel='4321', text="<!here> This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```"),
         call(channel='1234', text='This is a user-facing error message')
     ])
