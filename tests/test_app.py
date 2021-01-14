@@ -1,8 +1,7 @@
 import pytest
-from scrummasterjr import app
 from unittest.mock import MagicMock, call, patch
 
-def test_help_no_set():
+def test_help_no_set(app):
     # Test getting help with no command sets
     expected_response = "These are the things I know how to respond to:\nhello - random greeting"
 
@@ -11,7 +10,7 @@ def test_help_no_set():
     response = app.get_help("help")
     assert response == expected_response
 
-def test_help_mock_set():
+def test_help_mock_set(app):
     # Test getting help with a Mock command set
     set = MagicMock()
     set.getCommandDescriptions.return_value = {"some command": "does a test thing"}
@@ -33,7 +32,7 @@ def test_help_mock_set():
      "I'm sorry, I don't understand you. Try asking me for `help`"
     )
 ])
-def test_handle_mention(message, expected_response):
+def test_handle_mention(message, expected_response, app):
     mock_say = MagicMock()
 
     app.handle_message(message, mock_say.say)
@@ -50,7 +49,7 @@ hello_responses = ["Hello there!",
              "Bonjour!"
             ]
 
-def test_handle_mention_hello():
+def test_handle_mention_hello(app):
     mock_say = MagicMock()
     def side_effect(*args, **kwargs):
         assert args[0] in hello_responses
@@ -60,7 +59,7 @@ def test_handle_mention_hello():
     app.handle_message({'text':'hello',
     'channel': '1234'}, mock_say.say)
 
-def test_handle_response_error():
+def test_handle_response_error(app):
     message = {'subtype': None, 'text':'This was a message that generated and error', 'channel': '1234'}
     def throw_error(message_arg):
         assert message['text'] == message_arg
