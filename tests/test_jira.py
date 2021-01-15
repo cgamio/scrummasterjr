@@ -1,13 +1,13 @@
 import pytest
-import jira
+from scrummasterjr.jira import Jira
 from unittest.mock import MagicMock, patch
 import json
 import re
 from fixtures import *
 
-jira = jira.Jira(jira_test_instance, " ", " ")
+jira = Jira(jira_test_instance, " ", " ")
 
-@patch('jira.requests')
+@patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('http_code , expected_response', [
     (200, "My connection to Jira is up and running!"),
     (500, "Looks like there's an issue with my connection. I've logged an error")
@@ -39,7 +39,7 @@ def test_getCommandDescriptions():
 
     assert jira.getCommandDescriptions() == expected_response
 
-@patch('jira.requests')
+@patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('message, sprint_get_response, report_get_response, board_get_response,  expected_response', [
     ('sprint metrics 1234', badRequestResponse('No Sprint Found!'), {}, {}, error_response),
     ('sprint metrics abcd', {}, {}, {}, "Sorry, I don't see a valid sprint number there"),
@@ -74,7 +74,7 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
     else:
         assert response == {'text': expected_response}
 
-@patch('jira.requests')
+@patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('velocity_get_response, sprint_id, expected_response', [
     (okRequestResponse(velocity_response['velocity_get_response']), None,  velocity_response['expected_response']),
     (okRequestResponse(no_sprints_velocity_response['velocity_get_response']), None, no_sprints_velocity_response['expected_response']),
@@ -95,7 +95,7 @@ def test_getAverageVelocity(mock_requests, velocity_get_response, sprint_id,  ex
     else:
         assert jira.getAverageVelocity('1234', sprint_id) == expected_response
 
-@patch('jira.requests')
+@patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response', [
     ('5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
     ('5432', valid_sprint_response, {}, badRequestResponse('No Report Found!'), {}, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
@@ -168,8 +168,8 @@ def test_generateNextSprintNotionReplacementDictionary(sprint_report_data,  expe
 def test_generateJiraIssueLink(issue_numbers, expected_response):
     assert jira.generateJiraIssueLink(issue_numbers) == expected_response
 
-@patch('jira.NotionPage')
-@patch('jira.requests')
+@patch('scrummasterjr.jira.NotionPage')
+@patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, notion_case, expected_response', [
     ('sprint report 5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, False, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
     ('sprint report 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), False, valid_blocks),

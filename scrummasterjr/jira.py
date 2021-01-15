@@ -4,7 +4,7 @@ import logging
 import re
 import json
 from datetime import datetime
-from notion_page import NotionPage
+from scrummasterjr.notionpage import NotionPage
 
 class Jira:
     __auth = None

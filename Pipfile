@@ -6,12 +6,12 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-slackclient = "*"
-slackeventsapi = "*"
 flask = "*"
 pytest = "*"
 pytest-cov = "*"
 notion = ">=0.0.27"
+gunicorn = "*"
+slack-bolt = "*"
 
 [requires]
 python_version = "3.7"
