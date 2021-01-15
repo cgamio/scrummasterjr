@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, call, patch
 
+
 def test_help_no_set(app):
     # Test getting help with no command sets
     expected_response = "These are the things I know how to respond to:\nhello - random greeting"
@@ -73,7 +74,7 @@ def test_handle_response_error(app):
 
     mock_say.say.assert_called_with('This is a user-facing error message')
 
-    app.chat_postMessage.assert_has_calls([
+    app.client.chat_postMessage.assert_has_calls([
         call(channel='4321', text="<!here> This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```"),
         call(channel='1234', text='This is a user-facing error message')
     ])

@@ -1,13 +1,12 @@
 import pytest
 from unittest.mock import MagicMock, patch
-import logging
 
 @pytest.fixture(scope='function')
 def app(setup_environment):
-    with patch('slack_bolt.App') as mock:
-        from scrummasterjr import app
-        app.client = MagicMock()
-    yield app
+    with patch('slack_sdk.WebClient') as mock:  # just mock the webclient!
+        from scrummasterjr import app as le_app
+        le_app.client = MagicMock()
+        yield le_app
 
 @pytest.fixture()
 def setup_environment(monkeypatch):
