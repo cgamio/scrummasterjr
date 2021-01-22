@@ -174,6 +174,11 @@ def just_ack(ack, logger):
 def slack_events():
     return handler.handle(request)
 
+@flask_app.route("/health")
+def healthcheck():
+    """A simple health endpoint that returns 200 as long as the app is running"""
+    return "Up and Running!", 200
+
 if __name__ == '__main__':
     debug = True if 'prod' not in str(os.getenv('ENV')) else False
     flask_app.run(host='0.0.0.0', port=8081, debug=debug)
