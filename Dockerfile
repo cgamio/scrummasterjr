@@ -7,6 +7,9 @@ ENV PYTHONPATH=/app/\
     PYTHONUNBUFFERED=1\
     GUNICORN_CMD_ARGS="--workers 4 -b 0.0.0.0:80 --timeout 30"
 
+RUN apt-get -y update && apt-get -y install git && apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/man/?? /usr/share/man/??_*
+
 RUN mkdir /app
 WORKDIR /app
 ADD requirements.txt /app/
