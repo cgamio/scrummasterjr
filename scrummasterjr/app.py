@@ -82,11 +82,8 @@ def handle_response(function, message, say):
     if type(function_response) is tuple:
         if slack_error_channel:
             response, errortext = function_response
-            errormessage={
-                'channel': slack_error_channel,
-                'text': f"<!here> {errortext}\nMessage that generated this error:\n```{message}```"}
-            logging.debug(f"App Client = {app.client}")
-            app.client.chat_postMessage(errormessage)
+            errortext = f"<!here> {errortext}\nMessage that generated this error:\n```{message}```"
+            app.client.chat_postMessage(channel=slack_error_channel, text=errortext)
 
             function_response = response
 

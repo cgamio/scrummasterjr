@@ -74,5 +74,5 @@ def test_handle_response_error(app):
 
     mock_say.say.assert_called_with('This is a user-facing error message')
 
-    app.app.client.chat_postMessage.assert_called_with({"channel":'4321',
-    "text":"<!here> This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```"})
+    app.app.client.chat_postMessage.assert_called_with(channel='4321',
+    text="<!here> This is an admin error notification.\nMessage that generated this error:\n```{'subtype': None, 'text': 'This was a message that generated and error', 'channel': '1234'}```")
