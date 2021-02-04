@@ -9,9 +9,9 @@ verify_ssl = true
 flask = "*"
 pytest = "*"
 pytest-cov = "*"
-notion = ">=0.0.27"
 gunicorn = "*"
 slack-bolt = "*"
+notion = {editable = true,git = "https://github.com/antiusio/notion.git"}
 
 [requires]
 python_version = "3.7"
