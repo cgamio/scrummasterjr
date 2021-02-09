@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8425da694f22a18ab1da08d81fed2dfd68d4b8f41c82b5c4bb7e266e6f403eef"
+            "sha256": "8c44de2880ed5479ce5296c31f4930022d6339fa1a1db675fdccb18e9b8c4b30"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -243,9 +243,12 @@
             "version": "==1.1.1"
         },
         "notion": {
-            "editable": true,
-            "git": "https://github.com/antiusio/notion.git",
-            "ref": "0e3980370c00d7bd0692245db8cd3d516fbaa65f"
+            "hashes": [
+                "sha256:a6c511e1055bb69f05d75220f3f6a5de377a52d42ae38186c3138557c6b4942a",
+                "sha256:cc380ea2ffe70ee8d5f19244df910cc79ea56a577ca569553d30f8798f0b5b61"
+            ],
+            "index": "pypi",
+            "version": "==0.0.28"
         },
         "packaging": {
             "hashes": [
@@ -313,18 +316,18 @@
         },
         "slack-bolt": {
             "hashes": [
-                "sha256:645170f14481fda2c7b0ae7bda46c85212a2e5c2abd143c0d6def63d028e9670",
-                "sha256:d3d371e6970915db69a27134a3f35ddb1b96f73bd37d5a0d55f0efd408507a80"
+                "sha256:221c08a6c089efeac4b71422d5a632d64bd4a8c34a5765a961f9036b4ac737c7",
+                "sha256:b8d78c5ef35648ddee9de8041d2354cac1d2fd4cb3836b3de6747715d283f8d0"
             ],
             "index": "pypi",
-            "version": "==1.2.3"
+            "version": "==1.3.0"
         },
         "slack-sdk": {
             "hashes": [
-                "sha256:f64934f84a2288051077947b39755d0023790f4dfbb12e99fa6570606d0e20ca",
-                "sha256:fa934a7dd591a5538768d80a88b9652bd5496f83e675b30e8643e5058597c4b5"
+                "sha256:536a8f208aae016693e0e703ec18d09f0e6a061119db807b7769976152cfdb68",
+                "sha256:6e0cb960c724c7c897894b36f7531f2585e9b084e46f3a32ed51047f6933d22a"
             ],
-            "version": "==3.2.1"
+            "version": "==3.3.0"
         },
         "soupsieve": {
             "hashes": [

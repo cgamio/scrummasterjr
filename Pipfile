@@ -11,7 +11,7 @@ pytest = "*"
 pytest-cov = "*"
 gunicorn = "*"
 slack-bolt = "*"
-notion = {editable = true,git = "https://github.com/antiusio/notion.git"}
+notion = "*"
 
 [requires]
 python_version = "3.7"
