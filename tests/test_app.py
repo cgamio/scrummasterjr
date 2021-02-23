@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, call, patch
+from scrummasterjr.error import ScrumMasterJrError
 
 
 def test_help_no_set(app):
@@ -64,7 +65,7 @@ def test_handle_response_error(app):
     message = {'subtype': None, 'text':'This was a message that generated and error', 'channel': '1234'}
     def throw_error(message_arg):
         assert message['text'] == message_arg
-        return ('This is a user-facing error message', 'This is an admin error notification.')
+        raise ScrumMasterJrError('This is a user-facing error message', 'This is an admin error notification.')
 
     mock_say = MagicMock()
 

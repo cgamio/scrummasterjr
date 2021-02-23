@@ -15,6 +15,7 @@ logging.basicConfig(
 )
 
 from scrummasterjr.jira import Jira
+from scrummasterjr.error import ScrumMasterJrError
 
 # flask / bolt apps
 flask_app = Flask(__name__)
@@ -78,14 +79,15 @@ def handle_response(function, message, say):
         function: function reference - the function that should be called
         message: string - the message that triggered this events
     """
-    function_response = function(message['text'])
-    if type(function_response) is tuple:
+    try:
+        function_response = function(message['text'])
+    except ScrumMasterJrError as smjrerr:
         if slack_error_channel:
-            response, errortext = function_response
-            errortext = f"<!here> {errortext}\nMessage that generated this error:\n```{message}```"
+            errortext = f"<!here> {smjrerr.admin_message}\nMessage that generated this error:\n```{message}```"
             app.client.chat_postMessage(channel=slack_error_channel, text=errortext)
 
-            function_response = response
+        function_response = smjrerr.user_message
+        say(smjrerr.user_message)
 
     say(function_response)
 

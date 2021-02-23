@@ -5,6 +5,7 @@ import re
 import json
 from datetime import datetime
 from scrummasterjr.notionpage import NotionPage
+from scrummasterjr.error import ScrumMasterJrError
 
 class Jira:
     __auth = None
@@ -259,7 +260,7 @@ class Jira:
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
         if not sprint:
-            raise Exception(f"Could not find sprint with id {sprint_id}")
+            raise ScrumMasterJrError(f"I could not find sprint with id {sprint_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         return sprint
 
@@ -274,7 +275,7 @@ class Jira:
         """
         board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
         if not board:
-            raise Exception(f"Could not find boad with id {board_id}")
+            raise ScrumMasterJrError(f"Could not find boad with id {board_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         return board
 
@@ -290,7 +291,7 @@ class Jira:
         """
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
         if not sprint_report:
-            raise Exception(f"Could not find report for sprint {sprint_id} on board {board_id}")
+            raise ScrumMasterJrError(f"Could not find report for sprint {sprint_id} on board {board_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         return sprint_report
 
@@ -309,14 +310,9 @@ class Jira:
             logging.error(f"Did not find a sprint number in: '{message}'")
             return {'text': "Sorry, I don't see a valid sprint number there"}
 
-        try:
-            sprint = self.__getSprint(sprintid)
-            sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
-            metrics = self.__calculateSprintMetrics(sprint_report)
-
-        except BaseException as e:
-            logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{e}")
-            return {'text': "Sorry, I had trouble getting metrics for that sprint. I've logged an error"}
+        sprint = self.__getSprint(sprintid)
+        sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
+        metrics = self.__calculateSprintMetrics(sprint_report)
 
         metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
 
@@ -336,7 +332,7 @@ class Jira:
         try:
             report['sprint_number'] = re.search(r'(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
         except AttributeError:
-            raise Exception(f"Could not find or parse sprint number from: '{sprint_report['sprint']['name']}'")
+            raise ScrumMasterJrError(f"I couldn't not find or parse sprint number from: '{sprint_report['sprint']['name']}'. Please make sure that you name sprints to include `S#` or `Sprint #`, where `#` is the number of the sprint")
 
         try:
             report['sprint_start'] = sprint_report['sprint']['startDate']
@@ -348,7 +344,7 @@ class Jira:
         try:
             report['sprint_goals'] = sprint_report['sprint']['goal'].split("\n")
         except (AttributeError, KeyError):
-            raise Exception(f"Could not find or parse sprint goal")
+            raise ScrumMasterJrError(f"I couldn't find or parse sprint goal for one of your sprints. Please check your arguments again, but this might not be your fault so I've let my overlords know. Are you using the right command for your jira instance? Ask me for `help` for more information", f"Unable to find or parse sprint goal\n {sprint_report}")
 
         return report
 
@@ -363,18 +359,14 @@ class Jira:
         """
         report = {}
 
-        try:
-            sprint = self.__getSprint(sprint_id)
-            sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
-            report = self.__getJiraSprintReportData(sprint_report)
-            report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
-            board = self.__getBoard(sprint['originBoardId'])
-            report['project_name'] = board['location']['projectName']
-            report['project_key'] = board['location']['projectKey']
-            report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
-        except BaseException as e:
-            logging.error(f"There was an error generating a report sprint {sprint_id}\n{str(e)}")
-            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
+        sprint = self.__getSprint(sprint_id)
+        sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
+        report = self.__getJiraSprintReportData(sprint_report)
+        report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
+        board = self.__getBoard(sprint['originBoardId'])
+        report['project_name'] = board['location']['projectName']
+        report['project_key'] = board['location']['projectKey']
+        report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
 
         return report
 
@@ -397,8 +389,8 @@ class Jira:
 
         regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?', message).groupdict()
 
+
         report_data = self.generateAllSprintReportData(regex_result['sprint_id'])
-        if 'text' in report_data: return report_data
 
         blocks = []
 
@@ -486,7 +478,6 @@ class Jira:
             if 'text' in next_report_data: return next_report_data
 
             result = self.updateNotionPage(regex_result['notion_url'], report_data, next_report_data)
-            logging.error(f"Notion Page Update Result: {result}")
 
             blocks.append(divider_block)
 
@@ -509,7 +500,10 @@ class Jira:
                     }
                     })
 
-        return ({"blocks": blocks}, error) if error else {"blocks": blocks}
+        if error:
+            raise ScrumMasterJrError({"blocks": blocks}, error)
+
+        return {"blocks": blocks}
 
     def updateNotionPage(self, notion_url, sprint_report_data, next_sprint_report_data=False):
         """Updates the notion page at the url with the sprint report data using a search / replace mechanism
@@ -550,7 +544,7 @@ class Jira:
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
 
         if velocity_report == False:
-            raise Exception(f"Unable to get velocity report for board {board_id}")
+            raise ScrumMasterJrError(f"I wasn't able to get the velocity report for board {board_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         total = 0
         sprints = 0
@@ -619,7 +613,7 @@ class Jira:
                 for item in sprint_report_data['issue_metrics'][metric_type].keys():
                     url += f"{google_entry_translations['issue_metrics'][metric_type][item]}={sprint_report_data['issue_metrics'][metric_type][item]}&"
         except (KeyError):
-            raise Exception("Unable to generate Google Form URL, expected keys missing")
+            raise ScrumMasterJrError("I wasn't able to generate a Google Form URl for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate Google Form URL, expected keys missing")
 
         return url
 
@@ -653,7 +647,7 @@ class Jira:
             notion_dictionary['[next-original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
 
         except KeyError:
-            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
+            raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a *Next Sprint* Notion Replacement Dictionary, keys not found")
 
         return notion_dictionary
 
@@ -700,7 +694,7 @@ class Jira:
             notion_dictionary['[items-removed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['removed']} Removed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['removed'])})"
 
         except KeyError:
-            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
+            raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
 
         return notion_dictionary
 
