@@ -110,26 +110,27 @@ normal_sprint_data = {
         "removed": []
         },
         "items": {
-            "bugs_completed": 1,
             "committed": 3,
             "completed": 3,
-            "not_completed": 0,
             "planned_completed": 3,
-            "removed": 0,
-            "stories_completed": 1,
-            "unplanned_bugs_completed": 0,
             "unplanned_completed": 0,
-            "unplanned_stories_completed": 0
+            "stories_completed": 1,
+            "unplanned_stories_completed": 0,
+            "bugs_completed": 1,
+            "unplanned_bugs_completed": 0,
+            "not_completed": 0,
+            "removed": 0
         },
         "points": {
             "committed": 9,
             "completed": 9,
-            "feature_completed": 3,
-            "not_completed": 0,
-            "optimization_completed": 3,
             "planned_completed": 9,
-            "removed": 0,
-            "unplanned_completed": 0
+            "unplanned_completed": 0,
+            "feature_completed": 3,
+            "optimization_completed": 3,
+            "not_completed": 0,
+            "removed": 0
+
         },
         "meta": {
             "predictability": 100,
@@ -1346,7 +1347,7 @@ report_velocity_response = {
     }
 }
 
-valid_google_form_url='https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?entry.1082637073=TBT&entry.1975251686=1&entry.448087930=1&entry.2095001800=3&entry.1399119358=3&entry.128659456=0&entry.954885633=3&entry.1137054034=0&entry.1980453543=1&entry.1252702382=0&entry.485777497=0&entry.370334542=0&entry.1427603868=9&entry.1486076673=9&entry.254612996=3&entry.611444996=0&entry.2092919144=3&entry.493624591=9&entry.976792423=0&entry.1333444050=0&'
+valid_google_form_url='https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?entry.1082637073=TBT&entry.1975251686=1&entry.2095001800=3&entry.1399119358=3&entry.954885633=3&entry.485777497=0&entry.1980453543=1&entry.370334542=0&entry.448087930=1&entry.1252702382=0&entry.128659456=0&entry.1137054034=0&entry.1427603868=9&entry.1486076673=9&entry.493624591=9&entry.1333444050=0&entry.254612996=3&entry.2092919144=3&entry.611444996=0&entry.976792423=0&'
 
 
 validNotionReplacementDictionary = {
@@ -1476,7 +1477,7 @@ valid_blocks = {'blocks': [{'alt_text': 'Order Up!',
                                      {'text': '100', 'type': 'plain_text'}],
                           'type': 'section'},
                          {'type': 'divider'},
-                         {'text': {'text': '<https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?entry.1082637073=TBT&entry.1975251686=1&entry.1427603868=9&entry.1486076673=9&entry.493624591=9&entry.1333444050=0&entry.254612996=3&entry.2092919144=3&entry.611444996=0&entry.976792423=0&entry.2095001800=3&entry.1399119358=3&entry.954885633=3&entry.485777497=0&entry.1980453543=1&entry.370334542=0&entry.448087930=1&entry.1252702382=0&entry.128659456=0&entry.1137054034=0&|Google '
+                         {'text': {'text': f'<{valid_google_form_url}|Google '
                                            'Form URL>',
                                    'type': 'mrkdwn'},
                           'type': 'section'}]}
@@ -1549,7 +1550,7 @@ valid_notion_blocks = {'blocks': [{'alt_text': 'Order Up!',
                                      {'text': '100', 'type': 'plain_text'}],
                           'type': 'section'},
                          {'type': 'divider'},
-                         {'text': {'text': '<https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?entry.1082637073=TBT&entry.1975251686=1&entry.1427603868=9&entry.1486076673=9&entry.493624591=9&entry.1333444050=0&entry.254612996=3&entry.2092919144=3&entry.611444996=0&entry.976792423=0&entry.2095001800=3&entry.1399119358=3&entry.954885633=3&entry.485777497=0&entry.1980453543=1&entry.370334542=0&entry.448087930=1&entry.1252702382=0&entry.128659456=0&entry.1137054034=0&|Google '
+                         {'text': {'text': f'<{valid_google_form_url}|Google '
                                            'Form URL>',
                                    'type': 'mrkdwn'},
                           'type': 'section'},
