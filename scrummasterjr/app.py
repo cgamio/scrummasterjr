@@ -15,6 +15,7 @@ logging.basicConfig(
 )
 
 from scrummasterjr.jira import Jira
+from scrummasterjr.jiracommand import JiraCommand
 from scrummasterjr.error import ScrumMasterJrError
 
 # flask / bolt apps
@@ -57,7 +58,8 @@ try:
     cds_jira_host = os.environ["CDS_JIRA_HOST"]
     cds_jira_user = os.environ["CDS_JIRA_USER"]
     cds_jira_token = os.environ["CDS_JIRA_TOKEN"]
-    cds_jira = Jira(cds_jira_host, cds_jira_user, cds_jira_token, "cds")
+    cds_jira = Jira(cds_jira_host, cds_jira_user, cds_jira_token)
+    cds_jira_command = JiraCommand(cds_jira, "cds")
     commandsets.append(cds_jira)
 except KeyError:
     logging.warning("Did not find CDS Jira Environment Variables. Continuing without registering that command set")
@@ -68,6 +70,7 @@ try:
     jira_user = os.environ["JIRA_USER"]
     jira_token = os.environ["JIRA_TOKEN"]
     jira = Jira(jira_host, jira_user, jira_token)
+    jiraCommand = JiraCommand(jira)
     commandsets.append(jira)
 except KeyError:
     logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
