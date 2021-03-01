@@ -64,7 +64,7 @@ def test_handle_mention_hello(app):
 def test_handle_response_error(app):
     message = {'subtype': None, 'text':'This was a message that generated and error', 'channel': '1234'}
     def throw_error(message_arg):
-        assert message['text'] == message_arg
+        assert message == message_arg
         raise ScrumMasterJrError('This is a user-facing error message', 'This is an admin error notification.')
 
     mock_say = MagicMock()
