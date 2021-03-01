@@ -156,3 +156,26 @@ def test_generateNextSprintNotionReplacementDictionary(sprint_report_data,  expe
 ])
 def test_generateJiraIssueLink(issue_numbers, expected_response):
     assert jira.generateJiraIssueLink(issue_numbers) == expected_response
+
+
+@patch('scrummasterjr.jira.NotionPage')
+@pytest.mark.parametrize('next_sprint_report, notion_exception', [
+    (True, None),
+    (True, ScrumMasterJrError('Some Error')),
+    (False, None),
+    (False, ScrumMasterJrError('Some Error'))
+])
+def test_updateNotionPage(mock_notion_page_class, next_sprint_report, notion_exception) :
+    mock_notion_page = MagicMock()
+    mock_notion_page_class.return_value = mock_notion_page
+
+    mock_notion_page.searchAndReplace.side_effect = notion_exception
+    notion_url = "https://www.notion.so/mediaos/some-test-document"
+
+    if next_sprint_report:
+        jira.updateNotionPage(notion_url, valid_report, valid_report)
+    else:
+        jira.updateNotionPage(notion_url, valid_report)
+
+    mock_notion_page_class.assert_called_once_with(notion_url)
+    mock_notion_page.searchAndReplace.assert_called_once()
