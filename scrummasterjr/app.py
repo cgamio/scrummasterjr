@@ -60,7 +60,7 @@ try:
     cds_jira_token = os.environ["CDS_JIRA_TOKEN"]
     cds_jira = Jira(cds_jira_host, cds_jira_user, cds_jira_token)
     cds_jira_command = JiraCommand(cds_jira, "cds")
-    commandsets.append(cds_jira)
+    commandsets.append(cds_jira_command)
 except KeyError:
     logging.warning("Did not find CDS Jira Environment Variables. Continuing without registering that command set")
 
@@ -71,7 +71,7 @@ try:
     jira_token = os.environ["JIRA_TOKEN"]
     jira = Jira(jira_host, jira_user, jira_token)
     jiraCommand = JiraCommand(jira)
-    commandsets.append(jira)
+    commandsets.append(jiraCommand)
 except KeyError:
     logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
 
@@ -83,7 +83,7 @@ def handle_response(function, message, say):
         message: string - the message that triggered this events
     """
     try:
-        function_response = function(message['text'])
+        function_response = function(message)
     except ScrumMasterJrError as smjrerr:
         if slack_error_channel:
             errortext = f"<!here> {smjrerr.admin_message}\nMessage that generated this error:\n```{message}```"
