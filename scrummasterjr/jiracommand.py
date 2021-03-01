@@ -6,18 +6,20 @@ import re
 
 class JiraCommand (BaseCommand):
 
-    def __init__ (self, jira, prefix = ""):
-        self.prefix = prefix
+    def __init__ (self, jira, prefix = None):
+        self.prefix = ""
+        if prefix:
+            self.prefix = f"{prefix} "
         self.jira = jira
         regex = {
             f'test {self.prefix}jira': self.testConnection,
             rf'{self.prefix}sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?': self.getSprintReport
         }
-        description = {
+        descriptions = {
             f'test {self.prefix}jira': 'tests my connection to jira',
             f'{self.prefix}sprint report [sprint-id] [next-sprint-id] [notion-url]': 'get a quick sprint report for a given sprint, the next sprint, and then update the given notion page'
         }
-        super().__init__(regex, description)
+        super().__init__(regex, descriptions)
 
     def testConnection(self, slack_event):
         response = self.jira.testConnection()

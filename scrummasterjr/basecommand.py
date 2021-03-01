@@ -1,8 +1,8 @@
 class BaseCommand:
 
-    def __init__ (self, regex, description):
+    def __init__ (self, regex, descriptions):
         self.regex = regex
-        self.description = description
+        self.descriptions = descriptions
 
     def getCommandsRegex(self):
         return self.regex
