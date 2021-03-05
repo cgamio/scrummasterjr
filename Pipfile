@@ -11,7 +11,7 @@ pytest = "*"
 pytest-cov = "*"
 gunicorn = "*"
 slack-bolt = "*"
-notion = "*"
+notion = {git = "https://github.com/julrach/notion-py"}
 
 [requires]
 python_version = "3.7"
