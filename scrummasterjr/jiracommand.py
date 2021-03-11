@@ -239,7 +239,7 @@ class JiraCommand (BaseCommand):
                 {
                     "text": {
                         "type": "plain_text",
-                        "text": sprint['name'] if sprint['state'] != 'active' else f"sprint['name'] *"
+                        "text": sprint['name'] if sprint['state'] != 'active' else f"{sprint['name']} *Active Sprint*"
                     },
                     "value": f"{sprint['id']}"
                 }
@@ -344,6 +344,8 @@ class JiraCommand (BaseCommand):
         board_state_values = body['view']['state']['values']
 
         board_id = board_state_values['board_section']['board_select_action']['selected_option']['value']
+        completed_sprint_id = None
+        upcoming_sprint_id = None
 
         errors = {}
         new_view = {}
@@ -390,6 +392,7 @@ class JiraCommand (BaseCommand):
                 "type": body["view"]["type"],
                 "title": body["view"]["title"],
                 "callback_id": "report_results_view",
+                "external_id": "sprint_results_view_id",
                 "blocks": [
                     {
             			"type": "image",
@@ -410,3 +413,85 @@ class JiraCommand (BaseCommand):
 
             }
         )
+
+        completed_sprint_report_data = self.jira.generateAllSprintReportData(completed_sprint_id)
+
+        new_view['blocks'] = [{
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": completed_sprint_report_data['project_name']
+            }
+        }]
+
+        sprint_goals_string = '\n'.join(completed_sprint_report_data['sprint_goals'])
+
+        new_view['blocks'].append(
+            {
+    			"type": "section",
+    			"text": {
+    				"type": "mrkdwn",
+    				"text": f"*Sprint {completed_sprint_report_data['sprint_number']}*\n{sprint_goals_string}"
+    			}
+    		}
+        )
+
+        new_view["submit"] = {
+            "type": "plain_text",
+            "text": "Submit Metrics"
+        }
+
+        new_view["close"] = {
+            "type": "plain_text",
+            "text": "Done"
+        }
+
+        client.views_update(
+            external_id=new_view["external_id"],
+            view = new_view
+        )
+        #
+        # blocks = [
+    	# 	,
+    	# 	,
+    	# 	{
+    	# 		"type": "section",
+    	# 		"text": {
+    	# 			"type": "mrkdwn",
+    	# 			"text": "*COLI - Sprint 2*\nDo some other things"
+    	# 		}
+    	# 	},
+    	# 	{
+    	# 		"type": "header",
+    	# 		"text": {
+    	# 			"type": "plain_text",
+    	# 			"text": "Metrics",
+    	# 			"emoji": true
+    	# 		}
+    	# 	},
+    	# 	{
+    	# 		"type": "section",
+    	# 		"fields": [
+    	# 			{
+    	# 				"type": "plain_text",
+    	# 				"text": "Velocity",
+    	# 				"emoji": true
+    	# 			},
+    	# 			{
+    	# 				"type": "plain_text",
+    	# 				"text": "27 pts",
+    	# 				"emoji": true
+    	# 			},
+    	# 			{
+    	# 				"type": "plain_text",
+    	# 				"text": "Predicability of Commitments",
+    	# 				"emoji": true
+    	# 			},
+    	# 			{
+    	# 				"type": "plain_text",
+    	# 				"text": "95%",
+    	# 				"emoji": true
+    	# 			}
+    	# 		]
+    	# 	}
+        # ]
