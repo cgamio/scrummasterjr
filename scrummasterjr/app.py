@@ -165,12 +165,6 @@ def handle_message(event, say):
 
     say("I'm sorry, I don't understand you. Try asking me for `help`")
 
-@app.event({"type": "message"})
-def just_ack(ack, logger):
-    """This listener handles all uncaught message events and just acks"""
-    logger.debug('ignored message.')
-    ack()
-
 @flask_app.route("/slack/events", methods=["POST"])
 def slack_events():
     return handler.handle(request)
@@ -183,3 +177,34 @@ def healthcheck():
 if __name__ == '__main__':
     debug = True if 'prod' not in str(os.getenv('ENV')) else False
     flask_app.run(host='0.0.0.0', port=8081, debug=debug)
+
+from blockkit import *
+
+@app.use
+def basicSetup(context, next):
+    try:
+        context['bot_name'] = os.environ['BOT_NAME']
+    except KeyError:
+        pass
+
+    next()
+
+@app.command('/smjr-sprint-report')
+def startInteractiveSprintReport(ack, body, client, command, respond):
+    jiraCommand.showSprintReportModal(ack, body, client, command, respond)
+
+@app.action("board_select_action")
+def show_menu_options(ack, body, client, context):
+    ack()
+    jiraCommand.showSprints(ack, body, client, context)
+
+@app.view("report_input_view")
+def run_sprint_report(ack, body, client, context):
+    jiraCommand.runSprintReport(ack, body, client, context)
+
+@app.event({"type": "message"})
+@app.action("ignore_me")
+def just_ack(ack, logger):
+    """This listener handles all uncaught message events and just acks"""
+    logger.debug('ignored message.')
+    ack()

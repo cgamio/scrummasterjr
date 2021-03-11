@@ -549,3 +549,25 @@ class Jira:
         link = re.sub(r'\%2C$', '', link) + ")"
 
         return link
+
+    def getBoardsInProject(self, projectkey):
+        link = ""
+        try:
+            link = f"{self.__agile_url}board?projectKeyOrId={projectkey.upper()}"
+            results = self.__makeRequest('GET', link)
+            if results:
+                return results
+        except AttributeError:
+            pass
+
+        return False
+
+    def getSprintsInBoard(self, board_id):
+        # This currently doesn't handle pagination, so it's only returning the first 50 sprints. We should either have it reverse 
+        link = f"{self.__agile_url}board/{board_id}/sprint"
+        results = self.__makeRequest('GET', link)
+
+        if results:
+            return results
+
+        return False

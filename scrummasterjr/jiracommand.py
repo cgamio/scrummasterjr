@@ -150,3 +150,263 @@ class JiraCommand (BaseCommand):
             raise ScrumMasterJrError({"blocks": blocks}, error)
 
         return {"blocks": blocks}
+
+    def showSprintReportModal(self, ack, body, client, command, respond):
+        ack()
+
+        results = self.jira.getBoardsInProject(command['text'].strip())
+
+        if not results:
+            respond(
+                {
+                    "text": "Please provide a valid Jira Project Key with this command",
+                    "response_type": "ephemeral"
+                }
+            )
+
+        board_options = []
+
+        for board in results["values"]:
+            if board['type'] == "scrum":
+                board_options.append(
+                    {
+                        "text": {
+                            "type": "plain_text",
+                            "text": board["name"]
+                        },
+                        "value": str(board["id"])
+                    }
+                )
+
+        if not board_options:
+            respond(
+                {
+                    "text": "I'm only able to generate sprint reports for projects that use Scrum boards. Please reach out in <#C6GJGERFC> if you need help getting one set up.",
+                    "response_type": "ephemeral"
+                }
+            )
+
+        modal_view = {
+    	"title": {
+    		"type": "plain_text",
+    		"text": "Run Sprint Report"
+    	},
+    	"type": "modal",
+    	"close": {
+    		"type": "plain_text",
+    		"text": "Cancel"
+    	},
+        "submit": {
+            "type": "plain_text",
+            "text": "Run"
+        },
+    	"blocks": [
+    		{
+                "block_id": "board_section",
+    			"type": "input",
+    			"label": {
+    				"type": "plain_text",
+    				"text": "Which board did you mean?"
+    			},
+    			"element": {
+    				"type": "static_select",
+    				"placeholder": {
+    					"type": "plain_text",
+    					"text": "Select a board"
+    				},
+    				"options": board_options,
+    				"action_id": "board_select_action"
+    			},
+                "dispatch_action": True
+    		}]
+        }
+
+        # Call views_open with the built-in client
+        client.views_open(
+             # Pass a valid trigger_id within 3 seconds of receiving it
+            trigger_id=body["trigger_id"],
+            # View payload
+            view=modal_view
+        )
+
+    def showSprints(self, ack, body, client, context):
+
+        results = self.jira.getSprintsInBoard(body['actions'][0]['selected_option']['value'])
+        sprints = []
+
+        for sprint in results['values']:
+            sprints.append(
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": sprint['name'] if sprint['state'] != 'active' else f"sprint['name'] *"
+                    },
+                    "value": f"{sprint['id']}"
+                }
+            )
+
+        if not sprints:
+            error_block = {
+    			"type": "section",
+    			"text": {
+    				"type": "mrkdwn",
+    				"text": ":warning: This board has no sprints, please select another :warning:"
+    			}
+    		}
+
+            body["view"]["blocks"] = [body["view"]["blocks"][0], error_block]
+            client.views_update(
+                hash=body["view"]["hash"],
+                view_id=body["view"]["id"],
+                view = {
+                    "type": body["view"]["type"],
+                    "title": body["view"]["title"],
+                    "callback_id": "report_input_view",
+                	"submit": {
+                		"type": "plain_text",
+                		"text": "Run"
+                	},
+                    "blocks": body['view']['blocks']
+                }
+            )
+            return
+
+        sprint_blocks = [{
+            "type": "input",
+            "block_id": "completed_sprint_section",
+            "label": {
+                "type": "plain_text",
+                "text": "Completed sprint"
+            },
+            "element": {
+                "type": "static_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a sprint"
+                },
+                "options": sprints
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "upcoming_sprint_section",
+            "label": {
+                "type": "plain_text",
+                "text": "Upcoming sprint"
+            },
+            "element": {
+                "type": "static_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a sprint"
+                },
+                "options": sprints,
+            }
+        }]
+
+        notion_block = {
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "plain_text_input-action",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "Paste a Notion URL to update here"
+				}
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Notion URL"
+			}
+		}
+
+
+        new_blocks = [body["view"]["blocks"][0]]
+        new_blocks.extend(sprint_blocks)
+
+        client.views_update(
+            hash=body["view"]["hash"],
+            view_id=body["view"]["id"],
+            view = {
+                "type": body["view"]["type"],
+                "title": body["view"]["title"],
+                "callback_id": "report_input_view",
+            	"submit": {
+            		"type": "plain_text",
+            		"text": "Run"
+            	},
+                "blocks": new_blocks
+            }
+        )
+
+    def runSprintReport(self, ack, body, client, context):
+
+        board_state_values = body['view']['state']['values']
+
+        board_id = board_state_values['board_section']['board_select_action']['selected_option']['value']
+
+        errors = {}
+        new_view = {}
+
+        try:
+
+            try:
+                completed_sprint_id = list(board_state_values['completed_sprint_section'].values())[0]['selected_option']['value']
+            except TypeError:
+                errors["completed_sprint_section"] = 'Please select a sprint'
+
+            try:
+                upcoming_sprint_id = list(board_state_values['upcoming_sprint_section'].values())[0]['selected_option']['value']
+            except TypeError:
+                errors["upcoming_sprint_section"] = 'Please select a sprint'
+        except KeyError:
+            new_view = {
+                "type": body["view"]["type"],
+                "title": body["view"]["title"],
+                "callback_id": "error_view",
+                "blocks": [
+            		{
+            			"type": "image",
+            			"image_url": "https://media2.giphy.com/media/Px7FQJqhWTGaA/giphy.gif?cid=ecf05e477ls5y92dm0xp0yqwfblydgcaek7p09t27zdv0tk3&rid=giphy.gif",
+            			"alt_text": "broken computer"
+            		},
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"That board has no sprints... Please press cancel and choose another"
+                        }
+                    }
+                ]
+            }
+
+        if errors:
+            ack(response_action="errors", errors=errors)
+            return
+
+
+        if not new_view:
+            new_view = {
+                "type": body["view"]["type"],
+                "title": body["view"]["title"],
+                "callback_id": "report_results_view",
+                "blocks": [
+                    {
+            			"type": "image",
+                        "title": {
+            				"type": "plain_text",
+            				"text": "Processing... Please wait"
+            			},
+            			"image_url": "https://media2.giphy.com/media/26gR0YFZxWbnUPtMA/giphy.gif?cid=ecf05e47e10dxbfzuw3ibaewju07n66c9j38iqbb0d95oroy&rid=giphy.gif",
+            			"alt_text": "thinking"
+            		}
+                ]
+            }
+
+        ack(
+            {
+                "response_action": "push",
+                "view": new_view
+
+            }
+        )

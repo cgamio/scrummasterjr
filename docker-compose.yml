@@ -1,0 +1,13 @@
+---
+version: '2.4'
+services:
+  scrummasterjr:
+    container_name: scrummasterjr
+    build:
+      context: .
+    image: 451479211471.dkr.ecr.us-east-1.amazonaws.com/hearst/scrum-master-jr:latest
+    ports:
+      - 8000:80
+    volumes:
+      - ${PWD}:/app
+    env_file: .env
