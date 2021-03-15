@@ -90,7 +90,6 @@ def handle_response(function, message, say):
             app.client.chat_postMessage(channel=slack_error_channel, text=errortext)
 
         function_response = smjrerr.user_message
-        say(smjrerr.user_message)
 
     say(function_response)
 
