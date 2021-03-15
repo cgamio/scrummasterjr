@@ -308,7 +308,7 @@ class JiraCommand (BaseCommand):
 			"type": "input",
 			"element": {
 				"type": "plain_text_input",
-				"action_id": "plain_text_input-action",
+				"action_id": "notion_url_input_action",
 				"placeholder": {
 					"type": "plain_text",
 					"text": "Paste a Notion URL to update here"
