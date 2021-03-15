@@ -23,28 +23,6 @@ flask_app = Flask(__name__)
 app = App(token=os.environ["SLACK_BOT_TOKEN"], signing_secret=os.environ["SLACK_SIGNING_SECRET"])
 handler = SlackRequestHandler(app)
 
-@app.middleware
-def log_request(logger, body, next):
-    logger.debug(body)
-    return next()
-
-def dms_only(message, next, logger):
-    channel_type = message.get('channel_type')
-
-    if channel_type == "im":
-        return next()
-
-    logger.debug("This message was not a DM")
-
-def no_bot_messages(message, next, logger):
-    """Listener middleware which filters out messages from bots by checking 'bot_id'"""
-    bot_id = message.get('bot_id')
-
-    if bot_id is None:
-        return next()
-
-    logger.debug(f'Ignoring message from bot: {bot_id}')
-
 # Get Channel to post error messages to
 try:
     slack_error_channel = os.environ["SLACK_ERROR_CHANNEL"]
@@ -74,6 +52,28 @@ try:
     commandsets.append(jiraCommand)
 except KeyError:
     logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
+
+@app.middleware
+def log_request(logger, body, next):
+    logger.debug(body)
+    return next()
+
+def dms_only(message, next, logger):
+    channel_type = message.get('channel_type')
+
+    if channel_type == "im":
+        return next()
+
+    logger.debug("This message was not a DM")
+
+def no_bot_messages(message, next, logger):
+    """Listener middleware which filters out messages from bots by checking 'bot_id'"""
+    bot_id = message.get('bot_id')
+
+    if bot_id is None:
+        return next()
+
+    logger.debug(f'Ignoring message from bot: {bot_id}')
 
 def handle_response(function, message, say):
     """Executes a command and forwards the response back to the user
