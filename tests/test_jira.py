@@ -1,5 +1,6 @@
 import pytest
 from scrummasterjr.jira import Jira
+from scrummasterjr.error import ScrumMasterJrError
 from unittest.mock import MagicMock, patch
 import json
 import re
@@ -8,42 +9,22 @@ from fixtures import *
 jira = Jira(jira_test_instance, " ", " ")
 
 @patch('scrummasterjr.jira.requests')
-@pytest.mark.parametrize('http_code , expected_response', [
-    (200, "My connection to Jira is up and running!"),
-    (500, "Looks like there's an issue with my connection. I've logged an error")
-])
-def test_testConnectionCommand(mock_requests, http_code, expected_response):
-    mock_requests.request.return_value = MagicMock(status_code=http_code, text='{"text": "some mock test"}')
+def test_testConnection(mock_requests):
 
-    response = jira.testConnectionCommand("")
+    def request_side_effect(verb, url, *args, **kwargs):
+        if 'myself' in url:
+            return MagicMock(**okRequestResponse({"data": "a-okay"}))
 
-    assert response == {'text': expected_response}
+    mock_requests.request.side_effect = request_side_effect
 
-def test_getCommandsRegex():
-    expected_response = {
-        'test jira': jira.testConnectionCommand,
-        'sprint metrics [0-9]+': jira.getSprintMetricsCommand,
-        'sprint report [0-9]+': jira.getSprintReportCommand,
-        r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?': jira.getSprintReportCommand
-    }
-
-    assert jira.getCommandsRegex() == expected_response
-
-def test_getCommandDescriptions():
-    expected_response = {
-        'test jira': 'tests my connection to jira',
-        'sprint metrics [sprint-id]': 'get metrics for a given sprint',
-        'sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
-        'sprint report [sprint-id] [next-sprint-id] [notion-url]': 'get a quick sprint report for a given sprint, the next sprint, and then update the given notion page'
-    }
-
-    assert jira.getCommandDescriptions() == expected_response
+    jira.testConnection()
+    mock_requests.request.assert_called_once()
 
 @patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('message, sprint_get_response, report_get_response, board_get_response,  expected_response', [
-    ('sprint metrics 1234', badRequestResponse('No Sprint Found!'), {}, {}, error_response),
+    ('sprint metrics 1234', badRequestResponse('No Sprint Found!'), {}, {}, ScrumMasterJrError("I could not find sprint with id 1234. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")),
     ('sprint metrics abcd', {}, {}, {}, "Sorry, I don't see a valid sprint number there"),
-    ('sprint metrics 1234', {}, badRequestResponse('No Board Found!'), {},  error_response),
+    ('sprint metrics 1234', {}, badRequestResponse('No Board Found!'), {},  ScrumMasterJrError("I could not find sprint with id 1234. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")),
     ('sprint metrics 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']), valid_board_response, normal_sprint_data['expected_response']),
     ('sprint metrics 1234', valid_sprint_response, okRequestResponse(incomplete_work_sprint_data['sprint_report_response']), valid_board_response, incomplete_work_sprint_data['expected_response']),
     ('sprint metrics 1234', valid_sprint_response, okRequestResponse(punted_sprint_data['sprint_report_response']), valid_board_response, punted_sprint_data['expected_response']),
@@ -64,15 +45,19 @@ def test_getSprintMetricsCommand(mock_requests, message, sprint_get_response, re
 
     mock_requests.request.side_effect = request_side_effect
 
-    response = jira.getSprintMetricsCommand(message)
-
-    if isinstance(expected_response,dict):
-        strip_blockqoutes = re.compile('```([^`]*)```', re.MULTILINE)
-        result_dict = json.loads(strip_blockqoutes.match(response['text']).group(1))
-
-        assert result_dict == expected_response
+    if isinstance(expected_response, Exception):
+        with pytest.raises(ScrumMasterJrError):
+            jira.getSprintMetricsCommand(message)
     else:
-        assert response == {'text': expected_response}
+        response = jira.getSprintMetricsCommand(message)
+
+        if isinstance(expected_response,dict):
+            strip_blockqoutes = re.compile('```([^`]*)```', re.MULTILINE)
+            result_dict = json.loads(strip_blockqoutes.match(response['text']).group(1))
+
+            assert result_dict == expected_response
+        else:
+            assert response == {'text': expected_response}
 
 @patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('velocity_get_response, sprint_id, expected_response', [
@@ -90,18 +75,18 @@ def test_getAverageVelocity(mock_requests, velocity_get_response, sprint_id,  ex
     mock_requests.request.side_effect = request_side_effect
 
     if isinstance(expected_response, Exception):
-        with pytest.raises(Exception, match=str(expected_response)):
+        with pytest.raises(ScrumMasterJrError):
             assert jira.getAverageVelocity('1234', sprint_id) == expected_response
     else:
         assert jira.getAverageVelocity('1234', sprint_id) == expected_response
 
 @patch('scrummasterjr.jira.requests')
 @pytest.mark.parametrize('sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response', [
-    ('5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
-    ('5432', valid_sprint_response, {}, badRequestResponse('No Report Found!'), {}, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
-    ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  badRequestResponse('No Board Found!'), okRequestResponse(report_velocity_response['velocity_get_response']), {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
-    ('1234', valid_sprint_response, okRequestResponse(no_goals_or_dates_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
-    ('1234', valid_sprint_response, okRequestResponse(no_sprint_number_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
+    ('5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, ScrumMasterJrError("Sorry, I had trouble generating a report for that sprint. I've logged an error")),
+    ('5432', valid_sprint_response, {}, badRequestResponse('No Report Found!'), {}, ScrumMasterJrError("Sorry, I had trouble generating a report for that sprint. I've logged an error")),
+    ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  badRequestResponse('No Board Found!'), okRequestResponse(report_velocity_response['velocity_get_response']), ScrumMasterJrError("Sorry, I had trouble generating a report for that sprint. I've logged an error")),
+    ('1234', valid_sprint_response, okRequestResponse(no_goals_or_dates_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), ScrumMasterJrError("Sorry, I had trouble generating a report for that sprint. I've logged an error")),
+    ('1234', valid_sprint_response, okRequestResponse(no_sprint_number_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), ScrumMasterJrError("Sorry, I had trouble generating a report for that sprint. I've logged an error")),
     ('1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_report)
 ])
 def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_response, report_get_response, board_get_response, velocity_get_response, expected_response):
@@ -117,7 +102,11 @@ def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_respon
 
     mock_requests.request.side_effect = request_side_effect
 
-    assert jira.generateAllSprintReportData(sprint_id) == expected_response
+    if isinstance(expected_response, Exception):
+        with pytest.raises(ScrumMasterJrError):
+            jira.generateAllSprintReportData(sprint_id)
+    else:
+        assert jira.generateAllSprintReportData(sprint_id) == expected_response
 
 @pytest.mark.parametrize('sprint_report_data, expected_response', [
     (valid_report, valid_google_form_url),
@@ -126,7 +115,7 @@ def test_generateAllSprintReportData(mock_requests, sprint_id, sprint_get_respon
 def test_generateGoogleFormURL(sprint_report_data, expected_response):
 
     if isinstance(expected_response, Exception):
-        with pytest.raises(Exception, match=str(expected_response)):
+        with pytest.raises(ScrumMasterJrError):
             jira.generateGoogleFormURL(sprint_report_data)
     else:
         assert jira.generateGoogleFormURL(sprint_report_data) == expected_response
@@ -137,7 +126,7 @@ def test_generateGoogleFormURL(sprint_report_data, expected_response):
 ])
 def test_generateNotionReplacementDictionary(sprint_report_data,  expected_response):
     if isinstance(expected_response, Exception):
-        with pytest.raises(Exception, match=str(expected_response)):
+        with pytest.raises(ScrumMasterJrError):
             jira.generateNotionReplacementDictionary(sprint_report_data)
     else:
 
@@ -152,7 +141,7 @@ def test_generateNotionReplacementDictionary(sprint_report_data,  expected_respo
 ])
 def test_generateNextSprintNotionReplacementDictionary(sprint_report_data,  expected_response):
     if isinstance(expected_response, Exception):
-        with pytest.raises(Exception, match=str(expected_response)):
+        with pytest.raises(ScrumMasterJrError):
             jira.generateNextSprintNotionReplacementDictionary(sprint_report_data)
     else:
 
@@ -168,39 +157,25 @@ def test_generateNextSprintNotionReplacementDictionary(sprint_report_data,  expe
 def test_generateJiraIssueLink(issue_numbers, expected_response):
     assert jira.generateJiraIssueLink(issue_numbers) == expected_response
 
+
 @patch('scrummasterjr.jira.NotionPage')
-@patch('scrummasterjr.jira.requests')
-@pytest.mark.parametrize('message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, notion_case, expected_response', [
-    ('sprint report 5432', badRequestResponse('No Sprint Found!'), {}, {}, {}, False, {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}),
-    ('sprint report 1234', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), False, valid_blocks),
-    ('sprint report 1234 5678 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), valid_notion_case, valid_notion_blocks),
-    ('sprint report 1234 5678 https://www.notion.so/mediaos/some-test-document', valid_sprint_response, okRequestResponse(normal_sprint_data['sprint_report_response']),  valid_board_response, okRequestResponse(report_velocity_response['velocity_get_response']), error_notion_case, notion_error_blocks)
+@pytest.mark.parametrize('next_sprint_report, notion_exception', [
+    (True, None),
+    (True, ScrumMasterJrError('Some Error')),
+    (False, None),
+    (False, ScrumMasterJrError('Some Error'))
 ])
-def test_getSprintReportCommand(mock_requests, mock_notion_page, message_text, sprint_get_response, report_get_response, board_get_response, velocity_get_response, notion_case, expected_response):
-    def request_side_effect(verb, url, *args, **kwargs):
-        if 'sprint/' in url:
-            return MagicMock(**sprint_get_response)
-        if 'rapid/charts/sprintreport' in url:
-            return MagicMock(**report_get_response)
-        if 'board/' in url:
-            return MagicMock(**board_get_response)
-        if 'rapid/charts/velocity' in url:
-            return MagicMock(**velocity_get_response)
+def test_updateNotionPage(mock_notion_page_class, next_sprint_report, notion_exception) :
+    mock_notion_page = MagicMock()
+    mock_notion_page_class.return_value = mock_notion_page
 
-    mock_requests.request.side_effect = request_side_effect
+    mock_notion_page.searchAndReplace.side_effect = notion_exception
+    notion_url = "https://www.notion.so/mediaos/some-test-document"
 
-    if notion_case:
-        mock_notion_page.return_value = mock_notion_page
-
-        if notion_case['exception']:
-            mock_notion_page.searchAndReplace.side_effect = lambda x: exec(f"raise(Exception('An Error!'))")
-
-
-    if isinstance(expected_response, Exception):
-        with pytest.raises(Exception, match=str(expected_response)):
-            jira.getSprintReportCommand(message_text)
+    if next_sprint_report:
+        jira.updateNotionPage(notion_url, valid_report, valid_report)
     else:
-        assert jira.getSprintReportCommand(message_text) == expected_response
+        jira.updateNotionPage(notion_url, valid_report)
 
-    if notion_case:
-        mock_notion_page.searchAndReplace.assert_called_once_with(notion_case['dictionary'])
+    mock_notion_page_class.assert_called_once_with(notion_url)
+    mock_notion_page.searchAndReplace.assert_called_once()

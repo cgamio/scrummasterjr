@@ -1,8 +1,6 @@
 
 FROM python:3.8.6-slim-buster
 
-ARG GUNICORN_CMD_ARGS
-
 ENV PYTHONPATH=/app/\
     PYTHONUNBUFFERED=1\
     GUNICORN_CMD_ARGS="--workers 4 -b 0.0.0.0:80 --timeout 30"

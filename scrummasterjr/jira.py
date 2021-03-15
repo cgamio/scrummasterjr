@@ -5,6 +5,7 @@ import re
 import json
 from datetime import datetime
 from scrummasterjr.notionpage import NotionPage
+from scrummasterjr.error import ScrumMasterJrError
 
 class Jira:
     __auth = None
@@ -44,21 +45,7 @@ class Jira:
         self.__agile_url = f"https://{self.__host}/rest/agile/latest/"
         self.__greenhopper_url = f"https://{self.__host}/rest/greenhopper/latest/"
 
-        self.__regex = {
-            f'test {self.__prefix}jira': self.testConnectionCommand,
-            f'{self.__prefix}sprint metrics [0-9]+': self.getSprintMetricsCommand,
-            f'{self.__prefix}sprint report [0-9]+': self.getSprintReportCommand,
-            rf'{self.__prefix}sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?': self.getSprintReportCommand
-        }
-
-        self.__descriptions = {
-            f'test {self.__prefix}jira': 'tests my connection to jira',
-            f'{self.__prefix}sprint metrics [sprint-id]': 'get metrics for a given sprint',
-            f'{self.__prefix}sprint report [sprint-id]': 'get a quick sprint report for a given sprint',
-            f'{self.__prefix}sprint report [sprint-id] [next-sprint-id] [notion-url]': 'get a quick sprint report for a given sprint, the next sprint, and then update the given notion page'
-        }
-
-    def __testConnection(self):
+    def testConnection(self):
         """Tests the connection to Jira by getting user data"""
         url = f"{self.__url}/myself"
 
@@ -66,24 +53,7 @@ class Jira:
 
         return response
 
-    def testConnectionCommand(self, message):
-        """Wrapper for Jira connection test functionality with user-friendly responses
-
-        Args:
-            message: string - the message from the user that initiated this command
-
-        Returns:
-            dictionary - A slack message response
-        """
-        response = self.__testConnection()
-        text = "My connection to Jira is up and running!"
-        if not response:
-            logging.error(f"Error with Jira connection: {response}")
-            text = "Looks like there's an issue with my connection. I've logged an error"
-
-        return {'text': text}
-
-    def __calculateSprintMetrics(self, sprint_report):
+    def calculateSprintMetrics(self, sprint_report):
         """Given the data from a Jira sprint report, calculates sprint metrics
 
         Args:
@@ -247,7 +217,7 @@ class Jira:
             "meta": meta
         }
 
-    def __getSprint(self, sprint_id):
+    def getSprint(self, sprint_id):
         """Utility funtion to get sprint data from Jira
 
         Args:
@@ -259,11 +229,11 @@ class Jira:
         # Get Jira Sprint Object (including Board reference) from Sprint ID
         sprint = self.__makeRequest('GET', f"{self.__agile_url}sprint/{sprint_id}")
         if not sprint:
-            raise Exception(f"Could not find sprint with id {sprint_id}")
+            raise ScrumMasterJrError(f"I could not find sprint with id {sprint_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         return sprint
 
-    def __getBoard(self, board_id):
+    def getBoard(self, board_id):
         """Utility funtion to get board data from Jira
 
         Args:
@@ -274,11 +244,11 @@ class Jira:
         """
         board = self.__makeRequest('GET', f"{self.__agile_url}board/{board_id}")
         if not board:
-            raise Exception(f"Could not find boad with id {board_id}")
+            raise ScrumMasterJrError(f"Could not find boad with id {board_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         return board
 
-    def __getSprintReport(self, sprint_id, board_id):
+    def getSprintReport(self, sprint_id, board_id):
         """Utility funtion to get sprint report data from Jira
 
         Args:
@@ -290,7 +260,7 @@ class Jira:
         """
         sprint_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/sprintreport?rapidViewId={board_id}&sprintId={sprint_id}")
         if not sprint_report:
-            raise Exception(f"Could not find report for sprint {sprint_id} on board {board_id}")
+            raise ScrumMasterJrError(f"Could not find report for sprint {sprint_id} on board {board_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         return sprint_report
 
@@ -309,20 +279,15 @@ class Jira:
             logging.error(f"Did not find a sprint number in: '{message}'")
             return {'text': "Sorry, I don't see a valid sprint number there"}
 
-        try:
-            sprint = self.__getSprint(sprintid)
-            sprint_report = self.__getSprintReport(sprintid, sprint['originBoardId'])
-            metrics = self.__calculateSprintMetrics(sprint_report)
-
-        except BaseException as e:
-            logging.error(f"There was an error generating sprint metrics for sprint {sprintid}\n{e}")
-            return {'text': "Sorry, I had trouble getting metrics for that sprint. I've logged an error"}
+        sprint = self.getSprint(sprintid)
+        sprint_report = self.getSprintReport(sprintid, sprint['originBoardId'])
+        metrics = self.calculateSprintMetrics(sprint_report)
 
         metrics_text = json.dumps(metrics, sort_keys=True, indent=4, separators=(",", ": "))
 
         return {'text': f"```{metrics_text}```"}
 
-    def __getJiraSprintReportData(self, sprint_report):
+    def getJiraSprintReportData(self, sprint_report):
         """Utility funtion to parse general sprint information from a Jira sprint report
 
         Args:
@@ -336,7 +301,7 @@ class Jira:
         try:
             report['sprint_number'] = re.search(r'(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
         except AttributeError:
-            raise Exception(f"Could not find or parse sprint number from: '{sprint_report['sprint']['name']}'")
+            raise ScrumMasterJrError(f"I couldn't not find or parse sprint number from: '{sprint_report['sprint']['name']}'. Please make sure that you name sprints to include `S#` or `Sprint #`, where `#` is the number of the sprint")
 
         try:
             report['sprint_start'] = sprint_report['sprint']['startDate']
@@ -348,7 +313,7 @@ class Jira:
         try:
             report['sprint_goals'] = sprint_report['sprint']['goal'].split("\n")
         except (AttributeError, KeyError):
-            raise Exception(f"Could not find or parse sprint goal")
+            raise ScrumMasterJrError(f"I couldn't find or parse sprint goal for one of your sprints. Please check your arguments again, but this might not be your fault so I've let my overlords know. Are you using the right command for your jira instance? Ask me for `help` for more information", f"Unable to find or parse sprint goal\n {sprint_report}")
 
         return report
 
@@ -363,153 +328,16 @@ class Jira:
         """
         report = {}
 
-        try:
-            sprint = self.__getSprint(sprint_id)
-            sprint_report = self.__getSprintReport(sprint_id, sprint['originBoardId'])
-            report = self.__getJiraSprintReportData(sprint_report)
-            report['issue_metrics'] = self.__calculateSprintMetrics(sprint_report)
-            board = self.__getBoard(sprint['originBoardId'])
-            report['project_name'] = board['location']['projectName']
-            report['project_key'] = board['location']['projectKey']
-            report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
-        except BaseException as e:
-            logging.error(f"There was an error generating a report sprint {sprint_id}\n{str(e)}")
-            return {'text': "Sorry, I had trouble generating a report for that sprint. I've logged an error"}
+        sprint = self.getSprint(sprint_id)
+        sprint_report = self.getSprintReport(sprint_id, sprint['originBoardId'])
+        report = self.getJiraSprintReportData(sprint_report)
+        report['issue_metrics'] = self.calculateSprintMetrics(sprint_report)
+        board = self.getBoard(sprint['originBoardId'])
+        report['project_name'] = board['location']['projectName']
+        report['project_key'] = board['location']['projectKey']
+        report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
 
         return report
-
-    def getSprintReportCommand(self, message):
-        """
-        A user-friendly wrapper for getting sprint report data, having it displayed nicely, and optionally collect the next sprint's data to update a notion page.
-
-        Args:
-            message: string - containing the message from the user that initiated this commands
-
-            Options:
-            - 'sprint report 1234': Gets and prints the sprint report data for sprint 1234
-            - 'spritn report 1234 5678 <https://notion.so/some-document': Gets and prints the sprint report data from sprint 1234, fetchs the data for sprint 5678 (assuming it's the next sprint) and updates the 'some-document' Notion page with that information
-
-        Returns:
-            dictionary - A slack response and an error message if applicable
-        """
-
-        error = None
-
-        regex_result = re.search(r'sprint report (?P<sprint_id>[0-9]+)\s*((?P<next_sprint_id>[0-9]+)\s*<?(?P<notion_url>https://www.notion.so/[^\s>]+))?', message).groupdict()
-
-        report_data = self.generateAllSprintReportData(regex_result['sprint_id'])
-        if 'text' in report_data: return report_data
-
-        blocks = []
-
-        divider_block = {
-    			"type": "divider"
-    		}
-
-        blocks.append({
-    			"type": "image",
-    			"title": {
-    				"type": "plain_text",
-    				"text": "Order Up!"
-    			},
-    			"image_url": "https://media.giphy.com/media/l1JojmmBMELYFKJc4/giphy.gif",
-    			"alt_text": "Order Up!"
-    		})
-        blocks.append(divider_block)
-
-        goals_string = '\n'.join(report_data['sprint_goals'])
-        blocks.append({
-    			"type": "section",
-    			"text": {
-    				"type": "mrkdwn",
-    				"text": f"*Project Name*: {report_data['project_name']}\n*Sprint {report_data['sprint_number']}*\n{goals_string}"
-    			}
-    		})
-
-        blocks.append(divider_block)
-
-        blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Metrics:*"
-                }
-                })
-
-        sprint_metrics = []
-        for type in ['items', 'points', 'meta']:
-            type_block = {
-        			"type": "section",
-        			"text": {
-        				"type": "mrkdwn",
-        				"text": f"*{type}*"
-        			}
-        		}
-            blocks.append(type_block)
-
-            for metric in report_data['issue_metrics'][type].keys():
-                sprint_metrics.append({
-    					"type": "plain_text",
-    					"text": f"{metric}"
-    				})
-                sprint_metrics.append({
-    					"type": "plain_text",
-    					"text": f"{report_data['issue_metrics'][type][metric]}"
-    				})
-                if len(sprint_metrics) > 8:
-                    blocks.append({
-                			"type": "section",
-                			"fields": sprint_metrics
-                    })
-                    sprint_metrics = []
-
-            if len(sprint_metrics) > 0:
-                sprint_metrics_block = {
-            			"type": "section",
-            			"fields": sprint_metrics
-                }
-                blocks.append(sprint_metrics_block)
-                sprint_metrics = []
-
-        blocks.append(divider_block)
-
-        blocks.append({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"<{self.generateGoogleFormURL(report_data)}|Google Form URL>"
-            }
-            })
-
-        if regex_result['notion_url'] and regex_result['next_sprint_id']:
-            next_report_data = self.generateAllSprintReportData(regex_result['next_sprint_id'])
-            if 'text' in next_report_data: return next_report_data
-
-            result = self.updateNotionPage(regex_result['notion_url'], report_data, next_report_data)
-            logging.error(f"Notion Page Update Result: {result}")
-
-            blocks.append(divider_block)
-
-            if result:
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"There was an error updating the <{regex_result['notion_url']}|Notion Page>. I've notified my overlords and I'm sure they're looking into it"
-                    }
-                    })
-
-                error = f"A user trying to update a Notion page got the following error. You might want to check / update the Notion token\n `{result}`"
-            else:
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"<{regex_result['notion_url']}|Notion Page> updated!"
-                    }
-                    })
-
-        return ({"blocks": blocks}, error) if error else {"blocks": blocks}
 
     def updateNotionPage(self, notion_url, sprint_report_data, next_sprint_report_data=False):
         """Updates the notion page at the url with the sprint report data using a search / replace mechanism
@@ -550,7 +378,7 @@ class Jira:
         velocity_report = self.__makeRequest('GET',f"{self.__greenhopper_url}rapid/charts/velocity?rapidViewId={board_id}")
 
         if velocity_report == False:
-            raise Exception(f"Unable to get velocity report for board {board_id}")
+            raise ScrumMasterJrError(f"I wasn't able to get the velocity report for board {board_id}. Please check your arguments again. Are you using the right command for your jira instance? Ask me for `help` for more information")
 
         total = 0
         sprints = 0
@@ -619,7 +447,7 @@ class Jira:
                 for item in sprint_report_data['issue_metrics'][metric_type].keys():
                     url += f"{google_entry_translations['issue_metrics'][metric_type][item]}={sprint_report_data['issue_metrics'][metric_type][item]}&"
         except (KeyError):
-            raise Exception("Unable to generate Google Form URL, expected keys missing")
+            raise ScrumMasterJrError("I wasn't able to generate a Google Form URl for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate Google Form URL, expected keys missing")
 
         return url
 
@@ -653,7 +481,7 @@ class Jira:
             notion_dictionary['[next-original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
 
         except KeyError:
-            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
+            raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a *Next Sprint* Notion Replacement Dictionary, keys not found")
 
         return notion_dictionary
 
@@ -700,7 +528,7 @@ class Jira:
             notion_dictionary['[items-removed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['removed']} Removed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['removed'])})"
 
         except KeyError:
-            raise Exception("Unable to generate a Notion Replacement Dictionary, keys not found")
+            raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
 
         return notion_dictionary
 
@@ -721,19 +549,3 @@ class Jira:
         link = re.sub(r'\%2C$', '', link) + ")"
 
         return link
-
-    def getCommandsRegex(self):
-        """Used by the bot to retrieve regex strings and commands that we support
-
-        Returns:
-            dictionary - regex strings and function references that are associated with them
-        """
-        return self.__regex
-
-    def getCommandDescriptions(self):
-        """Used by the bot to provide helpful information to the user about the commands we support
-
-        Returns:
-            dictionary - commands and their associated helpful descriptions
-        """
-        return self.__descriptions

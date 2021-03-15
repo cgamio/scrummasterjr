@@ -15,11 +15,43 @@ logging.basicConfig(
 )
 
 from scrummasterjr.jira import Jira
+from scrummasterjr.jiracommand import JiraCommand
+from scrummasterjr.error import ScrumMasterJrError
 
 # flask / bolt apps
 flask_app = Flask(__name__)
 app = App(token=os.environ["SLACK_BOT_TOKEN"], signing_secret=os.environ["SLACK_SIGNING_SECRET"])
 handler = SlackRequestHandler(app)
+
+# Get Channel to post error messages to
+try:
+    slack_error_channel = os.environ["SLACK_ERROR_CHANNEL"]
+except KeyError:
+    slack_error_channel = None
+
+commandsets = []
+
+# Set up for CDS Jira Commands (if configured)
+try:
+    cds_jira_host = os.environ["CDS_JIRA_HOST"]
+    cds_jira_user = os.environ["CDS_JIRA_USER"]
+    cds_jira_token = os.environ["CDS_JIRA_TOKEN"]
+    cds_jira = Jira(cds_jira_host, cds_jira_user, cds_jira_token)
+    cds_jira_command = JiraCommand(cds_jira, "cds")
+    commandsets.append(cds_jira_command)
+except KeyError:
+    logging.warning("Did not find CDS Jira Environment Variables. Continuing without registering that command set")
+
+# Set up for Jira Commands
+try:
+    jira_host = os.environ["JIRA_HOST"]
+    jira_user = os.environ["JIRA_USER"]
+    jira_token = os.environ["JIRA_TOKEN"]
+    jira = Jira(jira_host, jira_user, jira_token)
+    jiraCommand = JiraCommand(jira)
+    commandsets.append(jiraCommand)
+except KeyError:
+    logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
 
 @app.middleware
 def log_request(logger, body, next):
@@ -43,34 +75,6 @@ def no_bot_messages(message, next, logger):
 
     logger.debug(f'Ignoring message from bot: {bot_id}')
 
-# Get Channel to post error messages to
-try:
-    slack_error_channel = os.environ["SLACK_ERROR_CHANNEL"]
-except KeyError:
-    slack_error_channel = None
-
-commandsets = []
-
-# Set up for CDS Jira Commands (if configured)
-try:
-    cds_jira_host = os.environ["CDS_JIRA_HOST"]
-    cds_jira_user = os.environ["CDS_JIRA_USER"]
-    cds_jira_token = os.environ["CDS_JIRA_TOKEN"]
-    cds_jira = Jira(cds_jira_host, cds_jira_user, cds_jira_token, "cds")
-    commandsets.append(cds_jira)
-except KeyError:
-    logging.warning("Did not find CDS Jira Environment Variables. Continuing without registering that command set")
-
-# Set up for Jira Commands
-try:
-    jira_host = os.environ["JIRA_HOST"]
-    jira_user = os.environ["JIRA_USER"]
-    jira_token = os.environ["JIRA_TOKEN"]
-    jira = Jira(jira_host, jira_user, jira_token)
-    commandsets.append(jira)
-except KeyError:
-    logging.warning("Did not find Jira Environment Variables. Continuing without registering that command set")
-
 def handle_response(function, message, say):
     """Executes a command and forwards the response back to the user
 
@@ -78,14 +82,14 @@ def handle_response(function, message, say):
         function: function reference - the function that should be called
         message: string - the message that triggered this events
     """
-    function_response = function(message['text'])
-    if type(function_response) is tuple:
+    try:
+        function_response = function(message)
+    except ScrumMasterJrError as smjrerr:
         if slack_error_channel:
-            response, errortext = function_response
-            errortext = f"<!here> {errortext}\nMessage that generated this error:\n```{message}```"
+            errortext = f"<!here> {smjrerr.admin_message}\nMessage that generated this error:\n```{message}```"
             app.client.chat_postMessage(channel=slack_error_channel, text=errortext)
 
-            function_response = response
+        function_response = smjrerr.user_message
 
     say(function_response)
 
