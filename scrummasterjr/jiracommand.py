@@ -163,6 +163,7 @@ class JiraCommand (BaseCommand):
                     "response_type": "ephemeral"
                 }
             )
+            return
 
         board_options = []
 
@@ -185,6 +186,7 @@ class JiraCommand (BaseCommand):
                     "response_type": "ephemeral"
                 }
             )
+            return
 
         modal_view = {
     	"title": {
