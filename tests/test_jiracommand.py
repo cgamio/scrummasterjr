@@ -4,18 +4,21 @@ from scrummasterjr.error import ScrumMasterJrError
 from unittest.mock import MagicMock, patch, call
 from fixtures import *
 
-jiracommand = JiraCommand(None)
+@pytest.fixture
+def command():
+    command = JiraCommand(None)
+    command.jira = MagicMock()
+
+    return command
 
 @pytest.mark.parametrize('jira_response, expected_response', [
     (200, "My connection to Jira is up and running!"),
     (None, "Looks like there's an issue with my connection. I've logged an error")
 ])
-def test_testConnectionCommand(jira_response, expected_response):
-    mock_jira = MagicMock()
-    mock_jira.testConnection.return_value = jira_response
-    jiracommand.jira = mock_jira
+def test_testConnectionCommand(command, jira_response, expected_response):
+    command.jira.testConnection.return_value = jira_response
 
-    response = jiracommand.testConnection(None)
+    response = command.testConnection(None)
 
     assert response == expected_response
 
@@ -29,32 +32,30 @@ bad_notion_error = ScrumMasterJrError(notion_error_blocks)
     ({'text': 'sprint report 1234 5678 https://www.notion.so/mediaos/some-test-document'}, ['1234', '5678'], [valid_report, valid_report], "https://www.notion.so/mediaos/some-test-document", valid_notion_case, valid_google_form_url, valid_notion_blocks),
     ({'text': 'sprint report 1234 5678 https://www.notion.so/mediaos/some-test-document'}, ['1234', '5678'], [valid_report, valid_report], "https://www.notion.so/mediaos/some-test-document", bad_notion_error, valid_google_form_url, bad_notion_error),
 ])
-def test_getSprintReport(slack_event, all_sprint_data_input, all_sprint_data_response, notion_url, update_notion_page_response, generate_google_form_url_response, expected_response):
+def test_getSprintReport(command, slack_event, all_sprint_data_input, all_sprint_data_response, notion_url, update_notion_page_response, generate_google_form_url_response, expected_response):
 
-    mock_jira = MagicMock()
-    jiracommand.jira = mock_jira
 
     if isinstance(update_notion_page_response, Exception):
-        mock_jira.updateNotionPage.return_value = update_notion_page_response
+        command.jira.updateNotionPage.return_value = update_notion_page_response
     else:
-        mock_jira.updateNotionPage.return_value = None
+        command.jira.updateNotionPage.return_value = None
 
-    mock_jira.generateAllSprintReportData.side_effect = all_sprint_data_response
+    command.jira.generateAllSprintReportData.side_effect = all_sprint_data_response
 
     if generate_google_form_url_response:
-        mock_jira.generateGoogleFormURL.return_value = generate_google_form_url_response
+        command.jira.generateGoogleFormURL.return_value = generate_google_form_url_response
 
         if isinstance(generate_google_form_url_response, Exception):
-            mock_jira.generateGoogleFormURL.side_effect = lambda x: exec(f"raise(ScrumMasterJrError('An Error!'))")
+            command.jira.generateGoogleFormURL.side_effect = lambda x: exec(f"raise(ScrumMasterJrError('An Error!'))")
 
     if isinstance(expected_response, Exception):
         with pytest.raises(ScrumMasterJrError):
-            jiracommand.getSprintReport(slack_event)
+            command.getSprintReport(slack_event)
     else:
-        assert jiracommand.getSprintReport(slack_event) == expected_response
+        assert command.getSprintReport(slack_event) == expected_response
 
     if all_sprint_data_response:
-        mock_jira.generateAllSprintReportData.assert_has_calls(map(call, all_sprint_data_input))
+        command.jira.generateAllSprintReportData.assert_has_calls(map(call, all_sprint_data_input))
 
     if update_notion_page_response and not isinstance(update_notion_page_response, Exception):
-        mock_jira.updateNotionPage.assert_called_once_with(notion_url, *all_sprint_data_response)
+        command.jira.updateNotionPage.assert_called_once_with(notion_url, *all_sprint_data_response)
