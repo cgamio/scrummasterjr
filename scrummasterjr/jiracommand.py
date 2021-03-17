@@ -232,6 +232,7 @@ class JiraCommand (BaseCommand):
         )
 
     def showSprints(self, ack, body, client):
+        ack()
 
         results = self.jira.getSprintsInBoard(body['actions'][0]['selected_option']['value'])
         sprints = []
@@ -342,7 +343,6 @@ class JiraCommand (BaseCommand):
         )
 
     def runSprintReport(self, ack, body, client):
-        ack()
 
         board_state_values = body['view']['state']['values']
 
