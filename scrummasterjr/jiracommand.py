@@ -342,6 +342,7 @@ class JiraCommand (BaseCommand):
         )
 
     def runSprintReport(self, ack, body, client):
+        ack()
 
         board_state_values = body['view']['state']['values']
 
