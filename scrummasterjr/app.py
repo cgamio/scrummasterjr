@@ -194,13 +194,13 @@ def startInteractiveSprintReport(ack, body, client, command, respond):
     jiraCommand.showSprintReportModal(ack, body, client, command, respond)
 
 @app.action("board_select_action")
-def show_menu_options(ack, body, client, context):
+def show_menu_options(ack, body, client):
     ack()
-    jiraCommand.showSprints(ack, body, client, context)
+    jiraCommand.showSprints(ack, body, client)
 
 @app.view("report_input_view")
-def run_sprint_report(ack, body, client, context):
-    jiraCommand.runSprintReport(ack, body, client, context)
+def run_sprint_report(ack, body, client):
+    jiraCommand.runSprintReport(ack, body, client)
 
 @app.event({"type": "message"})
 @app.action("ignore_me")
