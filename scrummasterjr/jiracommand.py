@@ -351,7 +351,6 @@ class JiraCommand (BaseCommand):
         upcoming_sprint_id = None
 
         errors = {}
-        new_view = {}
 
         try:
 
@@ -365,10 +364,11 @@ class JiraCommand (BaseCommand):
             except TypeError:
                 errors["upcoming_sprint_section"] = 'Please select a sprint'
         except KeyError:
-            new_view = {
+            error_view = {
                 "type": body["view"]["type"],
                 "title": body["view"]["title"],
                 "callback_id": "error_view",
+                "external_id": "error_view",
                 "blocks": [
             		{
             			"type": "image",
@@ -385,30 +385,36 @@ class JiraCommand (BaseCommand):
                 ]
             }
 
+            ack(
+                {
+                    "response_action": "push",
+                    "view": error_view
+
+                }
+            )
+            return
+
         if errors:
             ack(response_action="errors", errors=errors)
             return
 
-
-        if not new_view:
-            new_view = {
-                "type": body["view"]["type"],
-                "title": body["view"]["title"],
-                "callback_id": "report_results_view",
-                "external_id": "sprint_results_view_id",
-                "blocks": [
-                    {
-            			"type": "image",
-                        "title": {
-            				"type": "plain_text",
-            				"text": "Processing... Please wait"
-            			},
-            			"image_url": "https://media2.giphy.com/media/26gR0YFZxWbnUPtMA/giphy.gif?cid=ecf05e47e10dxbfzuw3ibaewju07n66c9j38iqbb0d95oroy&rid=giphy.gif",
-            			"alt_text": "thinking"
-            		}
-                ]
-            }
-
+        new_view = {
+            "type": body["view"]["type"],
+            "title": body["view"]["title"],
+            "callback_id": "report_results_view",
+            "external_id": "sprint_results_view_id",
+            "blocks": [
+                {
+        			"type": "image",
+                    "title": {
+        				"type": "plain_text",
+        				"text": "Processing... Please wait"
+        			},
+        			"image_url": "https://media2.giphy.com/media/26gR0YFZxWbnUPtMA/giphy.gif?cid=ecf05e47e10dxbfzuw3ibaewju07n66c9j38iqbb0d95oroy&rid=giphy.gif",
+        			"alt_text": "thinking"
+        		}
+            ]
+        }
         ack(
             {
                 "response_action": "push",
