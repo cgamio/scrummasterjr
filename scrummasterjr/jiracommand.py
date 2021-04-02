@@ -3,6 +3,7 @@ from scrummasterjr.jira import Jira
 from scrummasterjr.error import ScrumMasterJrError
 import logging
 import re
+import json
 
 class JiraCommand (BaseCommand):
 
@@ -198,10 +199,6 @@ class JiraCommand (BaseCommand):
     		"type": "plain_text",
     		"text": "Cancel"
     	},
-        "submit": {
-            "type": "plain_text",
-            "text": "Run"
-        },
     	"blocks": [
     		{
                 "block_id": "board_section",
@@ -220,7 +217,10 @@ class JiraCommand (BaseCommand):
     				"action_id": "board_select_action"
     			},
                 "dispatch_action": True
-    		}]
+    		}],
+        "private_metadata": json.dumps({
+                "user_id": command['user_id']
+            })
         }
 
         # Call views_open with the built-in client
@@ -265,10 +265,6 @@ class JiraCommand (BaseCommand):
                     "type": body["view"]["type"],
                     "title": body["view"]["title"],
                     "callback_id": "report_input_view",
-                	"submit": {
-                		"type": "plain_text",
-                		"text": "Run"
-                	},
                     "blocks": body['view']['blocks']
                 }
             )
@@ -320,12 +316,15 @@ class JiraCommand (BaseCommand):
 			"label": {
 				"type": "plain_text",
 				"text": "Notion URL"
-			}
+			},
+            "optional": True,
+            "block_id": "notion_url_block"
 		}
 
 
         new_blocks = [body["view"]["blocks"][0]]
         new_blocks.extend(sprint_blocks)
+        new_blocks.append(notion_block)
 
         client.views_update(
             hash=body["view"]["hash"],
@@ -343,66 +342,20 @@ class JiraCommand (BaseCommand):
         )
 
     def runSprintReport(self, ack, body, client):
-
         board_state_values = body['view']['state']['values']
 
         board_id = board_state_values['board_section']['board_select_action']['selected_option']['value']
         completed_sprint_id = None
         upcoming_sprint_id = None
 
-        errors = {}
-
-        try:
-
-            try:
-                completed_sprint_id = list(board_state_values['completed_sprint_section'].values())[0]['selected_option']['value']
-            except TypeError:
-                errors["completed_sprint_section"] = 'Please select a sprint'
-
-            try:
-                upcoming_sprint_id = list(board_state_values['upcoming_sprint_section'].values())[0]['selected_option']['value']
-            except TypeError:
-                errors["upcoming_sprint_section"] = 'Please select a sprint'
-        except KeyError:
-            error_view = {
-                "type": body["view"]["type"],
-                "title": body["view"]["title"],
-                "callback_id": "error_view",
-                "external_id": "error_view",
-                "blocks": [
-            		{
-            			"type": "image",
-            			"image_url": "https://media2.giphy.com/media/Px7FQJqhWTGaA/giphy.gif?cid=ecf05e477ls5y92dm0xp0yqwfblydgcaek7p09t27zdv0tk3&rid=giphy.gif",
-            			"alt_text": "broken computer"
-            		},
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": f"That board has no sprints... Please press cancel and choose another"
-                        }
-                    }
-                ]
-            }
-
-            ack(
-                {
-                    "response_action": "push",
-                    "view": error_view
-
-                }
-            )
-            return
-
-        if errors:
-            ack(response_action="errors", errors=errors)
-            return
+        completed_sprint_id = list(board_state_values['completed_sprint_section'].values())[0]['selected_option']['value']
+        upcoming_sprint_id = list(board_state_values['upcoming_sprint_section'].values())[0]['selected_option']['value']
 
         new_view = {
             "type": body["view"]["type"],
             "title": body["view"]["title"],
-            "callback_id": "report_results_view",
-            "external_id": "sprint_results_view_id",
+            "callback_id": "sprint_results_view",
+            "external_id": "sprint_results_view",
             "blocks": [
                 {
         			"type": "image",
@@ -425,6 +378,9 @@ class JiraCommand (BaseCommand):
 
         completed_sprint_report_data = self.jira.generateAllSprintReportData(completed_sprint_id)
 
+        upcoming_sprint_report_data = self.jira.generateAllSprintReportData(upcoming_sprint_id)
+
+
         new_view['blocks'] = [{
             "type": "header",
             "text": {
@@ -445,6 +401,26 @@ class JiraCommand (BaseCommand):
     		}
         )
 
+        notion_url = board_state_values['notion_url_block']['notion_url_input_action']['value']
+
+        if notion_url:
+            new_view['blocks'].extend([{
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Notion Page"
+                }
+            }, {
+    			"type": "section",
+    			"text": {
+    				"type": "mrkdwn",
+    				"text": f"I'm updating <{notion_url}|that Notion Page> now. I'll let you know when it's done. Feel free to continue or close this modal."
+    			}
+    		},
+
+            ])
+
+
         new_view["submit"] = {
             "type": "plain_text",
             "text": "Submit Metrics"
@@ -452,55 +428,15 @@ class JiraCommand (BaseCommand):
 
         new_view["close"] = {
             "type": "plain_text",
-            "text": "Done"
+            "text": "Cancel"
         }
 
         client.views_update(
             external_id=new_view["external_id"],
             view = new_view
         )
-        #
-        # blocks = [
-    	# 	,
-    	# 	,
-    	# 	{
-    	# 		"type": "section",
-    	# 		"text": {
-    	# 			"type": "mrkdwn",
-    	# 			"text": "*COLI - Sprint 2*\nDo some other things"
-    	# 		}
-    	# 	},
-    	# 	{
-    	# 		"type": "header",
-    	# 		"text": {
-    	# 			"type": "plain_text",
-    	# 			"text": "Metrics",
-    	# 			"emoji": true
-    	# 		}
-    	# 	},
-    	# 	{
-    	# 		"type": "section",
-    	# 		"fields": [
-    	# 			{
-    	# 				"type": "plain_text",
-    	# 				"text": "Velocity",
-    	# 				"emoji": true
-    	# 			},
-    	# 			{
-    	# 				"type": "plain_text",
-    	# 				"text": "27 pts",
-    	# 				"emoji": true
-    	# 			},
-    	# 			{
-    	# 				"type": "plain_text",
-    	# 				"text": "Predicability of Commitments",
-    	# 				"emoji": true
-    	# 			},
-    	# 			{
-    	# 				"type": "plain_text",
-    	# 				"text": "95%",
-    	# 				"emoji": true
-    	# 			}
-    	# 		]
-    	# 	}
-        # ]
+
+        if notion_url:
+            logging.error("Updating notion page")
+            result = self.jira.updateNotionPage(notion_url, completed_sprint_report_data, upcoming_sprint_report_data)
+            logging.error(f"Result = {result}")
