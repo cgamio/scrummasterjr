@@ -237,7 +237,7 @@ class JiraCommand (BaseCommand):
         results = self.jira.getSprintsInBoard(body['actions'][0]['selected_option']['value'])
         sprints = []
 
-        for sprint in results['values']:
+        for sprint in results:
             sprints.append(
                 {
                     "text": {

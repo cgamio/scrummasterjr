@@ -563,11 +563,22 @@ class Jira:
         return False
 
     def getSprintsInBoard(self, board_id):
-        # This currently doesn't handle pagination, so it's only returning the first 50 sprints. We should either have it reverse 
-        link = f"{self.__agile_url}board/{board_id}/sprint"
+        # This currently doesn't handle pagination, so it's only returning the first 50 sprints. We should either have it reverse
+        link = f"{self.__agile_url}board/{board_id}/sprint?maxResults=100"
         results = self.__makeRequest('GET', link)
 
+        logging.error(f"Sprint Results: {results}")
+
         if results:
-            return results
+
+            # if results['maxResults'] < results['total']:
+            #     last_page = results['total'] - results['maxResults']
+            #     link = f"{link}&startAt={last_page}"
+            #     results = self.__makeRequest('GET', link)
+
+            sprints = results['values']
+            sprints.reverse()
+
+            return sprints
 
         return False
