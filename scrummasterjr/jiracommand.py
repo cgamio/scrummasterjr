@@ -352,7 +352,6 @@ class JiraCommand (BaseCommand):
             "title": body["view"]["title"],
             "callback_id": "sprint_results_view",
             "external_id": "sprint_results_view",
-            "private_metadata": body[]
             "blocks": [
                 {
         			"type": "image",
@@ -437,3 +436,9 @@ class JiraCommand (BaseCommand):
             logging.error("Updating notion page")
             result = self.jira.updateNotionPage(notion_url, completed_sprint_report_data, upcoming_sprint_report_data)
             logging.error(f"Result = {result}")
+
+            if result:
+                text = f"I'm sorry, but I encountered an error when updating your <{notion_url}|Notion Page>"
+            else:
+                text = f"Finished updating your <{notion_url}|Notion Page> for {completed_sprint_report_data['project_name']} Sprint {completed_sprint_report_data['sprint_number']}"
+            client.chat_postMessage(channel=body['user']['id'], text=text)
