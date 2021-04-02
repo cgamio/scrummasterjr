@@ -3,7 +3,6 @@ from scrummasterjr.jira import Jira
 from scrummasterjr.error import ScrumMasterJrError
 import logging
 import re
-import json
 
 class JiraCommand (BaseCommand):
 
@@ -217,10 +216,7 @@ class JiraCommand (BaseCommand):
     				"action_id": "board_select_action"
     			},
                 "dispatch_action": True
-    		}],
-        "private_metadata": json.dumps({
-                "user_id": command['user_id']
-            })
+    		}]
         }
 
         # Call views_open with the built-in client
@@ -356,6 +352,7 @@ class JiraCommand (BaseCommand):
             "title": body["view"]["title"],
             "callback_id": "sprint_results_view",
             "external_id": "sprint_results_view",
+            "private_metadata": body[]
             "blocks": [
                 {
         			"type": "image",
