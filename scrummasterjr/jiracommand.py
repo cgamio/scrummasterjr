@@ -376,12 +376,12 @@ class JiraCommand (BaseCommand):
 
         upcoming_sprint_report_data = self.jira.generateAllSprintReportData(upcoming_sprint_id)
 
-
+        new_view["title"]["text"] = completed_sprint_report_data['project_name']
         new_view['blocks'] = [{
             "type": "header",
             "text": {
                 "type": "plain_text",
-                "text": completed_sprint_report_data['project_name']
+                "text": f"Sprint {completed_sprint_report_data['sprint_number']}"
             }
         }]
 
@@ -392,10 +392,29 @@ class JiraCommand (BaseCommand):
     			"type": "section",
     			"text": {
     				"type": "mrkdwn",
-    				"text": f"*Sprint {completed_sprint_report_data['sprint_number']}*\n{sprint_goals_string}"
+    				"text": f"{sprint_goals_string}\n\n{completed_sprint_report_data['issue_metrics']['points']['committed']} points committed / {completed_sprint_report_data['issue_metrics']['points']['completed']} points completed\n{completed_sprint_report_data['issue_metrics']['items']['committed']} items committed / {completed_sprint_report_data['issue_metrics']['items']['completed']} items completed\nPredictability = {completed_sprint_report_data['issue_metrics']['meta']['predictability']}%\nPredictability of committments = {completed_sprint_report_data['issue_metrics']['meta']['predictability_of_commitments']}%\n3 Sprint Average Velocity = {completed_sprint_report_data['average_velocity']}"
     			}
     		}
         )
+
+        sprint_goals_string = '\n'.join(upcoming_sprint_report_data['sprint_goals'])
+
+        new_view['blocks'].extend([
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"Sprint {upcoming_sprint_report_data['sprint_number']}"
+                }
+            },
+            {
+    			"type": "section",
+    			"text": {
+    				"type": "mrkdwn",
+    				"text": f"*Sprint {upcoming_sprint_report_data['sprint_number']}*\n{sprint_goals_string}"
+    			}
+    		}
+        ])
 
         notion_url = board_state_values['notion_url_block']['notion_url_input_action']['value']
 
@@ -433,9 +452,9 @@ class JiraCommand (BaseCommand):
         )
 
         if notion_url:
-            logging.error("Updating notion page")
+            logging.info("Updating notion page")
             result = self.jira.updateNotionPage(notion_url, completed_sprint_report_data, upcoming_sprint_report_data)
-            logging.error(f"Result = {result}")
+            logging.info(f"Result = {result}")
 
             if result:
                 text = f"I'm sorry, but I encountered an error when updating your <{notion_url}|Notion Page>"
