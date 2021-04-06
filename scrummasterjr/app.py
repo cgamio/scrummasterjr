@@ -202,6 +202,10 @@ def show_menu_options(ack, body, client):
 def run_sprint_report(ack, body, client):
     jiraCommand.runSprintReport(ack, body, client)
 
+@app.view("sprint_results_view")
+def submit_metrics(ack, body, client):
+    jiraCommand.submitMetrics(ack, body, client)
+
 @app.event({"type": "message"})
 @app.action("ignore_me")
 def just_ack(ack, logger):

@@ -3,6 +3,8 @@ from scrummasterjr.jira import Jira
 from scrummasterjr.error import ScrumMasterJrError
 import logging
 import re
+import json
+import requests
 
 class JiraCommand (BaseCommand):
 
@@ -376,7 +378,7 @@ class JiraCommand (BaseCommand):
 
         upcoming_sprint_report_data = self.jira.generateAllSprintReportData(upcoming_sprint_id)
 
-        new_view["title"]["text"] = completed_sprint_report_data['project_name']
+        new_view["title"]["text"] = completed_sprint_report_data['project_name'][:24]
         new_view['blocks'] = [{
             "type": "header",
             "text": {
@@ -438,13 +440,15 @@ class JiraCommand (BaseCommand):
 
         new_view["submit"] = {
             "type": "plain_text",
-            "text": "Submit Metrics"
+            "text": "Submit Metrics and Close"
         }
 
         new_view["close"] = {
             "type": "plain_text",
             "text": "Cancel"
         }
+
+        new_view["private_metadata"] = json.dumps(completed_sprint_report_data)
 
         client.views_update(
             external_id=new_view["external_id"],
@@ -461,3 +465,27 @@ class JiraCommand (BaseCommand):
             else:
                 text = f"Finished updating your <{notion_url}|Notion Page> for {completed_sprint_report_data['project_name']} Sprint {completed_sprint_report_data['sprint_number']}"
             client.chat_postMessage(channel=body['user']['id'], text=text)
+
+    def submitMetrics(self, ack, body, client):
+        ack(
+            {
+                "response_action": "clear"
+            }
+        )
+        private_metadata = json.loads(body['view']['private_metadata'])
+
+        url = self.jira.generateGoogleFormURL(private_metadata)
+
+        logging.info(f"Google URL: {url}")
+
+        response = requests.request('GET', url)
+
+        if response.status_code == 200:
+            re_results = re.search('"([^"]+)">Edit your response', response.text)
+            resubmit_url = re.sub('amp;', '', re_results.group(1))
+
+            message = f"I've submitted your metrics for {private_metadata['project_name']} Sprint {private_metadata['sprint_number']}. You can edit that response with <{resubmit_url}|this link>."
+        else:
+            message = f"I ran into an error when trying to submit your metrics for {private_metadata['project_name']} Sprint {private_metadata['sprint_number']}! You should submit them on your own or reach out in <#C6GJGERFC> for help."
+
+        client.chat_postMessage(channel=body['user']['id'], text=message)
