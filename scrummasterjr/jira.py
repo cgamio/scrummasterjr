@@ -405,7 +405,7 @@ class Jira:
         Returns:
             string - A URL to a google form with relevant information pre-populate via query parameters
         """
-        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
+        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/formResponse?'
 
         google_entry_translations = {
         "issue_metrics": {
@@ -448,6 +448,8 @@ class Jira:
                     url += f"{google_entry_translations['issue_metrics'][metric_type][item]}={sprint_report_data['issue_metrics'][metric_type][item]}&"
         except (KeyError):
             raise ScrumMasterJrError("I wasn't able to generate a Google Form URl for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate Google Form URL, expected keys missing")
+
+        url += "&submit=Submit"
 
         return url
 
