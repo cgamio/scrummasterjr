@@ -449,7 +449,7 @@ class Jira:
         except (KeyError):
             raise ScrumMasterJrError("I wasn't able to generate a Google Form URl for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate Google Form URL, expected keys missing")
 
-        url += "&submit=Submit"
+        url += "submit=Submit"
 
         return url
 
