@@ -1,9 +1,7 @@
 -i https://pypi.org/simple
 attrs==20.3.0
-blockkit==0.9.1
 click==7.1.2
 coverage==5.5
-decorator==4.4.2
 flask==1.1.2
 git+https://github.com/julrach/notion-py@4c8c8bff49d91c12e6c6357bf9ea80a8c9df921c#egg=notion
 gunicorn==20.1.0
@@ -17,12 +15,10 @@ pluggy==0.13.1
 py==1.10.0
 pyparsing==2.4.7
 pytest-cov==2.11.1
-pytest==6.2.2
-six==1.15.0
+pytest==6.2.3
 slack-bolt==1.4.4
 slack-sdk==3.4.2
 toml==0.10.2
 typing-extensions==3.7.4.3 ; python_version < '3.8'
-validators==0.18.2
 werkzeug==1.0.1
 zipp==3.4.1

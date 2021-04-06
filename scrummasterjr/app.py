@@ -178,8 +178,6 @@ if __name__ == '__main__':
     debug = True if 'prod' not in str(os.getenv('ENV')) else False
     flask_app.run(host='0.0.0.0', port=8081, debug=debug)
 
-from blockkit import *
-
 @app.use
 def basicSetup(context, next):
     try:
