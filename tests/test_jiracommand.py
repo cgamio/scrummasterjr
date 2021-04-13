@@ -232,9 +232,3 @@ def test_showSprints_no_sprints(command, body_with_selected_board, sprints_in_bo
     mock_ack.assert_called_once()
     mock_client.views_update.assert_called_once()
     command.jira.getSprintsInBoard.assert_called_once_with(selected_board_id)
-
-# def test_runSprintReport(command, body_with_all_inputs):
-#     mock_ack = MagicMock()
-#     mock_client = MagicMock()
-#
-#     command.runSprintReport(mock_ack, body_with_all_inputs, mock_client)
