@@ -187,7 +187,7 @@ def basicSetup(context, next):
 
     next()
 
-@app.command('/SMJR:sprint-report')
+@app.command('/smjr:sprint-report')
 def startInteractiveSprintReport(ack, body, client, command, respond):
     jiraCommand.showSprintReportModal(ack, body, client, command, respond)
 
