@@ -405,7 +405,7 @@ class Jira:
         Returns:
             string - A URL to a google form with relevant information pre-populate via query parameters
         """
-        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/viewform?'
+        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdF__V1ZMfl6H5q3xIQhSkeZMeCNkOHUdTBFdYA1HBavH31hA/formResponse?'
 
         google_entry_translations = {
         "issue_metrics": {
@@ -448,6 +448,8 @@ class Jira:
                     url += f"{google_entry_translations['issue_metrics'][metric_type][item]}={sprint_report_data['issue_metrics'][metric_type][item]}&"
         except (KeyError):
             raise ScrumMasterJrError("I wasn't able to generate a Google Form URl for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate Google Form URL, expected keys missing")
+
+        url += "submit=Submit"
 
         return url
 
@@ -549,3 +551,36 @@ class Jira:
         link = re.sub(r'\%2C$', '', link) + ")"
 
         return link
+
+    def getBoardsInProject(self, projectkey):
+        link = ""
+        try:
+            link = f"{self.__agile_url}board?projectKeyOrId={projectkey.upper()}"
+            results = self.__makeRequest('GET', link)
+            if results:
+                return results
+        except AttributeError:
+            pass
+
+        return False
+
+    def getSprintsInBoard(self, board_id):
+        # This currently doesn't handle pagination, so it's only returning the first 50 sprints. We should either have it reverse
+        link = f"{self.__agile_url}board/{board_id}/sprint?maxResults=100"
+        results = self.__makeRequest('GET', link)
+
+        logging.error(f"Sprint Results: {results}")
+
+        if results:
+
+            # if results['maxResults'] < results['total']:
+            #     last_page = results['total'] - results['maxResults']
+            #     link = f"{link}&startAt={last_page}"
+            #     results = self.__makeRequest('GET', link)
+
+            sprints = results['values']
+            sprints.reverse()
+
+            return sprints
+
+        return False

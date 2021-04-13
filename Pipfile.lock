@@ -97,19 +97,18 @@
         },
         "gunicorn": {
             "hashes": [
-                "sha256:1904bb2b8a43658807108d59c3f3d56c2b6121a701161de0ddf9ad140073c626",
-                "sha256:cd4a810dd51bf497552cf3f863b575dabd73d6ad6a91075b65936b151cbf4f9c"
+                "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"
             ],
             "index": "pypi",
-            "version": "==20.0.4"
+            "version": "==20.1.0"
         },
         "importlib-metadata": {
             "hashes": [
-                "sha256:24499ffde1b80be08284100393955842be4a59c7c16bbf2738aad0e464a8e0aa",
-                "sha256:c6af5dbf1126cd959c4a8d8efd61d4d3c83bddb0459a17e554284a077574b614"
+                "sha256:c9db46394197244adf2f0b08ec5bc3cf16757e9590b02af1fca085c16c0d600a",
+                "sha256:d2d46ef77ffc85cbf7dac7e81dd663fde71c45326131bea8033b9bad42268ebe"
             ],
             "markers": "python_version < '3.8'",
-            "version": "==3.7.0"
+            "version": "==3.10.0"
         },
         "iniconfig": {
             "hashes": [
@@ -223,11 +222,11 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:9d1edf9e7d0b84d72ea3dbcdfd22b35fb543a5e8f2a60092dd578936bf63d7f9",
-                "sha256:b574b57423e818210672e07ca1fa90aaf194a4f63f3ab909a2c67ebb22913839"
+                "sha256:671238a46e4df0f3498d1c3270e5deb9b32d25134c99b7d75370a68cfbe9b634",
+                "sha256:6ad9c7bdf517a808242b998ac20063c41532a570d088d77eec1ee12b0b5574bc"
             ],
             "index": "pypi",
-            "version": "==6.2.2"
+            "version": "==6.2.3"
         },
         "pytest-cov": {
             "hashes": [
@@ -239,11 +238,11 @@
         },
         "slack-bolt": {
             "hashes": [
-                "sha256:3dee0985c609505ea69a3b048c2678700d96b8061bb0b04c5f99519f183884b0",
-                "sha256:7877d686ef46d1b619bbd050ff6fadd14a325f49531bf81982bde635d12cc61d"
+                "sha256:26ec38cf8db6b7a24cb5b3cc1def3fc35bba3c98b0068e738f3e93cf4ebe20a0",
+                "sha256:e6f97d06854f2628773bb8c5d44eb7ba9d23e8a81e62e8d32cba2af7a0f305c2"
             ],
             "index": "pypi",
-            "version": "==1.4.2"
+            "version": "==1.4.4"
         },
         "slack-sdk": {
             "hashes": [
