@@ -156,7 +156,15 @@ class JiraCommand (BaseCommand):
     def showSprintReportModal(self, ack, body, client, command, respond):
         ack()
 
-        results = self.jira.getBoardsInProject(command['text'].strip())
+        results = None
+
+        try:
+            text = command['text'].strip()
+            results = self.jira.getBoardsInProject(text)
+        except:
+            pass
+
+        results = self.jira.getBoardsInProject(results)
 
         if not results:
             respond(
