@@ -164,8 +164,6 @@ class JiraCommand (BaseCommand):
         except:
             pass
 
-        results = self.jira.getBoardsInProject(results)
-
         if not results:
             respond(
                 {
