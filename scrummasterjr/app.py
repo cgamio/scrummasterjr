@@ -23,6 +23,9 @@ flask_app = Flask(__name__)
 app = App(token=os.environ["SLACK_BOT_TOKEN"], signing_secret=os.environ["SLACK_SIGNING_SECRET"])
 handler = SlackRequestHandler(app)
 
+# Get bot name command prefix
+bot_name = os.environ["BOT_NAME"]
+
 # Get Channel to post error messages to
 try:
     slack_error_channel = os.environ["SLACK_ERROR_CHANNEL"]
@@ -187,7 +190,7 @@ def basicSetup(context, next):
 
     next()
 
-@app.command('/smjr:sprint-report')
+@app.command(f"/{bot_name}:sprint-report")
 def startInteractiveSprintReport(ack, body, client, command, respond):
     jiraCommand.showSprintReportModal(ack, body, client, command, respond)
 

@@ -52,6 +52,8 @@ spec:
           value: {{ cds_jira_token }}
         - name: SLACK_ERROR_CHANNEL
           value: {{ slack_error_channel }}
+        - name: BOT_NAME
+          value: {{ bot_name }}
         ports:
         - containerPort: 80
           protocol: TCP
