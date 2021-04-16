@@ -42,6 +42,23 @@ try:
     cds_jira = Jira(cds_jira_host, cds_jira_user, cds_jira_token)
     cds_jira_command = JiraCommand(cds_jira, "cds")
     commandsets.append(cds_jira_command)
+
+    @app.command(f"/{bot_name}:cds-sprint-report")
+    def startInteractiveSprintReport(ack, body, client, command, respond):
+        cds_jira_command.showSprintReportModal(ack, body, client, command, respond)
+
+    @app.action("cds_board_select_action")
+    def show_menu_options(ack, body, client):
+        ack()
+        cds_jira_command.showSprints(ack, body, client)
+
+    @app.view("cds_report_input_view")
+    def run_sprint_report(ack, body, client):
+        cds_jira_command.runSprintReport(ack, body, client)
+
+    @app.view("cds_sprint_results_view")
+    def submit_metrics(ack, body, client):
+        cds_jira_command.submitMetrics(ack, body, client)
 except KeyError:
     logging.warning("Did not find CDS Jira Environment Variables. Continuing without registering that command set")
 
