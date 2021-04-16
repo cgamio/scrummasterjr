@@ -569,25 +569,20 @@ class Jira:
         link = f"{self.__agile_url}board/{board_id}/sprint"
         results = self.__makeRequest('GET', link)
 
-        logging.error(f"Sprint Results: {results}")
         sprints = []
         startAt = 0
-
-
 
         while results and results['isLast'] == False:
 
             sprints.extend(results['values'])
             startAt += len(results['values'])
             results = self.__makeRequest('GET', f"{link}?startAt={startAt}")
-            logging.error(f"Sprint Results: {results}")
 
         if results:
             sprints.extend(results['values'])
 
         if sprints:
             sprints.reverse()
-            logging.error(f"Sprints: {sprints}")
             return sprints
 
         return False
