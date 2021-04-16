@@ -577,11 +577,6 @@ class Jira:
 
         while results and results['isLast'] == False:
 
-            # if results['maxResults'] < results['total']:
-            #     last_page = results['total'] - results['maxResults']
-            #     link = f"{link}&startAt={last_page}"
-            #     results = self.__makeRequest('GET', link)o
-
             sprints.extend(results['values'])
             startAt += len(results['values'])
             results = self.__makeRequest('GET', f"{link}?startAt={startAt}")
