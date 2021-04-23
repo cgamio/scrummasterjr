@@ -24,7 +24,7 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"], signing_secret=os.environ["SLACK_
 handler = SlackRequestHandler(app)
 
 # Get bot name command prefix
-bot_name = os.environ["BOT_NAME"]
+bot_name = os.getenv("BOT_NAME", "smjr")
 
 # Get Channel to post error messages to
 try:
