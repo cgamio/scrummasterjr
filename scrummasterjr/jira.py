@@ -565,24 +565,26 @@ class Jira:
         return False
 
     def getSprintsInBoard(self, board_id):
-        # This currently doesn't handle pagination, so it's only returning the first 50 sprints. We should either have it reverse
+        # We handle pagination by using `startAt`.
+        # Because how sprints are returned (oldest first) we will reverse the list before return.
         link = f"{self.__agile_url}board/{board_id}/sprint"
-        results = self.__makeRequest('GET', link)
-
         sprints = []
         startAt = 0
+        while True:
+            # Get list of sprints, if this is not the start, then start at `startAt`
+            url = f'{link}?startAt={startAt}' if startAt > 0 else link
+            results = self.__makeRequest('GET', url)
+            logging.debug(f"Sprint Results: {results}")
 
-        while results and results['isLast'] == False:
+            if results:
+                sprints.extend(results['values'])
+                startAt += len(results['values'])
+            elif (not results) or (results.get('isLast')):
+                # break from while if results is false or `isLast` is also false.
+                break
 
-            sprints.extend(results['values'])
-            startAt += len(results['values'])
-            results = self.__makeRequest('GET', f"{link}?startAt={startAt}")
-
-        if results:
-            sprints.extend(results['values'])
-
-        if sprints:
-            sprints.reverse()
-            return sprints
-
-        return False
+        # if the 'sprints' array is empty it'll still return a falsy object
+        # no need to explicitly return "false"
+        sprints.reverse()
+        logging.debug(f"Sprints: {sprints}")
+        return sprints
