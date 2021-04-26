@@ -579,7 +579,8 @@ class Jira:
             if results:
                 sprints.extend(results['values'])
                 startAt += len(results['values'])
-            elif (not results) or (results.get('isLast')):
+
+            if (not results) or (results.get('isLast')):
                 # break from while if results is false or `isLast` is also false.
                 break
 
