@@ -10,8 +10,10 @@ class JiraCommand (BaseCommand):
 
     def __init__ (self, jira, prefix = None):
         self.prefix = ""
+        self.slack_prefix = ""
         if prefix:
             self.prefix = f"{prefix} "
+            self.slack_prefix = f"{prefix}_"
         self.jira = jira
         regex = {
             f'test {self.prefix}jira': self.testConnection,
@@ -156,7 +158,13 @@ class JiraCommand (BaseCommand):
     def showSprintReportModal(self, ack, body, client, command, respond):
         ack()
 
-        results = self.jira.getBoardsInProject(command['text'].strip())
+        results = None
+
+        try:
+            text = command['text'].strip()
+            results = self.jira.getBoardsInProject(text)
+        except:
+            pass
 
         if not results:
             respond(
@@ -215,7 +223,7 @@ class JiraCommand (BaseCommand):
     					"text": "Select a board"
     				},
     				"options": board_options,
-    				"action_id": "board_select_action"
+    				"action_id": f"{self.slack_prefix}board_select_action"
     			},
                 "dispatch_action": True
     		}]
@@ -262,7 +270,7 @@ class JiraCommand (BaseCommand):
                 view = {
                     "type": body["view"]["type"],
                     "title": body["view"]["title"],
-                    "callback_id": "report_input_view",
+                    "callback_id": f"{self.slack_prefix}report_input_view",
                     "blocks": body['view']['blocks']
                 }
             )
@@ -330,7 +338,7 @@ class JiraCommand (BaseCommand):
             view = {
                 "type": body["view"]["type"],
                 "title": body["view"]["title"],
-                "callback_id": "report_input_view",
+                "callback_id": f"{self.slack_prefix}report_input_view",
             	"submit": {
             		"type": "plain_text",
             		"text": "Run"
@@ -342,7 +350,7 @@ class JiraCommand (BaseCommand):
     def runSprintReport(self, ack, body, client):
         board_state_values = body['view']['state']['values']
 
-        board_id = board_state_values['board_section']['board_select_action']['selected_option']['value']
+        board_id = board_state_values['board_section'][f"{self.slack_prefix}board_select_action"]['selected_option']['value']
         completed_sprint_id = None
         upcoming_sprint_id = None
 
@@ -352,8 +360,8 @@ class JiraCommand (BaseCommand):
         new_view = {
             "type": body["view"]["type"],
             "title": body["view"]["title"],
-            "callback_id": "sprint_results_view",
-            "external_id": "sprint_results_view",
+            "callback_id": f"{self.slack_prefix}sprint_results_view",
+            "external_id": f"{self.slack_prefix}sprint_results_view",
             "blocks": [
                 {
         			"type": "image",
