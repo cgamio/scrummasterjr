@@ -580,8 +580,8 @@ class Jira:
                 sprints.extend(results['values'])
                 startAt += len(results['values'])
 
-            if (not results) or (results.get('isLast')):
-                # break from while if results is false or `isLast` is also false.
+            if (not results) or (results.get('isLast', True)):
+                # break from while if results is false or `isLast` is True.
                 break
 
         # if the 'sprints' array is empty it'll still return a falsy object
