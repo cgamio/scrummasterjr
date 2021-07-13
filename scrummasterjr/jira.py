@@ -299,7 +299,7 @@ class Jira:
         report = {}
 
         try:
-            report['sprint_number'] = re.search(r'(?i)(S|Sprint )(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
+            report['sprint_number'] = re.search(r'(?i)(S|Sprint |\d*\.)(?P<number>\d+)', sprint_report["sprint"]["name"]).group('number')
         except AttributeError:
             raise ScrumMasterJrError(f"I couldn't not find or parse sprint number from: '{sprint_report['sprint']['name']}'. Please make sure that you name sprints to include `S#` or `Sprint #`, where `#` is the number of the sprint")
 
