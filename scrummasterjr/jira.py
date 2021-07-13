@@ -384,6 +384,8 @@ class Jira:
         sprints = 0
         found_sprint = True if sprint_id == None else False
 
+        sprint_id = f"{sprint_id}"
+
         for sprint in sorted(velocity_report['velocityStatEntries'], reverse=True):
             if sprints >= 3:
                 # We only care about the last three sprints
@@ -471,6 +473,10 @@ class Jira:
             start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
             end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
 
+        except ValueError:
+            pass
+
+        try:
             notion_dictionary['[next-sprint-number]'] = sprint_report_data['sprint_number']
             notion_dictionary['[next-sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
             notion_dictionary['[next-sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
@@ -504,6 +510,11 @@ class Jira:
         try:
             start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
             end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
+
+        except ValueError:
+            pass
+
+        try:
 
             notion_dictionary['[team-name]'] = sprint_report_data['project_name']
             notion_dictionary['[sprint-number]'] = sprint_report_data['sprint_number']
