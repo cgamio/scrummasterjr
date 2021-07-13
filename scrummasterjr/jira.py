@@ -44,6 +44,7 @@ class Jira:
         self.__url = f"https://{self.__host}/rest/api/latest/"
         self.__agile_url = f"https://{self.__host}/rest/agile/latest/"
         self.__greenhopper_url = f"https://{self.__host}/rest/greenhopper/latest/"
+        self.summary = {}
 
     def testConnection(self):
         """Tests the connection to Jira by getting user data"""
@@ -600,3 +601,65 @@ class Jira:
         sprints.reverse()
         logging.debug(f"Sprints: {sprints}")
         return sprints
+
+    def getMatchingSprintInBoard(self, board_id, starts_with):
+        all_sprints = self.getSprintsInBoard(board_id)
+
+        for sprint in all_sprints:
+            if re.match(starts_with, sprint['name']):
+                return sprint['id']
+
+    def updateSummaryNotionDictionary(self):
+        notion_dictionary = {}
+
+        if 'board_id' in self.summary.keys():
+
+            if 'current_sprint' in self.summary.keys():
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['current_sprint'])
+                if sprint:
+                    data = self.generateAllSprintReportData(sprint)
+                    dictionary = self.generateNotionReplacementDictionary(data)
+                    notion_dictionary.update(dictionary)
+
+            if 'next_sprint' in self.summary.keys():
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['next_sprint'])
+                if sprint:
+                    data = self.generateAllSprintReportData(sprint)
+                    dictionary = self.generateNextSprintNotionReplacementDictionary(data)
+                    notion_dictionary.update(dictionary)
+
+        logging.info(f"Updating notion_dictionary\n{notion_dictionary}")
+
+        return notion_dictionary
+
+    def setSummaryCurrentSprint (self, sprint):
+        self.summary['current_sprint'] = sprint
+        return self.updateSummaryNotionDictionary()
+
+    def setSummaryNextSprint(self, next_sprint):
+        self.summary['next_sprint'] = next_sprint
+        return self.updateSummaryNotionDictionary()
+
+    def setSummaryBoardID(self, board_id):
+        self.summary['board_id'] = board_id
+        return self.updateSummaryNotionDictionary()
+
+    def updateSummary(self, tag):
+        logging.info(f"Found Summary Update Tag: {tag}")
+        results = re.search('\[(?P<tag>[\w-]+) (?P<value>[\d\.]+)\]', tag)
+        if results:
+            if results.group('tag') == 'sprint':
+                return self.setSummaryCurrentSprint(results.group('value'))
+            if results.group('tag') == 'next-sprint':
+                return self.setSummaryNextSprint(results.group('value'))
+            if results.group('tag') == 'board':
+                return self.setSummaryBoardID(results.group('value'))
+        return {}
+
+    def updateNotionSummaryPage(self, notion_url):
+        self.summary = {}
+        self.summary['page'] = NotionPage(notion_url)
+
+        stopping_block_patterns = ['\[sprint ', '\[next-sprint ', '\[board ']
+
+        self.summary['page'].searchAndReplace({}, stopping_block_patterns, self.updateSummary)
