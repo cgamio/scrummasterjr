@@ -4,29 +4,18 @@ from notion.client import NotionClient
 from notion.block import PageBlock, HeaderBlock, DividerBlock, TodoBlock
 from datetime import datetime
 import logging
+import re
+from collections import deque
 
 class NotionPage:
 
     def __init__(self, url):
         self.__client = NotionClient(token_v2=os.environ.get('NOTION_TOKEN'))
         self.blocks = self.__client.get_block(url)
+        self.queue = None
 
-    def searchAndReplace(self, replacement_dictionary):
-        """
-        This function assumes that the document contains instances of the keys in the replacement dictionary. It will traverse the document structure and replace any instances of those keys, with the values in the dictionary.
-
-        Args:
-            replacement_dictionary: dictionary - keys we want to replace with their values in this Notion page.
-
-                Special cases:
-                - `[sprint-goal]` and `[next-sprint-goal]`: These assume that the value is an array of goals, and will replace the key with a series of Todo blocks for each goal in the array
-
-        Returns:
-            Nothing
-        """
-        queue = []
-
-        queue.extend(self.blocks.children)
+    def searchAndReplace(self, replacement_dictionary, stopping_block_patterns = [], dictionary_update_callback = None):
+        self.queue = deque(self.blocks.children)
 
         checkSprintGoals = False
         if "[sprint-goal]" in replacement_dictionary:
@@ -36,16 +25,27 @@ class NotionPage:
         if "[next-sprint-goal]" in replacement_dictionary:
             checkNextSprintGoals = True
 
-        while queue:
-            block = queue.pop()
+        while self.queue:
+            block = self.queue.popleft()
             logging.info(f"Processing Block: {block}")
 
             try:
-                queue.extend(block.children)
+                self.queue.extendleft(block.children)
             except AttributeError:
                 logging.info("Block has no more children, end of the line")
 
             try:
+                for pattern in stopping_block_patterns:
+                    if re.match(pattern, block.title):
+                        replacement_dictionary = dictionary_update_callback(block.title)
+                        block.remove()
+                        if "[next-sprint-goal]" in replacement_dictionary:
+                            checkNextSprintGoals = True
+                        if "[sprint-goal]" in replacement_dictionary:
+                            checkSprintGoals = True
+                        continue
+
+
                 if checkSprintGoals and "[sprint-goal]" in block.title:
                     parent = block.parent
                     logging.info(f"Parent: {parent}")
