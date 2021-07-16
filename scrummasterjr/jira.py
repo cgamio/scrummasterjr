@@ -204,6 +204,10 @@ class Jira:
             "predictability_of_commitments": 0
         }
 
+        #Added Work
+        issue_keys["added"] = list(sprint_report["contents"]["issueKeysAddedDuringSprint"].keys())
+        items["added"] = len(issue_keys["added"])
+
         if points['committed'] != 0:
             meta['predictability'] = int(points['completed']/points['committed']*100)
             meta['predictability_of_commitments'] = int(points['planned_completed']/points['committed']*100)
@@ -472,15 +476,20 @@ class Jira:
 
         try:
             start_date = datetime.strptime(sprint_report_data['sprint_start'].split('T')[0], '%d/%b/%y %I:%M %p')
-            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
+            notion_dictionary['[next-sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
+        except ValueError:
+            pass
 
+        try:
+            end_date = datetime.strptime(sprint_report_data['sprint_end'].split('T')[0], '%d/%b/%y %I:%M %p')
+            notion_dictionary['[next-sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
         except ValueError:
             pass
 
         try:
             notion_dictionary['[next-sprint-number]'] = sprint_report_data['sprint_number']
-            notion_dictionary['[next-sprint-start]'] = datetime.strftime(start_date, '%m/%d/%Y')
-            notion_dictionary['[next-sprint-end]'] = datetime.strftime(end_date, '%m/%d/%Y')
+
+
 
             notion_dictionary['[next-sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
 
@@ -527,6 +536,7 @@ class Jira:
 
             notion_dictionary['[items-committed]'] = str(sprint_report_data['issue_metrics']['items']['committed'])
             notion_dictionary['[items-completed]'] = str(sprint_report_data['issue_metrics']['items']['completed'])
+            notion_dictionary['[items-added]'] = str(sprint_report_data['issue_metrics']['items']['added'])
             notion_dictionary['[bugs-completed]'] = str(sprint_report_data['issue_metrics']['items']['bugs_completed'])
 
             notion_dictionary['[predictability]'] = str(sprint_report_data['issue_metrics']['meta']['predictability']) + "%"
@@ -540,6 +550,8 @@ class Jira:
             notion_dictionary['[items-not-completed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['not_completed']} Incomplete Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['incomplete'])})"
 
             notion_dictionary['[items-removed-link]'] = f"[{sprint_report_data['issue_metrics']['items']['removed']} Removed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['removed'])})"
+
+            notion_dictionary['[items-added-link]'] = f"[{sprint_report_data['issue_metrics']['items']['added']} Added Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['added'])})"
 
         except KeyError:
             raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
