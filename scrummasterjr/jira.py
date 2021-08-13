@@ -96,7 +96,7 @@ class Jira:
 
         feature_work = ["Story", "Design", "Spike"]
         optimization = ["Optimization"]
-        bug = ["Bug"]
+        bug = ["Bug", "User Bug"]
         ignore = ["Task", "Epic"]
 
         # Completed Work
