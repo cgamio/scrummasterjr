@@ -108,12 +108,12 @@ class Jira:
                 continue
 
             try:
-                issue_points_original = int(completed["estimateStatistic"]["statFieldValue"]["value"])
+                issue_points_original = round(completed["estimateStatistic"]["statFieldValue"]["value"])
             except:
                 issue_points_original = 0
 
             try:
-                issue_points = int(completed["currentEstimateStatistic"]["statFieldValue"]["value"])
+                issue_points = round(completed["currentEstimateStatistic"]["statFieldValue"]["value"])
             except:
                 issue_points = 0
 
@@ -165,7 +165,7 @@ class Jira:
                 continue
 
             try:
-                issue_points = int(incomplete["currentEstimateStatistic"]["statFieldValue"]["value"])
+                issue_points = round(incomplete["currentEstimateStatistic"]["statFieldValue"]["value"])
             except:
                 issue_points = 0
 
@@ -187,7 +187,7 @@ class Jira:
                 continue
 
             try:
-                issue_points = int(removed["currentEstimateStatistic"]["statFieldValue"]["value"])
+                issue_points = round(removed["currentEstimateStatistic"]["statFieldValue"]["value"])
             except:
                 issue_points = 0
 
@@ -209,8 +209,8 @@ class Jira:
         items["added"] = len(issue_keys["added"])
 
         if points['committed'] != 0:
-            meta['predictability'] = int(points['completed']/points['committed']*100)
-            meta['predictability_of_commitments'] = int(points['planned_completed']/points['committed']*100)
+            meta['predictability'] = round(points['completed']/points['committed']*100)
+            meta['predictability_of_commitments'] = round(points['planned_completed']/points['committed']*100)
         else:
             # If a sprint has no points committed, we say the predictability is 0
             logging.warning('This sprint had no commitments, predictability is 0')
@@ -401,7 +401,7 @@ class Jira:
                 total = total +  velocity_report['velocityStatEntries'][sprint]['completed']['value']
                 sprints = sprints + 1
 
-        return int(total/sprints) if sprints > 0 else total
+        return round(total/sprints) if sprints > 0 else total
 
     def generateGoogleFormURL(self, sprint_report_data):
         """Generates a URL that will pre-populate a specific AgileOps Google Form where teams submit their sprint metrics
