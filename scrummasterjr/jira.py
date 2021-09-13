@@ -342,6 +342,8 @@ class Jira:
         report['project_key'] = board['location']['projectKey']
         report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
 
+        [report['average_predictability'], report['average_predictability_of_commitments']] = self.getAveragePredictabilities(sprint['originBoardId'], sprint_id)
+
         return report
 
     def updateNotionPage(self, notion_url, sprint_report_data, next_sprint_report_data=False):
@@ -553,6 +555,9 @@ class Jira:
 
             notion_dictionary['[items-added-link]'] = f"[{sprint_report_data['issue_metrics']['items']['added']} Added Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['added'])})"
 
+            notion_dictionary['average-predictability'] = f"{sprint_report_data['average_predictability']}%"
+            notion_dictionary['average-predictability-of-committments'] = f"{sprint_report_data['average_predictability_of_commitments']}%"
+
         except KeyError:
             raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
 
@@ -675,3 +680,28 @@ class Jira:
         stopping_block_patterns = ['\[sprint ', '\[next-sprint ', '\[board ']
 
         self.summary['page'].searchAndReplace({}, stopping_block_patterns, self.updateSummary)
+
+    def getAveragePredictabilities(self, board_id, sprint_id):
+        sprints = self.getSprintsInBoard(board_id)
+        found = False
+        found_sprints = 0
+        completed = 0
+        committed = 0
+        planned_completed = 0
+
+        for sprint in sprints:
+            if sprint['id'] == sprint_id:
+                found = True
+            if found and found_sprints < 3:
+                sprint_report = self.getSprintReport(sprint['id'], board_id)
+                report = self.getJiraSprintReportData(sprint_report)
+                metrics = self.calculateSprintMetrics(sprint_report)
+                completed += metrics['points']['completed']
+                committed += metrics['points']['committed']
+                planned_completed += metrics['points']['planned_completed']
+                found_sprints += 1;
+
+        if committed > 0:
+            return (round(completed / committed*100), round(planned_completed / committed*100))
+        else:
+            return (0,0)
