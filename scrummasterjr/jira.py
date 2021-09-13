@@ -556,7 +556,7 @@ class Jira:
             notion_dictionary['[items-added-link]'] = f"[{sprint_report_data['issue_metrics']['items']['added']} Added Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['added'])})"
 
             notion_dictionary['average-predictability'] = f"{sprint_report_data['average_predictability']}%"
-            notion_dictionary['average-predictability-of-committments'] = f"{sprint_report_data['average_predictability_of_commitments']}%"
+            notion_dictionary['average-predictability-of-commitments'] = f"{sprint_report_data['average_predictability_of_commitments']}%"
 
         except KeyError:
             raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
