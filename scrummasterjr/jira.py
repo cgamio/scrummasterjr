@@ -97,7 +97,7 @@ class Jira:
         feature_work = ["Story", "Design", "Spike"]
         optimization = ["Optimization"]
         bug = ["Bug", "User Bug"]
-        ignore = ["Task", "Epic"]
+        ignore = ["Task", "Epic", "Retro Action Item"]
 
         # Completed Work
         for completed in sprint_report["contents"]["completedIssues"]:
