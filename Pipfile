@@ -13,6 +13,8 @@ gunicorn = "*"
 slack-bolt = "*"
 notion = {git = "https://github.com/julrach/notion-py"}
 requests = "*"
+atlassian-python-api = "*"
+ipython = "*"
 
 [requires]
 python_version = "3"
