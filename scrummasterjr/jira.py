@@ -5,6 +5,7 @@ import re
 import json
 from datetime import datetime
 from scrummasterjr.notionpage import NotionPage
+from scrummasterjr.confluencepage import ConfluencePage
 from scrummasterjr.error import ScrumMasterJrError
 
 class Jira:
@@ -364,7 +365,7 @@ class Jira:
             search_replace_dict.update(self.generateNextSprintNotionReplacementDictionary(next_sprint_report_data))
 
         try:
-            page = NotionPage(notion_url)
+            page = ConfluencePage(notion_url)
             logging.info(f"Notion Page: {page}")
             page.searchAndReplace(search_replace_dict)
         except BaseException as e:
@@ -675,7 +676,7 @@ class Jira:
 
     def updateNotionSummaryPage(self, notion_url):
         self.summary = {}
-        self.summary['page'] = NotionPage(notion_url)
+        self.summary['page'] = ConfluencePage(notion_url)
 
         stopping_block_patterns = ['\[sprint ', '\[next-sprint ', '\[board ']
 
