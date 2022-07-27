@@ -17,15 +17,15 @@ class ConfluencePage:
             username=os.environ["JIRA_USER"],
             password=os.environ["JIRA_TOKEN"]
         )
-        page_id = re.search("(\d*)\/[^\/]*$", page_url).groups()[0]
-        logging.info(f"Page URL: {page_url}\nPage ID: {page_id}")
-        self.page = self.__client.get_page_by_id(page_id, expand='body.storage')
+        self.page_id = re.search("(\d*)\/[^\/]*$", page_url).groups()[0]
+        logging.info(f"Page URL: {page_url}\nPage ID: {self.page_id}")
+        self.page = self.__client.get_page_by_id(self.page_id, expand='body.storage')
         self.contents = self.page['body']['storage']['value']
         self.queue = None
 
     def searchAndReplace(self, replacement_dictionary, stopping_block_patterns = [], dictionary_update_callback = None):
         soup = BeautifulSoup(self.contents, 'html.parser')
-        self.queue = deque(soup.contents)
+        self.queue = deque(soup.contents[0].contents)
 
         checkSprintGoals = False
         if "[sprint-goal]" in replacement_dictionary:
@@ -40,7 +40,7 @@ class ConfluencePage:
             logging.info(f"Processing Block: {block}")
 
             try:
-                self.queue.extendleft(block.contents)
+                self.queue.extendleft(block.contents[::-1])
                 continue
             except AttributeError:
                 logging.info("Block has no more children, end of the line")
@@ -61,26 +61,32 @@ class ConfluencePage:
                     parent = block.parent
                     logging.info(f"Parent: {parent}")
                     list = soup.new_tag('ul')
-                    for goal in replacement_dictionary['[sprint-goal]'].split("\n"):
-                        list_item = soup.new_tag('li')
-                        p_item = soup.new_tag('p')
-                        p_item.string = goal
-                        list_item.append(p_item)
-                        list.append(list_item)
-                    parent.replace_with(list)
+                    try:
+                        for goal in replacement_dictionary['[sprint-goal]'].split("\n"):
+                            list_item = soup.new_tag('li')
+                            p_item = soup.new_tag('p')
+                            p_item.string = goal
+                            list_item.append(p_item)
+                            list.append(list_item)
+                        parent.replace_with(list)
+                    except (KeyError):
+                        pass
                     continue
 
-                if checkNextSprintGoals and "[next-sprint-goal]" in block.title:
+                if checkNextSprintGoals and "[next-sprint-goal]" in block.string:
                     parent = block.parent
                     logging.info(f"Parent: {parent}")
                     list = soup.new_tag('ul')
-                    for goal in replacement_dictionary['[next-sprint-goal]'].split("\n"):
-                        list_item = soup.new_tag('li')
-                        p_item = soup.new_tag('p')
-                        p_item.string = goal
-                        list_item.append(p_item)
-                        list.append(list_item)
-                    parent.replace_with(list)
+                    try:
+                        for goal in replacement_dictionary['[next-sprint-goal]'].split("\n"):
+                            list_item = soup.new_tag('li')
+                            p_item = soup.new_tag('p')
+                            p_item.string = goal
+                            list_item.append(p_item)
+                            list.append(list_item)
+                        parent.replace_with(list)
+                    except (KeyError):
+                        pass    
                     continue
 
                 new_title = block.string
@@ -89,7 +95,7 @@ class ConfluencePage:
                     new_title = new_title.replace(search, replace)
 
                 if block.string != new_title:
-                    logging.info(f"{block.string} -> {new_title}")
+                    logging.info(f"REPLACING {block.string} -> {new_title}")
                     block.string.replace_with(new_title)
             except AttributeError:
                 logging.info("Block has no title, moving on")
