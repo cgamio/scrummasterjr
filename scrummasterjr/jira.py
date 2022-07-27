@@ -98,7 +98,7 @@ class Jira:
         feature_work = ["Story", "Design", "Spike"]
         optimization = ["Optimization"]
         bug = ["Bug", "User Bug"]
-        ignore = ["Task", "Epic", "Retro Action Item", "Requirement", "Request", "Idea"]
+        ignore = ["Task", "Epic", "Retro Action Item", "Requirement", "Request", "Idea", "Test"]
 
         # Completed Work
         for completed in sprint_report["contents"]["completedIssues"]:
@@ -319,7 +319,8 @@ class Jira:
         try:
             report['sprint_goals'] = sprint_report['sprint']['goal'].split("\n")
         except (AttributeError, KeyError):
-            raise ScrumMasterJrError(f"I couldn't find or parse sprint goal for one of your sprints. Please check your arguments again, but this might not be your fault so I've let my overlords know. Are you using the right command for your jira instance? Ask me for `help` for more information", f"Unable to find or parse sprint goal\n {sprint_report}")
+            pass
+            #raise ScrumMasterJrError(f"I couldn't find or parse sprint goal for one of your sprints. Please check your arguments again, but this might not be your fault so I've let my overlords know. Are you using the right command for your jira instance? Ask me for `help` for more information", f"Unable to find or parse sprint goal\n {sprint_report}")
 
         return report
 
@@ -395,6 +396,7 @@ class Jira:
         sprint_id = f"{sprint_id}"
 
         for sprint in sorted(velocity_report['velocityStatEntries'], reverse=True):
+            logging.info(f"Sprint: {sprint}")
             if sprints >= 3:
                 # We only care about the last three sprints
                 break;
@@ -492,8 +494,6 @@ class Jira:
         try:
             notion_dictionary['[next-sprint-number]'] = sprint_report_data['sprint_number']
 
-
-
             notion_dictionary['[next-sprint-goal]'] = "\n".join(sprint_report_data['sprint_goals'])
 
             notion_dictionary['[next-points-committed]'] = str(sprint_report_data['issue_metrics']['points']['committed'])
@@ -502,7 +502,8 @@ class Jira:
             notion_dictionary['[next-original-committed-link]'] =f"[{sprint_report_data['issue_metrics']['items']['committed']} Committed Issues]({self.generateJiraIssueLink(sprint_report_data['issue_metrics']['issue_keys']['committed'])})"
 
         except KeyError:
-            raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a *Next Sprint* Notion Replacement Dictionary, keys not found")
+            pass
+            #raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a *Next Sprint* Notion Replacement Dictionary, keys not found")
 
         return notion_dictionary
 
@@ -560,7 +561,8 @@ class Jira:
             notion_dictionary['[average-commitment-predictability]'] = f"{sprint_report_data['average_predictability_of_commitments']}%"
 
         except KeyError:
-            raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
+            pass
+            #raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
 
         return notion_dictionary
 
@@ -631,9 +633,19 @@ class Jira:
         notion_dictionary = {}
 
         if 'board_id' in self.summary.keys():
+            logging.info(f"We have a board: {self.summary['board_id']}")
 
             if 'current_sprint' in self.summary.keys():
+<<<<<<< Updated upstream
                 sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['current_sprint']}{self.summary['specific_sprint_name_match']}")
+=======
+<<<<<<< Updated upstream
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['current_sprint'])
+=======
+                logging.info(f"We have a sprint: {self.summary['board_id']}")
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['current_sprint']}{self.summary['specific_sprint_name_match']}")
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
                 if sprint:
                     data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNotionReplacementDictionary(data)
@@ -646,7 +658,7 @@ class Jira:
                     dictionary = self.generateNextSprintNotionReplacementDictionary(data)
                     notion_dictionary.update(dictionary)
 
-        logging.info(f"Updating notion_dictionary\n{notion_dictionary}")
+        logging.info(f"Updating notion_dictionary\n{notion_dictionary}\nContext:\n{self.summary}")
 
         return notion_dictionary
 
