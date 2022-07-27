@@ -619,12 +619,12 @@ class Jira:
         logging.debug(f"Sprints: {sprints}")
         return sprints
 
-    def getMatchingSprintInBoard(self, board_id, starts_with):
+    def getMatchingSprintInBoard(self, board_id, contains):
         all_sprints = self.getSprintsInBoard(board_id)
 
         for sprint in all_sprints:
-            if re.match(starts_with, sprint['name']):
-                return sprint['id']
+            if re.search(contains, sprint['name']):
+                return sprint
 
     def updateSummaryNotionDictionary(self):
         notion_dictionary = {}
@@ -632,16 +632,16 @@ class Jira:
         if 'board_id' in self.summary.keys():
 
             if 'current_sprint' in self.summary.keys():
-                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['current_sprint'])
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['current_sprint']}{self.summary['specific_sprint_name_match']}")
                 if sprint:
-                    data = self.generateAllSprintReportData(sprint)
+                    data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNotionReplacementDictionary(data)
                     notion_dictionary.update(dictionary)
 
             if 'next_sprint' in self.summary.keys():
                 sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['next_sprint'])
                 if sprint:
-                    data = self.generateAllSprintReportData(sprint)
+                    data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNextSprintNotionReplacementDictionary(data)
                     notion_dictionary.update(dictionary)
 
@@ -657,20 +657,21 @@ class Jira:
         self.summary['next_sprint'] = next_sprint
         return self.updateSummaryNotionDictionary()
 
-    def setSummaryBoardID(self, board_id):
+    def setSummaryBoardID(self, board_id, specific_sprint_name_match = ""):
         self.summary['board_id'] = board_id
+        self.summary['specific_sprint_name_match'] = specific_sprint_name_match
         return self.updateSummaryNotionDictionary()
 
     def updateSummary(self, tag):
         logging.info(f"Found Summary Update Tag: {tag}")
-        results = re.search('\[(?P<tag>[\w-]+) (?P<value>[\d\.]+)\]', tag)
+        results = re.search('\[(?P<tag>[\w-]+) (?P<value>[\d\.]+)( (?P<arg>[\w\.]+))?\]', tag)
         if results:
             if results.group('tag') == 'sprint':
                 return self.setSummaryCurrentSprint(results.group('value'))
             if results.group('tag') == 'next-sprint':
                 return self.setSummaryNextSprint(results.group('value'))
             if results.group('tag') == 'board':
-                return self.setSummaryBoardID(results.group('value'))
+                return self.setSummaryBoardID(results.group('value'), results.group('arg'))
         return {}
 
     def updateNotionSummaryPage(self, notion_url):
