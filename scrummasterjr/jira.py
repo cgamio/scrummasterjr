@@ -636,16 +636,8 @@ class Jira:
             logging.info(f"We have a board: {self.summary['board_id']}")
 
             if 'current_sprint' in self.summary.keys():
-<<<<<<< Updated upstream
-                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['current_sprint']}{self.summary['specific_sprint_name_match']}")
-=======
-<<<<<<< Updated upstream
-                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['current_sprint'])
-=======
                 logging.info(f"We have a sprint: {self.summary['board_id']}")
                 sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['current_sprint']}{self.summary['specific_sprint_name_match']}")
->>>>>>> Stashed changes
->>>>>>> Stashed changes
                 if sprint:
                     data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNotionReplacementDictionary(data)
