@@ -170,12 +170,17 @@ class Jira:
             except:
                 issue_points = 0
 
+            try:
+                issue_points_original = round(incomplete["estimateStatistic"]["statFieldValue"]["value"])
+            except:
+                issue_points_original = 0
+
             points["not_completed"] += issue_points
             items["not_completed"] += 1
 
             if incomplete["key"] not in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 issue_keys["committed"].append(incomplete["key"])
-                points["committed"] += issue_points
+                points["committed"] += issue_points_original
                 items["committed"] += 1
 
         # Removed Work
@@ -192,10 +197,16 @@ class Jira:
             except:
                 issue_points = 0
 
+            try:
+                issue_points_original = round(removed["estimateStatistic"]["statFieldValue"]["value"])
+            except:
+                issue_points_original = 0
+
             if removed["key"] not in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
-                points["committed"] += issue_points
+                points["committed"] += issue_points_original
                 items["committed"] += 1
                 issue_keys["committed"].append(removed["key"])
+                logging.info(f"Removed issue {removed['key']} was commits as {issue_points_original} points for a total of {points['committed']}")
 
             points["removed"] += issue_points
             items["removed"] += 1
@@ -644,7 +655,7 @@ class Jira:
                     notion_dictionary.update(dictionary)
 
             if 'next_sprint' in self.summary.keys():
-                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['next_sprint'])
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"self.summary['next_sprint']{self.summary['specific_sprint_name_match']}")
                 if sprint:
                     data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNextSprintNotionReplacementDictionary(data)
