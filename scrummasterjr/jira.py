@@ -92,7 +92,8 @@ class Jira:
             "committed": [],
             "completed": [],
             "incomplete": [],
-            "removed": []
+            "removed": [],
+            "added": []
         }
 
         feature_work = ["Story", "Design", "Spike"]
@@ -206,7 +207,11 @@ class Jira:
         }
 
         #Added Work
-        issue_keys["added"] = list(sprint_report["contents"]["issueKeysAddedDuringSprint"].keys())
+        added_issues = list(sprint_report["contents"]["issueKeysAddedDuringSprint"].keys())
+        for added_issue in added_issues:
+            if added_issue not in issue_keys["removed"]:
+                issue_keys["added"].append(added_issue)
+
         items["added"] = len(issue_keys["added"])
 
         if points['committed'] != 0:
@@ -644,7 +649,7 @@ class Jira:
                     notion_dictionary.update(dictionary)
 
             if 'next_sprint' in self.summary.keys():
-                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], self.summary['next_sprint'])
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['next_sprint']}{self.summary['specific_sprint_name_match']})
                 if sprint:
                     data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNextSprintNotionReplacementDictionary(data)
