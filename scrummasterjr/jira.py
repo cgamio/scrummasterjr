@@ -649,7 +649,7 @@ class Jira:
                     notion_dictionary.update(dictionary)
 
             if 'next_sprint' in self.summary.keys():
-                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['next_sprint']}{self.summary['specific_sprint_name_match']})
+                sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['next_sprint']}{self.summary['specific_sprint_name_match']}")
                 if sprint:
                     data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNextSprintNotionReplacementDictionary(data)
