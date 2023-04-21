@@ -21,11 +21,11 @@ if __name__ == '__main__':
         "HODL": (46,'H'),
         "Juggernaut": (45,'J'),
         "Limitless": (52,'L'),
-        "Mystery Inc": (66,'M'),
         "DevOps": (61,'O'),
         "Paradise": (48,'P'),
-        "Urban Chickens": (40,'U'),
-        "Snacks": (27,'S')
+        "Snacks": (27,'S'),
+	"Unicorn": (89, 'U'),
+	"Atlantis": (92, 'A')
     }
 
     f = open('all_sprint_data.txt', 'a')
