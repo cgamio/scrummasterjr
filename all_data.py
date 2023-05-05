@@ -19,7 +19,7 @@ if __name__ == '__main__':
         "Emu": (30,'E'),
         "Fire Ferrets": (42,'F'),
         "HODL": (46,'H'),
-        "Juggernaut": (45,'J'),
+        "Jammin Polliwogs": (45,'J'),
         "Limitless": (52,'L'),
         "DevOps": (61,'O'),
         "Paradise": (48,'P'),
