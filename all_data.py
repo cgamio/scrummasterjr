@@ -16,6 +16,7 @@ if __name__ == '__main__':
 
     teams = {
         "Dirigible": (37,'D'),
+	"DOT": (109, 'T'),
         "Emu": (30,'E'),
         "Fire Ferrets": (42,'F'),
         "HODL": (46,'H'),
