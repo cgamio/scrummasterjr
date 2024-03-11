@@ -16,17 +16,15 @@ if __name__ == '__main__':
 
     teams = {
         "Dirigible": (37,'D'),
-	"DOT": (109, 'T'),
         "Emu": (30,'E'),
         "Fire Ferrets": (42,'F'),
         "HODL": (46,'H'),
-        "Jammin Polliwogs": (45,'J'),
-        "Limitless": (52,'L'),
         "DevOps": (61,'O'),
         "Paradise": (48,'P'),
         "Snacks": (27,'S'),
 	"Unicorn": (89, 'U'),
-	"Atlantis": (92, 'A')
+	"Atlantis": (92, 'A'),
+	"Yeet": (119, 'Y')
     }
 
     f = open('all_sprint_data.txt', 'a')
