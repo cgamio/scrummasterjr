@@ -15,7 +15,6 @@ if __name__ == '__main__':
     jira = Jira(jira_host, jira_user, jira_token)
 
     teams = {
-        "Dirigible": (37,'D'),
         "Emu": (30,'E'),
         "Fire Ferrets": (42,'F'),
         "HODL": (46,'H'),
@@ -25,7 +24,10 @@ if __name__ == '__main__':
         "Snacks": (27,'S'),
 	"Unicorn": (89, 'U'),
 	"Atlantis": (92, 'A'),
-	"Yeet": (119, 'Y')
+	"Yeet": (119, 'Y'),
+	"Zeppelin": (37, 'Z'),
+	"Merlin": (165, 'M'),
+	"Keto-memes": (162, 'K')
     }
 
     f = open('all_sprint_data.txt', 'a')
