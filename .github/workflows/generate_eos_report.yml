@@ -21,4 +21,4 @@ jobs:
           echo "Current Sprint = $CURRENT_SPRINT"
           echo "PATH = $PATH"
           ls -la
-          pipenv run ./generate_eos_report_page.py
+          pipenv run python ./generate_eos_report_page.py
