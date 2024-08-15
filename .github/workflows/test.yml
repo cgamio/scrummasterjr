@@ -9,4 +9,4 @@ jobs:
     steps:
       - name: Test Step 1
         run: |
-          echo "Current Sprint = $CURRENT_SPRINT"
+          echo "Current Sprint = ${{var.CURRENT_SPRINT}}"
