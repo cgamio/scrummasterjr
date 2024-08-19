@@ -17,8 +17,8 @@ jobs:
             JIRA_HOST: ${{ secrets.JIRA_HOST }}
             JIRA_USER: ${{ secrets.JIRA_USER }}
             JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
-            TEMPLATE_PAGE_ID: ${{ secrets.TEMPLATE_PAGE_ID }}
-            PARENT_PAGE_ID: ${{ secrets.PARENT_PAGE_ID }}
+            TEMPLATE_PAGE_ID: ${{ vars.TEMPLATE_PAGE_ID }}
+            PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
         id: script
         run: |
           echo "Current Sprint = $CURRENT_SPRINT"
