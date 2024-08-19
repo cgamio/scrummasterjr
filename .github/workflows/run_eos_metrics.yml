@@ -69,7 +69,7 @@ jobs:
         if: startsWith(steps.page-url.outputs.match, 'https')
         uses: slackapi/slack-github-action@v1.26.0
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.TEAM_LEADS }}
+          SLACK_WEBHOOK_URL: ${{ secrets.TEAM_LEADS_SLACK_WEBHOOK }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
         with:
           payload: |
