@@ -32,6 +32,6 @@ if __name__ == '__main__':
     newbody = source['body']['storage']['value']
 
     newbody = re.sub(r'\[sprint {sprint number}\]', f'[sprint {current_sprint_string}]', newbody)
-    newbody = re.sub(r'\[next-sprint {sprint number}\]', f'[sprint {next_sprint}]', newbody)
+    newbody = re.sub(r'\[next-sprint {sprint number}\]', f'[next-sprint {next_sprint}]', newbody)
 
     dest = confluence.update_or_create(parent_page_id, f"[PENDING METRICS] End of Sprint {current_sprint_split[1]} Report - {start_date} to {end_date} - {presenting_string} Presenting", newbody)

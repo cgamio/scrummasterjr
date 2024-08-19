@@ -44,7 +44,7 @@ jobs:
         with:
           value: ${{ steps.file.outputs.content }}
           regex: '\s*\n\s*'
-          replacement: '\\n'
+          replacement: '\n'
       
       - name: Report Metrics Results
         if: startsWith(steps.page-url.outputs.match, 'https')
