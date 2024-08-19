@@ -29,7 +29,7 @@ if __name__ == '__main__':
         if child['title'].startswith('[PENDING METRICS]'):
             print(f"Updating page https://{os.environ['JIRA_HOST']}/wiki/{child['_links']['webui']}")
             jira.updateNotionSummaryPage(f"https://{os.environ['JIRA_HOST']}/wiki/{child['_links']['webui']}")
-            confluence.update_page(child['id'], title=child['title'].replace("[PENDING METRICS]", ""))
+            confluence.update_page(child['id'], title=child['title'].replace("[PENDING METRICS] ", ""))
             print(f"https://{os.environ['JIRA_HOST']}/wiki/{child['_links']['webui']}")
             exit()
 

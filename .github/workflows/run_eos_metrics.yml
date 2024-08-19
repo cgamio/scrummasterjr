@@ -38,6 +38,14 @@ jobs:
         uses: juliangruber/read-file-action@v1
         with:
           path: ./all_sprint_data.txt
+      - name: Prep Metrics Blob
+        id: metrics
+        uses: ashley-taylor/regex-property-action@v1.3
+        with:
+          value: ${{ steps.file.outputs.content }}
+          regex: '\s*\n\s*'
+          replacement: '\\n'
+      
       - name: Report Results
         if: startsWith(steps.page-url.outputs.match, 'https')
         uses: slackapi/slack-github-action@v1.26.0
@@ -52,7 +60,26 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Here are the latest Sprint Metrics:\n`${{ steps.file.outputs.content }}`"
+                    "text": 'Here are the latest Sprint Metrics! \n```${{ steps.metrics.outputs.value }}```'
+                  }
+                }
+              ]
+            }
+      - name: Report Results
+        if: startsWith(steps.page-url.outputs.match, 'https')
+        uses: slackapi/slack-github-action@v1.26.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.TEAM_LEADS }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Metrics have been posted in the <${{ steps.page-url.outputs.match }}|End of Sprint Report>"
                   }
                 }
               ]
