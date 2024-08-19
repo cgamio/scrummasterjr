@@ -30,6 +30,8 @@ if __name__ == '__main__':
             print(f"Updating page https://{os.environ['JIRA_HOST']}/wiki/{child['_links']['webui']}")
             jira.updateNotionSummaryPage(f"https://{os.environ['JIRA_HOST']}/wiki/{child['_links']['webui']}")
             confluence.update_page(child['id'], title=child['title'].replace("[PENDING METRICS]", ""))
+            print(f"https://{os.environ['JIRA_HOST']}/wiki/{child['_links']['webui']}")
             exit()
 
+    print("Unable to find any pages starting with [PENDING METRICS]")
     exit(1)

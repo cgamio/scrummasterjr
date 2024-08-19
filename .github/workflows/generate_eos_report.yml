@@ -21,10 +21,7 @@ jobs:
             PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
         id: script
         run: |
-          echo "Current Sprint = $CURRENT_SPRINT"
-          echo "PATH = $PATH"
-          ls -la
-          pipenv run python ./generate_eos_report_page.py
+          pipenv run python ./generate_eos_report_page.py | tee eos_report_logs.txt
       - uses: kaisugi/action-regex-match@v1.0.0
         id: page-url
         name: Find Page URL
@@ -33,6 +30,7 @@ jobs:
           regex: 'You may access your page at: (.*)$'
           flags: "i"
       - name: Slack (Success) Notification
+        if: startsWith(steps.page-url.outputs.group1, "https")
         uses: slackapi/slack-github-action@v1.26.0
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.TEAM_LEADS_SLACK_WEBHOOK }}

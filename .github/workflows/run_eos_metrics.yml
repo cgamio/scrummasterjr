@@ -2,6 +2,8 @@ name: Run End of Sprint Metrics
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * 4"
 
 jobs:
   generate:
@@ -17,6 +19,42 @@ jobs:
             JIRA_USER: ${{ secrets.JIRA_USER }}
             JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
             PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
+            CURRENT_SPRINT: ${{ vars.CURRENT_SPRINT }}
         id: script
         run: |
-          pipenv run python ./run_end_of_sprint_metrics.py
+          pipenv run python ./run_end_of_sprint_metrics.py | tee ./eos_logs.txt
+          pipenv run python ./all_data.py $CURRENT_SPRINT | tee ./all_data_logs.txt
+          echo "POTENTIAL_URL=$( tail -n 1 eos_logs.txt )" >> $GITHUB_ENV
+      - name: Get Page URL
+        uses: kaisugi/action-regex-match@v1.0.0
+        id: page-url
+        with:
+          text: ${{ env.POTENTIAL_URL }}
+          regex: 'https://.*$'
+          flags: "i"
+      - name: Read package.json
+        if: startsWith(steps.page-url.outputs.match, 'https')
+        id: file
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./all_sprint_data.txt
+      - name: Report Results
+        if: startsWith(steps.page-url.outputs.match, 'https')
+        uses: slackapi/slack-github-action@v1.26.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.TEAM_LEADS_SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Here are the latest Sprint Metrics:\n`${{ steps.file.outputs.content }}`"
+                  }
+                }
+              ]
+            }
+        
