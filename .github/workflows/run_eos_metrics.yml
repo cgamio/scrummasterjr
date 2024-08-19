@@ -1,0 +1,22 @@
+name: Run End of Sprint Metrics
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Python, pipenv and Pipfile packages
+        uses: palewire/install-python-pipenv-pipfile@v4
+        with:
+          python-version: 3.9.15
+      - env:
+            JIRA_HOST: ${{ secrets.JIRA_HOST }}
+            JIRA_USER: ${{ secrets.JIRA_USER }}
+            JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+            PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
+        id: script
+        run: |
+          pipenv run python ./run_end_of_sprint_metrics.py
