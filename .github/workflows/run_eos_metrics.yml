@@ -46,7 +46,7 @@ jobs:
           regex: '\s*\n\s*'
           replacement: '\\n'
       
-      - name: Report Results
+      - name: Report Metrics Results
         if: startsWith(steps.page-url.outputs.match, 'https')
         uses: slackapi/slack-github-action@v1.26.0
         env:
@@ -60,12 +60,12 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": 'Here are the latest Sprint Metrics! \n```${{ steps.metrics.outputs.value }}```'
+                    "text": "Here are the latest Sprint Metrics! \n```${{ steps.metrics.outputs.value }}```"
                   }
                 }
               ]
             }
-      - name: Report Results
+      - name: Notify Leads
         if: startsWith(steps.page-url.outputs.match, 'https')
         uses: slackapi/slack-github-action@v1.26.0
         env:
