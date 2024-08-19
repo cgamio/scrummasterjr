@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: 3.9.15
       - env:
-            JIRA_HOST: ${{ secrets.JIRA_HOST }}
+            JIRA_HOST: ${{ vars.JIRA_HOST }}
             JIRA_USER: ${{ secrets.JIRA_USER }}
             JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
             PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
