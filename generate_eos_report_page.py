@@ -28,10 +28,10 @@ if __name__ == '__main__':
     template_page_id = os.environ["TEMPLATE_PAGE_ID"]
     parent_page_id = os.environ["PARENT_PAGE_ID"]
 
-    source = confluence.get_page_by_id('2425094145', expand='body.storage')
+    source = confluence.get_page_by_id(template_page_id, expand='body.storage')
     newbody = source['body']['storage']['value']
 
     newbody = re.sub(r'\[sprint {sprint number}\]', f'[sprint {current_sprint_string}]', newbody)
     newbody = re.sub(r'\[next-sprint {sprint number}\]', f'[sprint {next_sprint}]', newbody)
 
-    dest = confluence.update_or_create("3644129307", f"End of Sprint {current_sprint_split[1]} Report - {start_date} to {end_date} - {presenting_string} Presenting", newbody)
+    dest = confluence.update_or_create(parent_page_id, f"[PENDING METRICS] End of Sprint {current_sprint_split[1]} Report - {start_date} to {end_date} - {presenting_string} Presenting", newbody)

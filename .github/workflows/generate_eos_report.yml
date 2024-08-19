@@ -19,8 +19,34 @@ jobs:
             JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
             TEMPLATE_PAGE_ID: ${{ secrets.TEMPLATE_PAGE_ID }}
             PARENT_PAGE_ID: ${{ secrets.PARENT_PAGE_ID }}
+        id: script
         run: |
           echo "Current Sprint = $CURRENT_SPRINT"
           echo "PATH = $PATH"
           ls -la
           pipenv run python ./generate_eos_report_page.py
+      - uses: kaisugi/action-regex-match@v1.0.0
+        id: page-url
+        name: Find Page URL
+        with:
+          text: ${{join(steps.script.outputs.*, '\n')}}
+          regex: 'You may access your page at: (.*)$'
+          flags: "i"
+      - name: Slack (Success) Notification
+        uses: slackapi/slack-github-action@v1.26.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.TEAM_LEADS_SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "The latest End of Sprint Report is available <${{ steps.page-url.outputs.group1 }}|here> but is still pending metrics"
+                  }
+                }
+              ]
+            }
