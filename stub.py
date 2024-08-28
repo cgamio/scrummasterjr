@@ -1,6 +1,7 @@
 import os
 from scrummasterjr.jira import Jira
 import logging
+from atlassian import Confluence
 
 if __name__ == '__main__':
 
@@ -12,3 +13,9 @@ if __name__ == '__main__':
     jira_user = os.environ["JIRA_USER"]
     jira_token = os.environ["JIRA_TOKEN"]
     jira = Jira(jira_host, jira_user, jira_token)
+
+    confluence = Confluence(
+        url=f"https://{os.environ['JIRA_HOST']}",
+        username=os.environ["JIRA_USER"],
+        password=os.environ["JIRA_TOKEN"]
+    )
