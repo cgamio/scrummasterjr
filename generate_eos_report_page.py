@@ -19,9 +19,9 @@ if __name__ == '__main__':
     next_sprint = f"{current_sprint_split[0]}.{int(current_sprint_split[1])+1}"
 
     # Assume that this is going to run on the Monday before the sprint ending on Wednesday
-    now = datetime.datetime.now()+datetime.timedelta(days=2)
+    now = datetime.datetime.now()-datetime.timedelta(days=12)
     start_date = now.strftime('%m/%d')
-    end_date = (now+datetime.timedelta(days=14)).strftime('%m\%d')
+    end_date = (now+datetime.timedelta(days=2)).strftime('%m\%d')
 
     presenting_string = "A-K" if int(current_sprint_split[1])%2 else "J-Z"
 
