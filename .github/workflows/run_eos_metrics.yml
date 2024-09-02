@@ -30,7 +30,7 @@ jobs:
         id: page-url
         with:
           text: ${{ env.POTENTIAL_URL }}
-          regex: 'https:\/\/.*$'
+          regex: '(https:\/\/).*$'
           flags: "i"
       - name: Read package.json
         if: startsWith(steps.page-url.outputs.match, 'https')
