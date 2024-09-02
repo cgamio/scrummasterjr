@@ -22,15 +22,15 @@ jobs:
             CURRENT_SPRINT: ${{ vars.CURRENT_SPRINT }}
         id: script
         run: |
-          pipenv run python ./run_end_of_sprint_metrics.py | tee ./eos_logs.txt
-          pipenv run python ./all_data.py $CURRENT_SPRINT | tee ./all_data_logs.txt
+          pipenv run python ./run_end_of_sprint_metrics.py 2>&1 | tee ./eos_logs.txt
+          pipenv run python ./all_data.py $CURRENT_SPRINT 2>&1 | tee ./all_data_logs.txt
           echo "POTENTIAL_URL=$( tail -n 1 eos_logs.txt )" >> $GITHUB_ENV
       - name: Get Page URL
         uses: kaisugi/action-regex-match@v1.0.0
         id: page-url
         with:
           text: ${{ env.POTENTIAL_URL }}
-          regex: 'https://.*$'
+          regex: 'https:\/\/.*$'
           flags: "i"
       - name: Read package.json
         if: startsWith(steps.page-url.outputs.match, 'https')
