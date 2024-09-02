@@ -26,12 +26,12 @@ jobs:
           pipenv run python ./generate_eos_report_page.py | tee eos_report_logs.txt
           echo "POTENTIAL_URL=$( tail -n 1 eos_report_logs.txt )" >> $GITHUB_ENV
           echo $GITHUB_ENV
-      - uses: kaisugi/action-regex-match@v1.0.0
+      - name: Get Page URL
+        uses: kaisugi/action-regex-match@v1.0.0
         id: page-url
-        name: Find Page URL
         with:
           text: ${{ env.POTENTIAL_URL }}
-          regex: 'You may access your page at: (.*)$'
+          regex: 'https://.*$'
           flags: "i"
       - name: Slack (Success) Notification
         if: startsWith(steps.page-url.outputs.group1, 'https')
