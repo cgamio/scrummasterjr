@@ -31,7 +31,7 @@ if __name__ == '__main__':
             print(f"Previous EOS ended on {match.group(3)} and we need to wait until next week to cut a new one")
             exit(1)
 
-        current_sprint_number = int(match(1))+1
+        current_sprint_number = int(match.group(1))+1
         current_sprint_string = f"{now.strftime('%y')}.{current_sprint_number}"
         next_sprint = f"{now.strftime('%y')}.{current_sprint_number+1}"
         
