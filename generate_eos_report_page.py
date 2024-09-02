@@ -36,7 +36,7 @@ if __name__ == '__main__':
         next_sprint = f"{now.strftime('%y')}.{current_sprint_number+1}"
         
         start_date = (now-datetime.timedelta(days=12)).strftime('%m/%d')
-        end_date = (now+datetime.timedelta(days=2)).strftime('%m\%d')
+        end_date = (now+datetime.timedelta(days=2)).strftime('%m/%d')
         
         presenting_string = "A-K" if current_sprint_number%2 else "J-Z"
 
