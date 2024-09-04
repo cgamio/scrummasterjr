@@ -38,7 +38,7 @@ if __name__ == '__main__':
         start_date = (now-datetime.timedelta(days=12)).strftime('%m/%d')
         end_date = (now+datetime.timedelta(days=2)).strftime('%m/%d')
         
-        presenting_string = "A-K" if current_sprint_number%2 else "J-Z"
+        presenting_string = "A-I" if current_sprint_number%2 else "J-Z"
 
         source = confluence.get_page_by_id(template_page_id, expand='body.storage')
         newbody = source['body']['storage']['value']
