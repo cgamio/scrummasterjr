@@ -1,7 +1,7 @@
 import os, sys
 from scrummasterjr.jira import Jira
 from scrummasterjr.error import ScrumMasterJrError
-import logging
+import logging, re
 
 if __name__ == '__main__':
 
