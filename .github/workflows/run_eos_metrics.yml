@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 20 * * 4"
-
+  
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -14,24 +14,31 @@ jobs:
         uses: palewire/install-python-pipenv-pipfile@v4
         with:
           python-version: 3.9.15
-      - env:
+      - id: update_eos_page
+        env:
             JIRA_HOST: ${{ vars.JIRA_HOST }}
             JIRA_USER: ${{ secrets.JIRA_USER }}
             JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
             PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
-            CURRENT_SPRINT: ${{ vars.CURRENT_SPRINT }}
-        id: script
         run: |
           pipenv run python ./run_end_of_sprint_metrics.py 2>&1 | tee ./eos_logs.txt
-          pipenv run python ./all_data.py $CURRENT_SPRINT 2>&1 | tee ./all_data_logs.txt
           echo "POTENTIAL_URL=$( tail -n 1 eos_logs.txt )" >> $GITHUB_ENV
       - name: Get Page URL
         uses: kaisugi/action-regex-match@v1.0.0
         id: page-url
         with:
           text: ${{ env.POTENTIAL_URL }}
-          regex: '(https:\/\/).*$'
+          regex: 'https:\/\/[\w\.\/\+]*Sprint\+(\d+)\+Report.*$'
           flags: "i"
+      - id: all_data_script
+        env:
+            JIRA_HOST: ${{ vars.JIRA_HOST }}
+            JIRA_USER: ${{ secrets.JIRA_USER }}
+            JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+            PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
+            SPRINT_NUMBER: ${{ steps.page-url.outputs.group1 }}
+        run: |
+          pipenv run python ./all_data.py "$(date +'%y').$SPRINT_NUMBER" 2>&1 | tee ./all_data_logs.txt
       - name: Read package.json
         if: startsWith(steps.page-url.outputs.match, 'https')
         id: file
@@ -45,7 +52,6 @@ jobs:
           value: ${{ steps.file.outputs.content }}
           regex: '\s*\n\s*'
           replacement: '\n'
-      
       - name: Report Metrics Results
         if: startsWith(steps.page-url.outputs.match, 'https')
         uses: slackapi/slack-github-action@v1.26.0
