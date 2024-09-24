@@ -28,7 +28,7 @@ jobs:
         id: page-url
         with:
           text: ${{ env.POTENTIAL_URL }}
-          regex: 'https:\/\/[\w\.\/\+]*Sprint\+(\d+)\+Report.*$'
+          regex: 'https:\/\/[\w\.\/\+~]*Sprint\+(\d+)\+Report.*$'
           flags: "i"
       - id: all_data_script
         env:
