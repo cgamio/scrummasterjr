@@ -27,7 +27,8 @@ if __name__ == '__main__':
 	"Yeet": (119, 'Y'),
 	"Zeppelin": (37, 'Z'),
 	"Merlin": (165, 'M'),
-	"Keto-memes": (162, 'K')
+	"Keto-memes": (162, 'K'),
+	"Command Z": (179, 'C')
     }
 
     f = open('all_sprint_data.txt', 'a')
