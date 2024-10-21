@@ -85,7 +85,9 @@ class Jira:
             "bugs_completed": 0,
             "unplanned_bugs_completed": 0,
             "not_completed": 0,
-            "removed": 0
+            "removed": 0, 
+            "design_committed": 0,
+            "design_completed": 0
         }
 
         issue_keys = {
@@ -98,6 +100,7 @@ class Jira:
         feature_work = ["Story", "Design", "Spike"]
         optimization = ["Optimization"]
         bug = ["Bug", "User Bug"]
+        design = ["Design"]
         ignore = ["Task", "Epic", "Retro Action Item", "Requirement", "Request", "Idea", "Test"]
 
         # Completed Work
@@ -155,6 +158,12 @@ class Jira:
                 if unplanned:
                     items["unplanned_bugs_completed"] += 1
 
+            # Design
+            if completed["typeName"] in design:
+                items["design_completed"] += 1
+                if not unplanned:
+                    items["design_committed"] += 1
+
 
         # Incomplete Work
         for incomplete in sprint_report["contents"]["issuesNotCompletedInCurrentSprint"]:
@@ -182,6 +191,9 @@ class Jira:
                 issue_keys["committed"].append(incomplete["key"])
                 points["committed"] += issue_points_original
                 items["committed"] += 1
+
+                if incomplete["typeName"] in design:
+                    items["design_committed"] += 1
 
         # Removed Work
         for removed in sprint_report["contents"]["puntedIssues"]:
@@ -571,6 +583,9 @@ class Jira:
 
             notion_dictionary['[average-predictability]'] = f"{sprint_report_data['average_predictability']}%"
             notion_dictionary['[average-commitment-predictability]'] = f"{sprint_report_data['average_predictability_of_commitments']}%"
+
+            notion_dictionary['[design-committed]'] = str(sprint_report_data['issue_metrics']['items']['design_committed'])
+            notion_dictionary['[design-completed]'] = str(sprint_report_data['issue_metrics']['items']['design_completed'])
 
         except KeyError:
             pass
