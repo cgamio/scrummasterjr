@@ -588,6 +588,7 @@ class Jira:
             notion_dictionary['[design-completed]'] = str(sprint_report_data['issue_metrics']['items']['design_completed'])
 
             notion_dictionary['[items-planned-completed]'] = str(sprint_report_data['issue_metrics']['items']['planned_completed'])
+            notion_dictionary['[items-not-completed]'] = str(sprint_report_data['issue_metrics']['items']['not_completed'])
 
         except KeyError:
             pass
