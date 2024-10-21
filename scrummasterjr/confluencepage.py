@@ -27,6 +27,13 @@ class ConfluencePage:
         soup = BeautifulSoup(self.contents, 'html.parser')
         self.queue = deque(soup.contents[0].contents)
 
+        logging.info(f"Replacement Dictionary\n{replacement_dictionary}")
+
+        total_items_committed = 0
+        total_items_completed = 0
+        total_items_planned_completed = 0
+        total_commitment_predicability = 0
+
         checkSprintGoals = False
         if "[sprint-goal]" in replacement_dictionary:
             checkSprintGoals = True
@@ -49,6 +56,17 @@ class ConfluencePage:
                 for pattern in stopping_block_patterns:
                     if re.match(pattern, block.string):
                         replacement_dictionary = dictionary_update_callback(block.string)
+
+                        total_items_committed += int(replacement_dictionary['[items-committed]']) if '[items-committed]' in replacement_dictionary else 0
+                        total_items_completed += int(replacement_dictionary['[items-completed]']) if '[items-completed]' in replacement_dictionary else 0
+                        total_items_planned_completed += int(replacement_dictionary['[items-planned-completed]']) if '[items-planned-completed]' in replacement_dictionary else 0
+                        total_commitment_predicability = f"{round(total_items_planned_completed / total_items_committed*100)}%" if total_items_committed > 0 else "N/A"
+
+                        replacement_dictionary['[total-items-committed]'] = str(total_items_committed)
+                        replacement_dictionary['[total-items-completed]'] = str(total_items_completed)
+                        replacement_dictionary['[total-items-planned-completed]'] = str(total_items_planned_completed)
+                        replacement_dictionary['[total-commitment-predicability]'] = total_commitment_predicability
+
                         block.replace_with()
                         if "[next-sprint-goal]" in replacement_dictionary:
                             checkNextSprintGoals = True
