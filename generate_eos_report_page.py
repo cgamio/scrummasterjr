@@ -37,8 +37,6 @@ if __name__ == '__main__':
         
         start_date = (now-datetime.timedelta(days=12)).strftime('%m/%d')
         end_date = (now+datetime.timedelta(days=2)).strftime('%m/%d')
-        
-        presenting_string = "A-I" if current_sprint_number%2 else "J-Z"
 
         source = confluence.get_page_by_id(template_page_id, expand='body.storage')
         newbody = source['body']['storage']['value']
@@ -46,7 +44,7 @@ if __name__ == '__main__':
         newbody = re.sub(r'\[sprint {sprint number}\]', f'[sprint {current_sprint_string}]', newbody)
         newbody = re.sub(r'\[next-sprint {sprint number}\]', f'[next-sprint {next_sprint}]', newbody)
 
-        dest = confluence.update_or_create(parent_page_id, f"[PENDING METRICS] End of Sprint {current_sprint_number} Report - {start_date} to {end_date} - {presenting_string} Presenting", newbody)
+        dest = confluence.update_or_create(parent_page_id, f"[PENDING METRICS] End of Sprint {current_sprint_number} Report - {start_date} to {end_date}", newbody)
     else: 
         print("Last child in parent does not match EOS title formatting")
         exit(1)
