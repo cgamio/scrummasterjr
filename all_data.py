@@ -20,7 +20,7 @@ if __name__ == '__main__':
         "HODL": (46,'H'),
         "Jedi": (157, 'J'),
         "DevOps": (61,'O'),
-        "Bourbon": (126,'B'),
+        "Whiskey": (126,'W'),
         "Paradise": (48,'P'),
         "Snacks": (27,'S'),
         "Unicorn": (89, 'U'),
