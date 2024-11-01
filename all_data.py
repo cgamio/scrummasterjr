@@ -22,13 +22,13 @@ if __name__ == '__main__':
         "DevOps": (61,'O'),
         "Paradise": (48,'P'),
         "Snacks": (27,'S'),
-	"Unicorn": (89, 'U'),
-	"Atlantis": (92, 'A'),
-	"Yeet": (119, 'Y'),
-	"Zeppelin": (37, 'Z'),
-	"Merlin": (165, 'M'),
-	"Keto-memes": (162, 'K'),
-	"Command Z": (179, 'C')
+        "Unicorn": (89, 'U'),
+        "Atlantis": (92, 'A'),
+        "Yeet": (119, 'Y'),
+        "Zeppelin": (37, 'Z'),
+        "Merlin": (165, 'M'),
+        "Keto-memes": (162, 'K'),
+        "Command Z": (179, 'C')
     }
 
     f = open('all_sprint_data.txt', 'a')
