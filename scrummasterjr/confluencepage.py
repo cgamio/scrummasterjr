@@ -109,6 +109,8 @@ class ConfluencePage:
 
                 new_title = block.string
 
+                logging.info(f"Replacement Dictionary\n{replacement_dictionary}")
+
                 for search, replace in replacement_dictionary.items():
                     new_title = new_title.replace(search, replace)
 
