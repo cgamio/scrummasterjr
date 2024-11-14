@@ -60,7 +60,7 @@ class ConfluencePage:
                         total_items_committed += int(replacement_dictionary['[items-committed]']) if '[items-committed]' in replacement_dictionary else 0
                         total_items_completed += int(replacement_dictionary['[items-completed]']) if '[items-completed]' in replacement_dictionary else 0
                         total_items_planned_completed += int(replacement_dictionary['[items-planned-completed]']) if '[items-planned-completed]' in replacement_dictionary else 0
-                        total_commitment_predicability = f"{round(total_items_planned_completed / total_items_committed*100)}%" if total_items_committed > 0 else "N/A"
+                        total_commitment_predictability = f"{round(total_items_planned_completed / total_items_committed*100)}%" if total_items_committed > 0 else "N/A"
 
                         replacement_dictionary['[total-items-committed] items committed'] = str(total_items_committed)
                         replacement_dictionary['[total-items-completed]'] = str(total_items_completed)
