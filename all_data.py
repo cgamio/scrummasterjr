@@ -29,7 +29,8 @@ if __name__ == '__main__':
         "Zeppelin": (37, 'Z'),
         "Merlin": (165, 'M'),
         "Keto-memes": (162, 'K'),
-        "Command Z": (179, 'C')
+        "Command Z": (179, 'C'),
+        "Data Matrix": (116, 'D')
     }
 
     f = open('all_sprint_data.txt', 'a')
