@@ -600,6 +600,8 @@ class Jira:
             notion_dictionary['[design-committed]'] = str(sprint_report_data['issue_metrics']['items']['design_committed'])
             notion_dictionary['[design-completed]'] = str(sprint_report_data['issue_metrics']['items']['design_completed'])
             notion_dictionary['[average-design]'] = f"{sprint_report_data['average_design']}%"
+            notion_dictionary['[design-points-committed]'] = str(sprint_report_data['issue_metrics']['points']['design_committed'])
+            notion_dictionary['[design-points-completed]'] = str(sprint_report_data['issue_metrics']['points']['design_completed'])
 
             notion_dictionary['[items-planned-completed]'] = str(sprint_report_data['issue_metrics']['items']['planned_completed'])
             notion_dictionary['[items-not-completed]'] = str(sprint_report_data['issue_metrics']['items']['not_completed'])
