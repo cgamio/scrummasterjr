@@ -73,7 +73,9 @@ class Jira:
             "optimization_completed": 0,
             "not_completed": 0,
             "removed": 0,
-            "prod_support": 0
+            "prod_support": 0,
+            "design_committed": 0,
+            "design_completed": 0
         }
 
         items = {
@@ -103,7 +105,7 @@ class Jira:
         feature_work = ["Story", "Design", "Spike"]
         optimization = ["Optimization"]
         bug = ["Bug", "User Bug"]
-        design = ["Design"]
+        design = ["Design", "Design Spike"]
         ignore = ["Task", "Epic", "Retro Action Item", "Requirement", "Request", "Idea", "Test"]
 
         # Completed Work
@@ -164,8 +166,10 @@ class Jira:
             # Design
             if completed["typeName"] in design:
                 items["design_completed"] += 1
+                points["design_completed"] += issue_points
                 if not unplanned:
                     items["design_committed"] += 1
+                    points["design_committed"] += issue_points
 
             # Prod Support
             if "prod_support" in completed["labels"]:
@@ -202,6 +206,7 @@ class Jira:
 
                 if incomplete["typeName"] in design:
                     items["design_committed"] += 1
+                    points["design_committed"] += issue_points_original
 
         # Removed Work
         for removed in sprint_report["contents"]["puntedIssues"]:
@@ -375,7 +380,7 @@ class Jira:
         report['project_key'] = board['location']['projectKey']
         report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
 
-        [report['average_predictability'], report['average_predictability_of_commitments'], report['average_prod_support']] = self.getAveragePredictabilities(sprint['originBoardId'], sprint_id)
+        [report['average_predictability'], report['average_predictability_of_commitments'], report['average_prod_support'], report['average_design']] = self.getAveragePredictabilities(sprint['originBoardId'], sprint_id)
 
         return report
 
@@ -594,6 +599,7 @@ class Jira:
 
             notion_dictionary['[design-committed]'] = str(sprint_report_data['issue_metrics']['items']['design_committed'])
             notion_dictionary['[design-completed]'] = str(sprint_report_data['issue_metrics']['items']['design_completed'])
+            notion_dictionary['[average-design]'] = f"{sprint_report_data['average_design']}%"
 
             notion_dictionary['[items-planned-completed]'] = str(sprint_report_data['issue_metrics']['items']['planned_completed'])
             notion_dictionary['[items-not-completed]'] = str(sprint_report_data['issue_metrics']['items']['not_completed'])
@@ -740,6 +746,7 @@ class Jira:
         committed = 0
         planned_completed = 0
         prod_support = 0
+        design = 0
 
         for sprint in sprints:
             if sprint['id'] == sprint_id:
@@ -752,9 +759,10 @@ class Jira:
                 committed += metrics['points']['committed']
                 planned_completed += metrics['points']['planned_completed']
                 prod_support += metrics['points']['prod_support']
+                design += metrics['points']['design_completed']
                 found_sprints += 1
 
         if committed > 0:
-            return (round(completed / committed*100), round(planned_completed / committed*100), round(prod_support / completed*100))
+            return (round(completed / committed*100), round(planned_completed / committed*100), round(prod_support / completed*100), round(design / completed*100))
         else:
             return (0,0)
