@@ -75,7 +75,9 @@ class Jira:
             "removed": 0,
             "prod_support": 0,
             "design_committed": 0,
-            "design_completed": 0
+            "design_completed": 0,
+            "added": 0,
+            "bugs": 0
         }
 
         items = {
@@ -134,6 +136,7 @@ class Jira:
                 unplanned = True
                 points["unplanned_completed"] += issue_points
                 items["unplanned_completed"] += 1
+                points["added"] += issue_points
             else:
                 issue_keys["committed"].append(completed["key"])
                 points["committed"] += issue_points_original
@@ -160,6 +163,7 @@ class Jira:
             # Bugs
             if completed["typeName"] in bug:
                 items["bugs_completed"] += 1
+                points["bugs"] += issue_points
                 if unplanned:
                     items["unplanned_bugs_completed"] += 1
 
@@ -207,6 +211,8 @@ class Jira:
                 if incomplete["typeName"] in design:
                     items["design_committed"] += 1
                     points["design_committed"] += issue_points_original
+            else:
+                points["added"] += issue_points
 
         # Removed Work
         for removed in sprint_report["contents"]["puntedIssues"]:
