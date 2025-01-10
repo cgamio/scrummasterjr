@@ -764,7 +764,8 @@ class Jira:
                 design += metrics['points']['design_completed']
                 found_sprints += 1
 
-        if committed > 0:
-            return (round(completed / committed*100), round(planned_completed / committed*100), round(prod_support / completed*100), round(design / completed*100))
-        else:
-            return (0,0)
+        return (round(completed / committed*100) if committed else 0, 
+                round(planned_completed / committed*100) if committed else 0, 
+                round(prod_support / completed*100) if completed else 0, 
+                round(design / completed*100) if completed else 0)
+
