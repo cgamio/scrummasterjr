@@ -77,7 +77,8 @@ class Jira:
             "design_committed": 0,
             "design_completed": 0,
             "added": 0,
-            "bugs": 0
+            "bugs": 0,
+            "by_label": {'committed': {}, 'completed': {}}
         }
 
         items = {
@@ -131,6 +132,10 @@ class Jira:
             points["completed"] += issue_points
             items["completed"] += 1
 
+            for label in completed["labels"]:
+                points["by_label"]['completed'][label] = points["by_label"]['completed'].get(label, 0) + issue_points
+                logging.info(f"LABEL: {label} - {completed['id']} {issue_points} points Total: {points['by_label']['completed'][label]}")
+
             unplanned = False
             if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
@@ -145,6 +150,9 @@ class Jira:
                 items["planned_completed"] += 1
                 if issue_points_original < issue_points:
                     points["unplanned_completed"] += issue_points-issue_points_original
+                for label in completed["labels"]:
+                    points["by_label"]['committed'][label] = points["by_label"]['committed'].get(label, 0) + issue_points
+                    logging.info(f"LABEL: {label} - {completed['id']} {issue_points} points Total: {points['by_label']['committed'][label]}")
 
             # Story
             if completed["typeName"] == "Story":
@@ -180,6 +188,7 @@ class Jira:
                 points["prod_support"] += issue_points
                 items["prod_support"] += 1
                 issue_keys["prod_support"].append(completed["key"])
+                logging.info(f"PROD SUPPORT: {completed['key']} {issue_points} Total: {points['prod_support']}")
 
         # Incomplete Work
         for incomplete in sprint_report["contents"]["issuesNotCompletedInCurrentSprint"]:
@@ -207,6 +216,10 @@ class Jira:
                 issue_keys["committed"].append(incomplete["key"])
                 points["committed"] += issue_points_original
                 items["committed"] += 1
+
+                for label in incomplete["labels"]:
+                    points["by_label"]['committed'][label] = points["by_label"]['committed'].get(label, 0) + issue_points
+                    logging.info(f"LABEL: {label} - {incomplete['id']} {issue_points} points Total: {points['by_label']['committed'][label]}")
 
                 if incomplete["typeName"] in design:
                     items["design_committed"] += 1
