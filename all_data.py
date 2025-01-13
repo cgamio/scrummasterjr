@@ -30,6 +30,7 @@ if __name__ == '__main__':
         "Merlin": (165, 'M'),
         "Keto-memes": (162, 'K'),
         "Command Z": (179, 'C'),
+	"Rambo": (182, 'R'),
         "Data Matrix": (116, 'D')
     }
 
