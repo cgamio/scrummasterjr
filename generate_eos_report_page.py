@@ -32,8 +32,8 @@ if __name__ == '__main__':
             exit(1)
 
         current_sprint_number = int(match.group(1))+1
-        current_sprint_string = f"{now.strftime('%y')}.{current_sprint_number}"
-        next_sprint = f"{now.strftime('%y')}.{current_sprint_number+1}"
+        current_sprint_string = f"{now.strftime('%y')}.{current_sprint_number:02}"
+        next_sprint = f"{now.strftime('%y')}.{current_sprint_number+1:02}"
         
         start_date = (now-datetime.timedelta(days=12)).strftime('%m/%d')
         end_date = (now+datetime.timedelta(days=2)).strftime('%m/%d')
