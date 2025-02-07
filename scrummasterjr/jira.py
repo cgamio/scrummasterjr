@@ -77,8 +77,9 @@ class Jira:
             "design_committed": 0,
             "design_completed": 0,
             "added": 0,
+            "added_and_completed": 0,
             "bugs": 0,
-            "by_label": {'committed': {}, 'completed': {}}
+            "by_label": {'committed': {}, 'completed': {}, 'added': {}, 'added_and_completed': {}}
         }
 
         items = {
@@ -142,6 +143,11 @@ class Jira:
                 points["unplanned_completed"] += issue_points
                 items["unplanned_completed"] += 1
                 points["added"] += issue_points
+                points["added_and_completed"] += issue_points
+                for label in completed["labels"]:
+                    points["by_label"]['added'][label] = points["by_label"]['added'].get(label, 0) + issue_points
+                    points["by_label"]['added_and_completed'][label] = points["by_label"]['added_and_completed'].get(label, 0) + issue_points
+
             else:
                 issue_keys["committed"].append(completed["key"])
                 points["committed"] += issue_points_original
@@ -226,6 +232,8 @@ class Jira:
                     points["design_committed"] += issue_points_original
             else:
                 points["added"] += issue_points
+                for label in incomplete["labels"]:
+                    points["by_label"]['added'][label] = points["by_label"]['added'].get(label, 0) + issue_points
 
         # Removed Work
         for removed in sprint_report["contents"]["puntedIssues"]:
