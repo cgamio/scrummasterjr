@@ -713,12 +713,14 @@ class Jira:
             logging.info(f"We have a board: {self.summary['board_id']}")
 
             if 'current_sprint' in self.summary.keys():
-                logging.info(f"We have a sprint: {self.summary['board_id']}")
                 sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['current_sprint']}{self.summary['specific_sprint_name_match']}")
                 if sprint:
+                    logging.info(f"We have a sprint: {sprint}")
                     data = self.generateAllSprintReportData(sprint['id'])
                     dictionary = self.generateNotionReplacementDictionary(data)
                     notion_dictionary.update(dictionary)
+                else:
+                    logging.info("Couldn't find sprint, moving on")
 
             if 'next_sprint' in self.summary.keys():
                 sprint = self.getMatchingSprintInBoard(self.summary['board_id'], f"{self.summary['next_sprint']}{self.summary['specific_sprint_name_match']}")
