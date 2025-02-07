@@ -38,6 +38,8 @@ jobs:
             PARENT_PAGE_ID: ${{ vars.PARENT_PAGE_ID }}
             SPRINT_NUMBER: ${{ steps.page-url.outputs.group1 }}
         run: |
+          $SPRINT_NUMBER=$(printf %02d $SPRINT_NUMBER)
+          echo $SPRINT_NUMBER
           pipenv run python ./all_data.py "$(date +'%y').$SPRINT_NUMBER" 2>&1 | tee ./all_data_logs.txt
       - name: Read package.json
         if: startsWith(steps.page-url.outputs.match, 'https')
