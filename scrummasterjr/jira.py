@@ -75,7 +75,11 @@ class Jira:
             "removed": 0,
             "prod_support": 0,
             "design_committed": 0,
-            "design_completed": 0
+            "design_completed": 0,
+            "added": 0,
+            "added_and_completed": 0,
+            "bugs": 0,
+            "by_label": {'committed': {}, 'completed': {}, 'added': {}, 'added_and_completed': {}}
         }
 
         items = {
@@ -129,11 +133,21 @@ class Jira:
             points["completed"] += issue_points
             items["completed"] += 1
 
+            for label in completed["labels"]:
+                points["by_label"]['completed'][label] = points["by_label"]['completed'].get(label, 0) + issue_points
+                logging.info(f"LABEL: {label} - {completed['id']} {issue_points} points Total: {points['by_label']['completed'][label]}")
+
             unplanned = False
             if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
                 points["unplanned_completed"] += issue_points
                 items["unplanned_completed"] += 1
+                points["added"] += issue_points
+                points["added_and_completed"] += issue_points
+                for label in completed["labels"]:
+                    points["by_label"]['added'][label] = points["by_label"]['added'].get(label, 0) + issue_points
+                    points["by_label"]['added_and_completed'][label] = points["by_label"]['added_and_completed'].get(label, 0) + issue_points
+
             else:
                 issue_keys["committed"].append(completed["key"])
                 points["committed"] += issue_points_original
@@ -142,6 +156,9 @@ class Jira:
                 items["planned_completed"] += 1
                 if issue_points_original < issue_points:
                     points["unplanned_completed"] += issue_points-issue_points_original
+                for label in completed["labels"]:
+                    points["by_label"]['committed'][label] = points["by_label"]['committed'].get(label, 0) + issue_points
+                    logging.info(f"LABEL: {label} - {completed['id']} {issue_points} points Total: {points['by_label']['committed'][label]}")
 
             # Story
             if completed["typeName"] == "Story":
@@ -160,6 +177,7 @@ class Jira:
             # Bugs
             if completed["typeName"] in bug:
                 items["bugs_completed"] += 1
+                points["bugs"] += issue_points
                 if unplanned:
                     items["unplanned_bugs_completed"] += 1
 
@@ -176,6 +194,7 @@ class Jira:
                 points["prod_support"] += issue_points
                 items["prod_support"] += 1
                 issue_keys["prod_support"].append(completed["key"])
+                logging.info(f"PROD SUPPORT: {completed['key']} {issue_points} Total: {points['prod_support']}")
 
         # Incomplete Work
         for incomplete in sprint_report["contents"]["issuesNotCompletedInCurrentSprint"]:
@@ -204,9 +223,17 @@ class Jira:
                 points["committed"] += issue_points_original
                 items["committed"] += 1
 
+                for label in incomplete["labels"]:
+                    points["by_label"]['committed'][label] = points["by_label"]['committed'].get(label, 0) + issue_points
+                    logging.info(f"LABEL: {label} - {incomplete['id']} {issue_points} points Total: {points['by_label']['committed'][label]}")
+
                 if incomplete["typeName"] in design:
                     items["design_committed"] += 1
                     points["design_committed"] += issue_points_original
+            else:
+                points["added"] += issue_points
+                for label in incomplete["labels"]:
+                    points["by_label"]['added'][label] = points["by_label"]['added'].get(label, 0) + issue_points
 
         # Removed Work
         for removed in sprint_report["contents"]["puntedIssues"]:
