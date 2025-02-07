@@ -72,6 +72,8 @@ class ConfluencePage:
                             checkNextSprintGoals = True
                         if "[sprint-goal]" in replacement_dictionary:
                             checkSprintGoals = True
+                        
+                        logging.info(f"Replacement Dictionary\n{replacement_dictionary}")
                         continue
 
 
@@ -108,8 +110,6 @@ class ConfluencePage:
                     continue
 
                 new_title = block.string
-
-                logging.info(f"Replacement Dictionary\n{replacement_dictionary}")
 
                 for search, replace in replacement_dictionary.items():
                     new_title = new_title.replace(search, replace)

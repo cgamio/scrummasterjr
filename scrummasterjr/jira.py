@@ -135,8 +135,7 @@ class Jira:
 
             for label in completed["labels"]:
                 points["by_label"]['completed'][label] = points["by_label"]['completed'].get(label, 0) + issue_points
-                logging.info(f"LABEL: {label} - {completed['id']} {issue_points} points Total: {points['by_label']['completed'][label]}")
-
+                
             unplanned = False
             if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
@@ -158,8 +157,7 @@ class Jira:
                     points["unplanned_completed"] += issue_points-issue_points_original
                 for label in completed["labels"]:
                     points["by_label"]['committed'][label] = points["by_label"]['committed'].get(label, 0) + issue_points
-                    logging.info(f"LABEL: {label} - {completed['id']} {issue_points} points Total: {points['by_label']['committed'][label]}")
-
+                    
             # Story
             if completed["typeName"] == "Story":
                 items["stories_completed"] += 1
@@ -194,8 +192,7 @@ class Jira:
                 points["prod_support"] += issue_points
                 items["prod_support"] += 1
                 issue_keys["prod_support"].append(completed["key"])
-                logging.info(f"PROD SUPPORT: {completed['key']} {issue_points} Total: {points['prod_support']}")
-
+                
         # Incomplete Work
         for incomplete in sprint_report["contents"]["issuesNotCompletedInCurrentSprint"]:
 
@@ -225,8 +222,7 @@ class Jira:
 
                 for label in incomplete["labels"]:
                     points["by_label"]['committed'][label] = points["by_label"]['committed'].get(label, 0) + issue_points
-                    logging.info(f"LABEL: {label} - {incomplete['id']} {issue_points} points Total: {points['by_label']['committed'][label]}")
-
+                    
                 if incomplete["typeName"] in design:
                     items["design_committed"] += 1
                     points["design_committed"] += issue_points_original
@@ -258,8 +254,7 @@ class Jira:
                 points["committed"] += issue_points_original
                 items["committed"] += 1
                 issue_keys["committed"].append(removed["key"])
-                logging.info(f"Removed issue {removed['key']} was commits as {issue_points_original} points for a total of {points['committed']}")
-
+                
             points["removed"] += issue_points
             items["removed"] += 1
 
@@ -459,7 +454,6 @@ class Jira:
         sprint_id = f"{sprint_id}"
 
         for sprint in sorted(velocity_report['velocityStatEntries'], reverse=True):
-            logging.info(f"Sprint: {sprint}")
             if sprints >= 3:
                 # We only care about the last three sprints
                 break;
