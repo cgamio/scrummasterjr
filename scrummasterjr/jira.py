@@ -121,12 +121,9 @@ class Jira:
             if completed["typeName"] in ignore:
                 continue
 
-            # Short-circuit for issues that were added and then removed (unlikely in this case, but still)
             unplanned = False
             if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
-                if completed["key"] in puntedKeys:
-                    continue
 
             issue_keys["completed"].append(completed["key"])
 
@@ -208,12 +205,9 @@ class Jira:
             if incomplete["typeName"] in ignore:
                 continue
 
-             # Short-circuit for issues that were added and then removed (most likely in this case)
             unplanned = False
-            if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+            if incomplete["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
-                if completed["key"] in puntedKeys:
-                    continue
             
             issue_keys["incomplete"].append(incomplete["key"])
 
@@ -255,9 +249,9 @@ class Jira:
 
              # Short-circuit for issues that were added and then removed
             unplanned = False
-            if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+            if removed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
                 unplanned = True
-                if completed["key"] in puntedKeys:
+                if removed["key"] in puntedKeys:
                     continue
 
             issue_keys["removed"].append(removed["key"])
