@@ -112,13 +112,20 @@ class Jira:
         design = ["Design", "Design Spike"]
         ignore = ["Task", "Epic", "Retro Action Item", "Requirement", "Request", "Idea", "Test"]
 
+        puntedKeys = [d["key"] for d in sprint_report["contents"]["puntedIssues"]]
+
         # Completed Work
         for completed in sprint_report["contents"]["completedIssues"]:
-            issue_keys["completed"].append(completed["key"])
 
             # Short-circuit for things we don't track
             if completed["typeName"] in ignore:
                 continue
+
+            unplanned = False
+            if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+                unplanned = True
+
+            issue_keys["completed"].append(completed["key"])
 
             try:
                 issue_points_original = round(completed["estimateStatistic"]["statFieldValue"]["value"])
@@ -136,9 +143,7 @@ class Jira:
             for label in completed["labels"]:
                 points["by_label"]['completed'][label] = points["by_label"]['completed'].get(label, 0) + issue_points
                 
-            unplanned = False
-            if completed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
-                unplanned = True
+            if unplanned:
                 points["unplanned_completed"] += issue_points
                 items["unplanned_completed"] += 1
                 points["added"] += issue_points
@@ -196,11 +201,15 @@ class Jira:
         # Incomplete Work
         for incomplete in sprint_report["contents"]["issuesNotCompletedInCurrentSprint"]:
 
-            issue_keys["incomplete"].append(incomplete["key"])
-
             # Short-circuit for things we don't track
             if incomplete["typeName"] in ignore:
                 continue
+
+            unplanned = False
+            if incomplete["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+                unplanned = True
+            
+            issue_keys["incomplete"].append(incomplete["key"])
 
             try:
                 issue_points = round(incomplete["currentEstimateStatistic"]["statFieldValue"]["value"])
@@ -215,7 +224,7 @@ class Jira:
             points["not_completed"] += issue_points
             items["not_completed"] += 1
 
-            if incomplete["key"] not in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+            if not unplanned:
                 issue_keys["committed"].append(incomplete["key"])
                 points["committed"] += issue_points_original
                 items["committed"] += 1
@@ -234,11 +243,18 @@ class Jira:
         # Removed Work
         for removed in sprint_report["contents"]["puntedIssues"]:
 
-            issue_keys["removed"].append(removed["key"])
-
             # Short-circuit for things we don't track
             if removed["typeName"] in ignore:
                 continue
+
+             # Short-circuit for issues that were added and then removed
+            unplanned = False
+            if removed["key"] in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+                unplanned = True
+                if removed["key"] in puntedKeys:
+                    continue
+
+            issue_keys["removed"].append(removed["key"])
 
             try:
                 issue_points = round(removed["currentEstimateStatistic"]["statFieldValue"]["value"])
@@ -250,7 +266,7 @@ class Jira:
             except:
                 issue_points_original = 0
 
-            if removed["key"] not in sprint_report["contents"]["issueKeysAddedDuringSprint"].keys():
+            if not unplanned:
                 points["committed"] += issue_points_original
                 items["committed"] += 1
                 issue_keys["committed"].append(removed["key"])
@@ -264,7 +280,7 @@ class Jira:
         }
 
         #Added Work
-        issue_keys["added"] = list(sprint_report["contents"]["issueKeysAddedDuringSprint"].keys())
+        issue_keys["added"] = list(set(sprint_report["contents"]["issueKeysAddedDuringSprint"].keys()) - set(puntedKeys))
         items["added"] = len(issue_keys["added"])
 
         if points['committed'] != 0:
