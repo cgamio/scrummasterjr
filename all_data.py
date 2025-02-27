@@ -18,7 +18,6 @@ if __name__ == '__main__':
         "Emu": (30,'E'),
         "Fire Ferrets": (42,'F'),
         "Godzilla": (189, 'G'),
-        "HODL": (46,'H'),
         "Jedi": (157, 'J'),
         "DevOps": (61,'O'),
         "Whiskey": (126,'W'),
