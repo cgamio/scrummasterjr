@@ -33,7 +33,8 @@ if __name__ == '__main__':
         "Rambo": (182, 'R'),
         "Data Matrix": (116, 'D'),
         "Turing": (114, 'T'),
-        "HODL": (46, 'H')
+        "HODL": (46, 'H'),
+        "Queso": (322, 'Q')
     }
 
     f = open('all_sprint_data.txt', 'a')
