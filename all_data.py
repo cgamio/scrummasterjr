@@ -35,6 +35,7 @@ if __name__ == '__main__':
         "Turing": (114, 'T'),
         "HODL": (46, 'H'),
         "Queso": (322, 'Q')
+        "Vigilante": (784, 'V')
     }
 
     f = open('all_sprint_data.txt', 'a')
