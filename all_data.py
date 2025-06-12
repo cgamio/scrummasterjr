@@ -34,7 +34,7 @@ if __name__ == '__main__':
         "Data Matrix": (116, 'D'),
         "Turing": (114, 'T'),
         "HODL": (46, 'H'),
-        "Queso": (322, 'Q')
+        "Queso": (322, 'Q'),
         "Vigilante": (784, 'V')
     }
 
