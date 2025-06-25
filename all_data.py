@@ -26,7 +26,7 @@ if __name__ == '__main__':
         "Unicorn": (89, 'U'),
         "Atlantis": (92, 'A'),
         "Yeet": (119, 'Y'),
-        "Zeppelin": (37, 'Z'),
+        "Zeppelin": (883, 'Z'),
         "Merlin": (165, 'M'),
         "Keto-memes": (162, 'K'),
         "Command Z": (179, 'C'),
