@@ -19,7 +19,6 @@ if __name__ == '__main__':
         "Fire Ferrets": (42,'F'),
         "Godzilla": (189, 'G'),
         "Jedi": (157, 'J'),
-        "DevOps": (61,'O'),
         "Whiskey": (126,'W'),
         "Paradise": (48,'P'),
         "Snacks": (27,'S'),
@@ -35,7 +34,7 @@ if __name__ == '__main__':
         "Turing": (114, 'T'),
         "HODL": (46, 'H'),
         "Queso": (322, 'Q'),
-        "Vigilante": (784, 'V')
+        "Vigilante": (784, 'V'),
         "Platform": (388, 'O2')
     }
 
