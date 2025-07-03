@@ -1,4 +1,6 @@
 name: Refactor Comment Reminder
+permissions:
+  pull-requests: write
 
 on:
   issue_comment:
@@ -12,12 +14,20 @@ jobs:
     if: github.event.issue.pull_request && contains(github.event.comment.body, 'refactor')
     runs-on: ubuntu-latest
     steps:
-       - name: Create or update a comment
-         uses: taoliujun/action-unique-comment@v1
+       - uses: marocchino/sticky-pull-request-comment@v2
          with:
-            uniqueIdentifier: 'refactor reminder'
-            body: Hey there! Noticed a mention of "refactor" in this PR. Just a quick reminder |
-                  Before diving into any large or unplanned refactoring, please check in with the team first. It is important that we collectively decide whether to
-                    ✅ Accept the increased scope now, or
-                    ⏳ Defer the refactor to a later time.
-                  This helps us stay aligned and keep our priorities clear. Thanks for keeping the team in the loop!
+          header: ticket-description
+          message: |
+              💡 <strong>Refactor Reminder</strong>
+              <br>
+
+              Hey there! Noticed a mention of "refactor" in this PR. Just a quick reminder:
+              <br>
+
+              Before diving into any <strong>large or unplanned refactoring</strong>, please check in with the team first. It's important that we collectively decide whether to:
+              <ul>
+              <li>✅ Accept the increased scope now</li>
+              <li>⏳ Defer the refactor to a later time.</li>
+              </ul>
+              <p>This helps us stay aligned and keep our priorities clear. Thanks for keeping the team in the loop!</p>
+          skip_unchanged: true
