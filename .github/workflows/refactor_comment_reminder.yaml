@@ -11,15 +11,16 @@ on:
 jobs:
   pr_commented:
     name: PR comment
-    if: github.event.issue.pull_request && contains(github.event.comment.body, 'refactor')
+    if: (github.event.issue.pull_request || github.event.pull_request) && contains(github.event.comment.body, 'refactor')
     runs-on: ubuntu-latest
     steps:
        - uses: marocchino/sticky-pull-request-comment@v2
          with:
           header: ticket-description
-          number: ${{ github.event.issue.number }}
+          number: ${{ format('{0}{1}', github.event.issue.number, github.event.pull_request.number) }}
           message: |
               💡 <strong>Refactor Reminder</strong>
+
               Hey there! Noticed a mention of "refactor" in this PR. Just a quick reminder:
               
               Before diving into any <strong>large or unplanned refactoring</strong>, please check in with the team first. It's important that we collectively decide whether to:
