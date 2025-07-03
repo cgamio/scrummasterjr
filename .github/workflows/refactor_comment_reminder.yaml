@@ -20,11 +20,8 @@ jobs:
           number: ${{ github.event.issue.number }}
           message: |
               💡 <strong>Refactor Reminder</strong>
-              <br>
-
               Hey there! Noticed a mention of "refactor" in this PR. Just a quick reminder:
-              <br>
-
+              
               Before diving into any <strong>large or unplanned refactoring</strong>, please check in with the team first. It's important that we collectively decide whether to:
               <ul>
               <li>✅ Accept the increased scope now</li>
