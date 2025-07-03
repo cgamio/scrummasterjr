@@ -17,6 +17,7 @@ jobs:
        - uses: marocchino/sticky-pull-request-comment@v2
          with:
           header: ticket-description
+          number: ${{ github.event.pull_request.number }}
           message: |
               💡 <strong>Refactor Reminder</strong>
               <br>
