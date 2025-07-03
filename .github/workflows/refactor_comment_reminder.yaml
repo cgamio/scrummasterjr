@@ -11,7 +11,7 @@ on:
 jobs:
   pr_commented:
     name: PR comment
-    if: (github.event.issue.pull_request || github.event.pull_request) && contains(github.event.comment.body, 'refactor')
+    if: (github.event.issue.pull_request || github.event.pull_request) && (contains(github.event.issue.labels.*.name, 'Paradise') || contains(github.event.pull_request.labels.*.name, 'Paradise')) && contains(github.event.comment.body, 'refactor')
     runs-on: ubuntu-latest
     steps:
        - uses: marocchino/sticky-pull-request-comment@v2
