@@ -8,7 +8,7 @@ Configuration is done through environment variables set via Ahab.
 |---|---|
 |slack_bot_secret   |The bot token associated with the app's bot in Slack   |
 |slack_signing_secret   |The signing secret associated with the app in Slack (used to confirm that incoming messages are actually from Slack)   |
-
+asdfasdf
 The bot will listen to commands in any channel it has been invited to, provided that they are prefixed by an @mention. It will also respond to DM's, where they @mention is not required. 
 
 ### Built In Commands
