@@ -647,6 +647,16 @@ class Jira:
             notion_dictionary['[points-prod-support]'] = str(sprint_report_data['issue_metrics']['points']['prod_support'])
             notion_dictionary['[average-prod-support]'] = f"{sprint_report_data['average_prod_support']}%"
 
+            notion_dictionary['[dev-count]'] = str(self.summary['dev_count'])
+            notion_dictionary['[designer-count]'] = str(self.summary['designer_count'])
+
+            dev_points = sprint_report_data['issue_metrics']['points']['completed'] - sprint_report_data['issue_metrics']['points']['design_completed']
+
+            notion_dictionary['[dev-points]'] = str(dev_points)
+
+            notion_dictionary['[points-per-dev]'] = str(round(dev_points / self.summary['dev_count'])) if self.summary['dev_count'] else "N/A"
+            notion_dictionary['[points-per-designer]'] = str(round(sprint_report_data['issue_metrics']['points']['design_completed'] / self.summary['designer_count'])) if self.summary['designer_count'] else "N/A"
+
         except KeyError:
             pass
             #raise ScrumMasterJrError("I wasn't able to update your Notion Doc for some reason. This probably isn't your fault, I've let my overlords know.", "Unable to generate a Notion Replacement Dictionary, keys not found")
@@ -751,24 +761,23 @@ class Jira:
         self.summary['next_sprint'] = next_sprint
         return self.updateSummaryNotionDictionary()
 
-    def setSummaryBoardID(self, board_id, specific_sprint_name_match = ""):
+    def setSummaryBoardID(self, board_id, specific_sprint_name_match = "", dev_count = 0, designer_count = 0):
         self.summary['board_id'] = board_id
-        if specific_sprint_name_match:
-            self.summary['specific_sprint_name_match'] = specific_sprint_name_match
-        else:
-            self.summary['specific_sprint_name_match'] = ""
+        self.summary['specific_sprint_name_match'] = specific_sprint_name_match
+        self.summary['dev_count'] = int(dev_count)
+        self.summary['designer_count'] = int(designer_count)
         return self.updateSummaryNotionDictionary()
 
     def updateSummary(self, tag):
         logging.info(f"Found Summary Update Tag: {tag}")
-        results = re.search('\[(?P<tag>[\w-]+) (?P<value>[\d\.]+)( (?P<arg>[\w\.]+))?\]', tag)
+        results = re.search('\[(?P<tag>[\w-]+) (?P<value>[\d\.]+)( (?P<arg>[\w\.]+))?( (?P<arg2>[\d\.]+))?( (?P<arg3>[\d\.]+))?\]', tag)
         if results:
             if results.group('tag') == 'sprint':
                 return self.setSummaryCurrentSprint(results.group('value'))
             if results.group('tag') == 'next-sprint':
                 return self.setSummaryNextSprint(results.group('value'))
             if results.group('tag') == 'board':
-                return self.setSummaryBoardID(results.group('value'), results.group('arg'))
+                return self.setSummaryBoardID(results.group('value'), results.group('arg'), results.group('arg2'), results.group('arg3'))
         return {}
 
     def updateNotionSummaryPage(self, notion_url):
