@@ -764,8 +764,8 @@ class Jira:
     def setSummaryBoardID(self, board_id, specific_sprint_name_match = "", dev_count = 0, designer_count = 0):
         self.summary['board_id'] = board_id
         self.summary['specific_sprint_name_match'] = specific_sprint_name_match
-        self.summary['dev_count'] = int(dev_count)
-        self.summary['designer_count'] = int(designer_count)
+        self.summary['dev_count'] = int(dev_count) if dev_count else 0
+        self.summary['designer_count'] = int(designer_count) if designer_count else 0
         return self.updateSummaryNotionDictionary()
 
     def updateSummary(self, tag):
