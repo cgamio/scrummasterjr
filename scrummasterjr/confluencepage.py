@@ -80,11 +80,14 @@ class ConfluencePage:
                 if checkSprintGoals and "[sprint-goal]" in block.string:
                     parent = block.parent
                     logging.info(f"Parent: {parent}")
-                    list = soup.new_tag('ul')
+                    list = soup.new_tag('ac:task-list')
                     try:
                         for goal in replacement_dictionary['[sprint-goal]'].split("\n"):
-                            list_item = soup.new_tag('li')
-                            p_item = soup.new_tag('p')
+                            list_item = soup.new_tag('ac:task')
+                            p_item = soup.new_tag('ac:task-status')
+                            p_item.string = "incomplete"
+                            list_item.append(p_item)
+                            p_item = soup.new_tag('ac:task-body')
                             p_item.string = goal
                             list_item.append(p_item)
                             list.append(list_item)
