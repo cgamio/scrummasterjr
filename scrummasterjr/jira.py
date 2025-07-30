@@ -77,9 +77,8 @@ class Jira:
             "design_committed": 0,
             "design_completed": 0,
             "added": 0,
-            "added_and_completed": 0,
             "bugs": 0,
-            "by_label": {'committed': {}, 'completed': {}, 'added': {}, 'added_and_completed': {}}
+            "by_label": {'committed': {}, 'completed': {}, 'added': {}, 'unplanned_completed': {}}
         }
 
         items = {
@@ -147,10 +146,9 @@ class Jira:
                 points["unplanned_completed"] += issue_points
                 items["unplanned_completed"] += 1
                 points["added"] += issue_points
-                points["added_and_completed"] += issue_points
                 for label in completed["labels"]:
                     points["by_label"]['added'][label] = points["by_label"]['added'].get(label, 0) + issue_points
-                    points["by_label"]['added_and_completed'][label] = points["by_label"]['added_and_completed'].get(label, 0) + issue_points
+                    points["by_label"]['unplanned_completed'][label] = points["by_label"]['unplanned_completed'].get(label, 0) + issue_points
 
             else:
                 issue_keys["committed"].append(completed["key"])
@@ -159,7 +157,7 @@ class Jira:
                 points["planned_completed"] += issue_points
                 items["planned_completed"] += 1
                 if issue_points_original < issue_points:
-                    points["unplanned_completed"] += issue_points-issue_points_original
+                    points["planned_completed"] += issue_points-issue_points_original
                 for label in completed["labels"]:
                     points["by_label"]['committed'][label] = points["by_label"]['committed'].get(label, 0) + issue_points
                     
@@ -418,7 +416,7 @@ class Jira:
         report['project_key'] = board['location']['projectKey']
         report['average_velocity'] = self.getAverageVelocity(sprint['originBoardId'], sprint_id)
 
-        [report['average_predictability'], report['average_predictability_of_commitments'], report['average_prod_support'], report['average_design']] = self.getAveragePredictabilities(sprint['originBoardId'], sprint_id)
+        [report['average_predictability'], report['average_predictability_of_commitments'], report['average_prod_support'], report['average_design'], report['average_unplanned_completed']] = self.getAveragePredictabilities(sprint['originBoardId'], sprint_id)
 
         return report
 
@@ -636,7 +634,8 @@ class Jira:
 
             notion_dictionary['[design-committed]'] = str(sprint_report_data['issue_metrics']['items']['design_committed'])
             notion_dictionary['[design-completed]'] = str(sprint_report_data['issue_metrics']['items']['design_completed'])
-            notion_dictionary['[average-design]'] = f"{sprint_report_data['average_design']}%"
+            notion_dictionary['[average-design]'] = f"{round(sprint_report_data['average_design']/sprint_report_data['average_velocity']*100)}%"
+            notion_dictionary['[average-design-points]'] = str(sprint_report_data['average_design'])
             notion_dictionary['[design-points-committed]'] = str(sprint_report_data['issue_metrics']['points']['design_committed'])
             notion_dictionary['[design-points-completed]'] = str(sprint_report_data['issue_metrics']['points']['design_completed'])
 
@@ -645,14 +644,18 @@ class Jira:
 
             notion_dictionary['[items-prod-support]'] = str(sprint_report_data['issue_metrics']['items']['prod_support'])
             notion_dictionary['[points-prod-support]'] = str(sprint_report_data['issue_metrics']['points']['prod_support'])
-            notion_dictionary['[average-prod-support]'] = f"{sprint_report_data['average_prod_support']}%"
+            notion_dictionary['[average-prod-support]'] = f"{round(sprint_report_data['average_prod_support']/sprint_report_data['average_velocity']*100)}%"
+            notion_dictionary['[average-prod-support-points]'] = str(sprint_report_data['average_prod_support'])
 
-            notion_dictionary['[dev-count]'] = str(self.summary['dev_count'])
-            notion_dictionary['[designer-count]'] = str(self.summary['designer_count'])
+            notion_dictionary['[average-unplanned-completed]'] = f"{round(sprint_report_data['average_unplanned_completed']/sprint_report_data['average_velocity']*100)}%"
+            notion_dictionary['[average-unplanned-completed-points]'] = str(sprint_report_data['average_unplanned_completed'])
 
             dev_points = sprint_report_data['issue_metrics']['points']['completed'] - sprint_report_data['issue_metrics']['points']['design_completed']
-
             notion_dictionary['[dev-points]'] = str(dev_points)
+
+            # These expect to be called with some additional summary context from a Conluence / Notion doc and will bail if we don't have that
+            notion_dictionary['[dev-count]'] = str(self.summary['dev_count'])
+            notion_dictionary['[designer-count]'] = str(self.summary['designer_count'])
 
             notion_dictionary['[points-per-dev]'] = str(round(dev_points / self.summary['dev_count'])) if self.summary['dev_count'] else "N/A"
             notion_dictionary['[points-per-designer]'] = str(round(sprint_report_data['issue_metrics']['points']['design_completed'] / self.summary['designer_count'])) if self.summary['designer_count'] else "N/A"
@@ -797,6 +800,7 @@ class Jira:
         planned_completed = 0
         prod_support = 0
         design = 0
+        unplanned_completed = 0
 
         for sprint in sprints:
             if sprint['id'] == sprint_id:
@@ -810,10 +814,12 @@ class Jira:
                 planned_completed += metrics['points']['planned_completed']
                 prod_support += metrics['points']['prod_support']
                 design += metrics['points']['design_completed']
+                unplanned_completed += metrics['points']['unplanned_completed']
                 found_sprints += 1
 
         return (round(completed / committed*100) if committed else 0, 
                 round(planned_completed / committed*100) if committed else 0, 
-                round(prod_support / completed*100) if completed else 0, 
-                round(design / completed*100) if completed else 0)
+                round(prod_support / found_sprints) if found_sprints else 0, 
+                round(design / found_sprints) if found_sprints else 0,
+                round(unplanned_completed / found_sprints) if found_sprints else 0)
 
